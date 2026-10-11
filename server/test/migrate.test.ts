@@ -27,18 +27,24 @@ describe.skipIf(!available)('migrations', () => {
 
   async function tables(pool: pg.Pool): Promise<string[]> {
     const res = await pool.query<{ tablename: string }>(
-      "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE 'pl_test%' ORDER BY 1",
+      "SELECT tablename FROM pg_tables WHERE schemaname = current_schema() AND tablename LIKE 'pl_test%' ORDER BY 1",
     );
     return res.rows.map((row) => row.tablename);
   }
 
-  beforeAll(() => {
-    production = new pg.Pool({ connectionString: urls.production });
-    demo = new pg.Pool({ connectionString: urls.demo });
+  // Schéma à part : ces tests recréent pl_migrations sans toucher aux tables des autres tests.
+  const SCHEMA = 'pl_migrate_test';
+  const pool = (url: string | undefined) =>
+    new pg.Pool({ connectionString: url, options: `-c search_path=${SCHEMA}` });
+
+  beforeAll(async () => {
+    production = pool(urls.production);
+    demo = pool(urls.demo);
+    for (const db of [production, demo]) await db.query(`CREATE SCHEMA IF NOT EXISTS ${SCHEMA}`);
   });
 
   afterAll(async () => {
-    await Promise.all([reset(production), reset(demo)]);
+    for (const db of [production, demo]) await db.query(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`);
     await Promise.all([production.end(), demo.end()]);
   });
 

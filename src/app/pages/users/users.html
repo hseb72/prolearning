@@ -1,0 +1,79 @@
+<h1>{{ labels.title }}</h1>
+<p>{{ labels.intro }}</p>
+@if (demo()) {
+  <p class="message">{{ labels.demoNote }}</p>
+}
+
+<div class="status" aria-live="polite">
+  @if (status(); as status) {
+    <p
+      class="message"
+      [class.success]="status.kind === 'success'"
+      [class.error]="status.kind === 'error'"
+    >
+      {{ status.text }}
+    </p>
+  }
+</div>
+
+@if (users.isLoading() && !users.hasValue()) {
+  <p role="status">{{ labels.loading }}</p>
+} @else if (users.error()) {
+  <p class="message error" role="alert">{{ labels.loadFailed }}</p>
+} @else {
+  <table class="users">
+    <caption class="visually-hidden">
+      {{
+        labels.title
+      }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ labels.name }}</th>
+        <th scope="col">{{ labels.role }}</th>
+        <th scope="col">{{ labels.manager }}</th>
+        <th scope="col">{{ labels.lastLogin }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (user of users.value(); track user.id) {
+        <tr>
+          <th scope="row">
+            <span class="name">{{ user.displayName }}</span>
+            <span class="email">{{ user.email }}</span>
+          </th>
+          <td [attr.data-label]="labels.role">
+            <select
+              [attr.aria-label]="labels.roleOf(user.displayName)"
+              (change)="changeRole(user, $event)"
+            >
+              @for (role of roles; track role) {
+                <option [value]="role" [selected]="role === user.role">
+                  {{ roleLabels[role] }}
+                </option>
+              }
+            </select>
+          </td>
+          <td [attr.data-label]="labels.manager">
+            <select
+              [attr.aria-label]="labels.managerOf(user.displayName)"
+              (change)="changeManager(user, $event)"
+            >
+              <option value="" [selected]="user.managerId === null">{{ labels.noManager }}</option>
+              @for (manager of managers(); track manager.id) {
+                @if (manager.id !== user.id) {
+                  <option [value]="manager.id" [selected]="manager.id === user.managerId">
+                    {{ manager.displayName }}
+                  </option>
+                }
+              }
+            </select>
+          </td>
+          <td [attr.data-label]="labels.lastLogin">
+            {{ user.lastLoginAt ? (user.lastLoginAt | date: 'short') : labels.never }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

@@ -7,6 +7,7 @@ const executablePath = process.env['PLAYWRIGHT_CHROMIUM_PATH'] || undefined;
 
 export default defineConfig({
   testDir: 'e2e',
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: Boolean(process.env['CI']),
   retries: 0,
@@ -39,6 +40,8 @@ export default defineConfig({
         DATABASE_URL_PRODUCTION: process.env['E2E_DATABASE_URL_PRODUCTION'] ?? '',
         DATABASE_URL_DEMO: process.env['E2E_DATABASE_URL_DEMO'] ?? '',
         LOG_LEVEL: 'warn',
+        AUTH_DEV_LOGIN: 'true',
+        BOOTSTRAP_ADMIN_EMAILS: 'admin@soredi.example',
       },
     },
     {

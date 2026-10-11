@@ -1,6 +1,9 @@
 import { buildApp } from './app.js';
+import { OidcLogin } from './auth/oidc.js';
+import { purgeExpired } from './auth/sessions.js';
 import { loadConfig } from './config.js';
 import { closeDatabases, createDatabases } from './databases.js';
+import { ensureDemoAccounts } from './demo.js';
 import { migrateAll } from './migrate.js';
 
 const config = loadConfig();
@@ -14,11 +17,36 @@ for (const [space, names] of Object.entries(applied)) {
       : `Base ${space} : aucune migration à appliquer`,
   );
 }
+const created = await ensureDemoAccounts(databases.demo);
+if (created) console.log(`Base demo : ${created} comptes fictifs créés`);
 
-const app = buildApp({ databases, logLevel: config.LOG_LEVEL });
+const app = buildApp({
+  databases,
+  logLevel: config.LOG_LEVEL,
+  auth: {
+    appUrl: config.APP_URL,
+    sessionDays: config.SESSION_DAYS,
+    devLogin: config.AUTH_DEV_LOGIN,
+    bootstrapAdmins: config.BOOTSTRAP_ADMIN_EMAILS,
+    oidc: config.oidc
+      ? new OidcLogin(config.oidc, new URL('/api/auth/callback', config.APP_URL).href, {
+          allowInsecureIssuer: config.NODE_ENV !== 'production',
+        })
+      : null,
+  },
+});
+
+// Sessions et connexions expirées : purgées toutes les heures (minimisation des données).
+const purge = setInterval(
+  () =>
+    void purgeExpired(databases.production).catch((err) => app.log.warn({ err }, 'Purge en échec')),
+  3600_000,
+);
+purge.unref();
 
 async function shutdown(signal: string): Promise<void> {
   app.log.info(`${signal} reçu : arrêt en cours`);
+  clearInterval(purge);
   await app.close();
   await closeDatabases(databases);
   process.exit(0);

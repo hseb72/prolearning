@@ -1,0 +1,42 @@
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--gutter);
+  background: var(--color-banner-production-bg);
+  color: var(--color-banner-production-text);
+
+  &.demo {
+    background: var(--color-banner-demo-bg);
+    color: var(--color-banner-demo-text);
+    // Rayures discrètes : la démonstration se reconnaît aussi sans la couleur.
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent 0 12px,
+      rgba(20, 33, 61, 0.08) 12px 24px
+    );
+  }
+}
+
+.banner-title {
+  margin: 0;
+}
+
+.banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+
+  select {
+    max-width: 100%;
+  }
+}
+
+.banner-error {
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 600;
+}

@@ -1,4 +1,7 @@
 <h1>{{ labels.title }}</h1>
+@if (greeting(); as greeting) {
+  <p class="greeting">{{ greeting }}</p>
+}
 <p class="intro">{{ labels.intro }}</p>
 
 <section class="health" aria-labelledby="health-heading">

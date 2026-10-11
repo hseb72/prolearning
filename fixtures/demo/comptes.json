@@ -1,0 +1,10 @@
+{
+  "description": "Comptes fictifs de l'espace démonstration. L'administrateur joue leur rôle pour présenter la plateforme. Aucun ne peut se connecter.",
+  "comptes": [
+    { "cle": "admin", "nom": "Alice Martin", "email": "alice.martin@demo.invalid", "role": "admin" },
+    { "cle": "formation", "nom": "Bruno Lefèvre", "email": "bruno.lefevre@demo.invalid", "role": "training" },
+    { "cle": "manager", "nom": "Chloé Bernard", "email": "chloe.bernard@demo.invalid", "role": "manager" },
+    { "cle": "collab1", "nom": "David Moreau", "email": "david.moreau@demo.invalid", "role": "employee", "manager": "manager" },
+    { "cle": "collab2", "nom": "Emma Petit", "email": "emma.petit@demo.invalid", "role": "employee", "manager": "manager" }
+  ]
+}

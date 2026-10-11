@@ -76,7 +76,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 
 1. **Hébergement** : cible définitive sur le cluster décrit dans [`hseb72/homelab-platform`](https://github.com/hseb72/homelab-platform), en suivant le **pattern `shared`** de [`hseb72/platform-patterns`](https://github.com/hseb72/platform-patterns) (chart `app` publié en OCI, version épinglée). L'application est un **locataire** du socle : PostgreSQL, MinIO et Kong mutualisés, ressources déclarées côté socle (issue « Nouveau locataire »), secrets créés hors Git. Le protocole à suivre est `homelab-platform/CONSUMING.md` ; le déploiement de `hseb72/treasurehunters` (`deploy/`) sert de modèle, y compris pour les écarts connus entre le chart `app` 0.4.0 et le socle (`HTTPRoute` et provisionnement du chart désactivés, Ingress `kong` et `nginx` en manifestes locaux).
    - Front : `prolearning.crealcs.com`. API : `api.prolearning.crealcs.com`, exposée via Kong ; le front relaie `/api` vers Kong (même origine, pas de CORS).
-   - SSO : OIDC de Soredi.
+   - SSO : Keycloak de Soredi, émetteur OIDC `https://sso.crealcs.com/realms/soredi`. Le client OIDC est déclaré par le porteur du projet, qui fournit l'identifiant et le secret (secret créé hors Git, jamais versionné).
    - MinIO (fichiers déposés, images des formations) : demandé au socle dès que nécessaire, pas avant.
 2. **Pile technique** : la même que les autres applications du cluster (modèle : `treasurehunters`). TypeScript de bout en bout ; **front Angular** servi par nginx ; **API Node.js (Fastify)** accessible via Kong ; PostgreSQL (`pg`, migrations SQL versionnées appliquées au démarrage sous verrou consultatif) ; validation par `zod` ; paquet `shared/` commun au front et à l'API ; Vitest ; Playwright pour les tests de bout en bout. Images sur GHCR, déploiement Argo CD.
 3. **Isolation des espaces** : **une base PostgreSQL par espace** (`prolearning` pour la production, `prolearning_demo` pour la démonstration), donc deux locataires du socle, chacun avec son rôle. Aucune requête ne peut joindre les deux bases. La publication démo → production passe par l'export puis l'import au format d'échange.
@@ -85,17 +85,20 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 
 6. **Une seule installation** du front et de l'API pour les deux espaces : l'API ouvre une connexion par base (`server/src/databases.ts`, seul module autorisé à le faire) et choisit la base à chaque requête. Un non-administrateur est toujours servi par la production.
 7. **Démonstration par jeu de rôle** : dans l'espace démonstration, l'administrateur choisit un compte fictif et **joue son rôle** (collaborateur, manager, équipe formation ou administrateur) pour montrer et expliquer les fonctionnalités. Pas de mot de passe ni de compte SSO pour ces comptes fictifs ; le bandeau de démonstration indique le rôle joué. Ce jeu de rôle n'existe pas en production.
+8. **Rôles gérés dans l'application (RBAC)** : Keycloak ne sert qu'à prouver l'identité (`sub`, e-mail, nom). Les rôles (collaborateur, manager, équipe formation, administrateur) et le rattachement de chaque collaborateur à son manager sont tenus dans l'application par les administrateurs. Les premiers administrateurs sont désignés par leur e-mail dans la configuration (`BOOTSTRAP_ADMIN_EMAILS`).
 
 ## Structure du dépôt
 
 | Dossier | Contenu |
 |---|---|
 | `src/` | Front Angular (composants autonomes, signaux, sans zone.js). Textes d'interface réunis dans `src/app/labels.ts`. |
-| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases. |
+| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). |
 | `shared/` | Code commun au front et à l'API (types, règles). Imports relatifs suffixés `.js`. |
 | `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |
 | `e2e/` | Tests Playwright (bureau et écran de 375 px). |
 | `docker/` | Images `api` (Node 24, non-root) et `web` (nginx non privilégié, relais `/api` vers Kong). |
+| `fixtures/demo/` | Comptes fictifs de l'espace démonstration, chargés au démarrage si la base démo est vide. |
+| `docs/keycloak.md` | Déclaration du client Keycloak et configuration du SSO. |
 
 ## Développer
 
@@ -104,6 +107,7 @@ Node 24 (`.nvmrc`). Deux bases PostgreSQL locales, une par espace.
 ```bash
 npm ci && npm ci --prefix server
 export DATABASE_URL_PRODUCTION=postgres://…/prolearning DATABASE_URL_DEMO=postgres://…/prolearning_demo
+export AUTH_DEV_LOGIN=true BOOTSTRAP_ADMIN_EMAILS=moi@soredi.example   # connexion sans Keycloak
 npm run server:dev            # API sur :5080, migrations appliquées aux deux bases
 npm start                     # front sur :4200, /api relayé vers :5080
 ```
