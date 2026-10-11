@@ -84,6 +84,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 5. **Visibilité des résultats** des parcours en ligne : **l'apprenant seul**. Il peut choisir de publier sa réussite et ses badges à son management ou à la communauté ; rien n'est publié sans son action.
 
 6. **Une seule installation** du front et de l'API pour les deux espaces : l'API ouvre une connexion par base (`server/src/databases.ts`, seul module autorisé à le faire) et choisit la base à chaque requête. Un non-administrateur est toujours servi par la production.
+7. **Démonstration par jeu de rôle** : dans l'espace démonstration, l'administrateur choisit un compte fictif et **joue son rôle** (collaborateur, manager, équipe formation ou administrateur) pour montrer et expliquer les fonctionnalités. Pas de mot de passe ni de compte SSO pour ces comptes fictifs ; le bandeau de démonstration indique le rôle joué. Ce jeu de rôle n'existe pas en production.
 
 ## Structure du dépôt
 

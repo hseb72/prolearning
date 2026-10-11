@@ -127,7 +127,9 @@ jobs:
         run: |
           docker run -d --name web -p 8080:8080 -e DNS_RESOLVER=127.0.0.11 prolearning-web:ci
           for i in $(seq 1 20); do curl -fsS localhost:8080/healthz && break; sleep 1; done
-          curl -fsS localhost:8080/ | grep -q '<html lang="fr">'
+          curl -fsS localhost:8080/healthz
+          # Angular complète la balise (dir="ltr"…) : on ne vérifie que la langue.
+          curl -fsS localhost:8080/ | grep -q '<html lang="fr"'
           curl -fsS localhost:8080/une/route/du/front | grep -q '<app-root>'
           docker logs web
       - name: L'API refuse de démarrer sans configuration, avec un message explicite
