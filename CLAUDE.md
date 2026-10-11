@@ -70,15 +70,20 @@ Sécurité de l'import : markdown sans HTML brut et nettoyé, SVG nettoyés, lie
 - Connexion : prévoir le SSO d'entreprise (OIDC) ; une connexion locale suffit pour le pilote si le SSO n'est pas prêt.
 - Marque : identité 3S - Pro Learning (bleu nuit #14213D, orange #E07A2E / #B5561A, fond #F7F5F0 ; titres Source Serif 4, texte IBM Plex Sans), thèmes clair et sombre.
 
-## Décisions à prendre au démarrage (à confirmer avec le porteur du projet)
+## Décisions de démarrage
 
-1. **Hébergement** : interne, ou cloud (dans l'Union européenne).
-2. **Pile technique.** Proposition par défaut si rien n'est imposé : TypeScript de bout en bout, Next.js, PostgreSQL, Prisma, Auth.js (OIDC), Vitest et Playwright pour les tests.
-3. **Isolation des espaces** : colonne `space` sur chaque table, ou schéma PostgreSQL par espace.
-4. **Validation manager** obligatoire ou simple information (règle RH).
-5. **Visibilité des résultats** des parcours en ligne (apprenant seul, manager, RH).
+Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe par lui.
 
-Ne pas trancher ces points seul : poser la question, puis consigner la réponse ici.
+1. **Hébergement** : cible définitive sur le cluster décrit dans [`hseb72/homelab-platform`](https://github.com/hseb72/homelab-platform), en suivant le **pattern `shared`** de [`hseb72/platform-patterns`](https://github.com/hseb72/platform-patterns) (chart `app` publié en OCI, version épinglée). L'application est un **locataire** du socle : PostgreSQL, MinIO et Kong mutualisés, ressources déclarées côté socle (issue « Nouveau locataire »), secrets créés hors Git. Le protocole à suivre est `homelab-platform/CONSUMING.md` ; le déploiement de `hseb72/treasurehunters` (`deploy/`) sert de modèle, y compris pour les écarts connus entre le chart `app` 0.4.0 et le socle (`HTTPRoute` et provisionnement du chart désactivés, Ingress `kong` et `nginx` en manifestes locaux).
+   - Front : `prolearning.crealcs.com`. API exposée via Kong.
+   - SSO : OIDC de Soredi.
+   - MinIO (fichiers déposés, images des formations) : demandé au socle dès que nécessaire, pas avant.
+2. **Pile technique** : la même que les autres applications du cluster (modèle : `treasurehunters`). TypeScript de bout en bout ; **front Angular** servi par nginx ; **API Node.js (Fastify)** accessible via Kong ; PostgreSQL (`pg`, migrations SQL versionnées appliquées au démarrage sous verrou consultatif) ; validation par `zod` ; paquet `shared/` commun au front et à l'API ; Vitest ; Playwright pour les tests de bout en bout. Images sur GHCR, déploiement Argo CD.
+3. **Isolation des espaces** : **une base PostgreSQL par espace** (`prolearning` pour la production, `prolearning_demo` pour la démonstration), donc deux locataires du socle, chacun avec son rôle. Aucune requête ne peut joindre les deux bases. La publication démo → production passe par l'export puis l'import au format d'échange.
+4. **Validation manager** : obligatoire pour les inscriptions aux **sessions en direct** (à distance ou sur site). Aucune validation pour les **parcours en ligne en autonomie**.
+5. **Visibilité des résultats** des parcours en ligne : **l'apprenant seul**. Il peut choisir de publier sa réussite et ses badges à son management ou à la communauté ; rien n'est publié sans son action.
+
+Point encore ouvert : une seule installation du front et de l'API qui sert les deux bases (recommandé), ou une installation par espace.
 
 ## Ordre de réalisation proposé pour le pilote
 
