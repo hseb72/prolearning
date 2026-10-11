@@ -1,0 +1,7 @@
+<h1>{{ labels.title }}</h1>
+<p class="intro">{{ labels.intro }}</p>
+
+<section class="health" aria-labelledby="health-heading">
+  <h2 id="health-heading">{{ labels.healthHeading }}</h2>
+  <p class="health-state" [attr.data-state]="state()" role="status">{{ stateText() }}</p>
+</section>

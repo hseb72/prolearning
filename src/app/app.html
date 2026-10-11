@@ -1,0 +1,19 @@
+<a class="skip-link" href="#contenu">{{ labels.skipToContent }}</a>
+
+<header class="site-header">
+  <a class="brand" routerLink="/">
+    <span class="brand-mark" aria-hidden="true">3S</span>
+    <span class="brand-text">
+      <span class="brand-name">{{ labels.name }}</span>
+      <span class="brand-tagline">{{ labels.tagline }}</span>
+    </span>
+  </a>
+</header>
+
+<main id="contenu" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer class="site-footer">
+  <p>{{ labels.footer }}</p>
+</footer>

@@ -75,7 +75,7 @@ Sécurité de l'import : markdown sans HTML brut et nettoyé, SVG nettoyés, lie
 Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe par lui.
 
 1. **Hébergement** : cible définitive sur le cluster décrit dans [`hseb72/homelab-platform`](https://github.com/hseb72/homelab-platform), en suivant le **pattern `shared`** de [`hseb72/platform-patterns`](https://github.com/hseb72/platform-patterns) (chart `app` publié en OCI, version épinglée). L'application est un **locataire** du socle : PostgreSQL, MinIO et Kong mutualisés, ressources déclarées côté socle (issue « Nouveau locataire »), secrets créés hors Git. Le protocole à suivre est `homelab-platform/CONSUMING.md` ; le déploiement de `hseb72/treasurehunters` (`deploy/`) sert de modèle, y compris pour les écarts connus entre le chart `app` 0.4.0 et le socle (`HTTPRoute` et provisionnement du chart désactivés, Ingress `kong` et `nginx` en manifestes locaux).
-   - Front : `prolearning.crealcs.com`. API exposée via Kong.
+   - Front : `prolearning.crealcs.com`. API : `api.prolearning.crealcs.com`, exposée via Kong ; le front relaie `/api` vers Kong (même origine, pas de CORS).
    - SSO : OIDC de Soredi.
    - MinIO (fichiers déposés, images des formations) : demandé au socle dès que nécessaire, pas avant.
 2. **Pile technique** : la même que les autres applications du cluster (modèle : `treasurehunters`). TypeScript de bout en bout ; **front Angular** servi par nginx ; **API Node.js (Fastify)** accessible via Kong ; PostgreSQL (`pg`, migrations SQL versionnées appliquées au démarrage sous verrou consultatif) ; validation par `zod` ; paquet `shared/` commun au front et à l'API ; Vitest ; Playwright pour les tests de bout en bout. Images sur GHCR, déploiement Argo CD.
@@ -83,7 +83,38 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 4. **Validation manager** : obligatoire pour les inscriptions aux **sessions en direct** (à distance ou sur site). Aucune validation pour les **parcours en ligne en autonomie**.
 5. **Visibilité des résultats** des parcours en ligne : **l'apprenant seul**. Il peut choisir de publier sa réussite et ses badges à son management ou à la communauté ; rien n'est publié sans son action.
 
-Point encore ouvert : une seule installation du front et de l'API qui sert les deux bases (recommandé), ou une installation par espace.
+6. **Une seule installation** du front et de l'API pour les deux espaces : l'API ouvre une connexion par base (`server/src/databases.ts`, seul module autorisé à le faire) et choisit la base à chaque requête. Un non-administrateur est toujours servi par la production.
+
+## Structure du dépôt
+
+| Dossier | Contenu |
+|---|---|
+| `src/` | Front Angular (composants autonomes, signaux, sans zone.js). Textes d'interface réunis dans `src/app/labels.ts`. |
+| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases. |
+| `shared/` | Code commun au front et à l'API (types, règles). Imports relatifs suffixés `.js`. |
+| `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |
+| `e2e/` | Tests Playwright (bureau et écran de 375 px). |
+| `docker/` | Images `api` (Node 24, non-root) et `web` (nginx non privilégié, relais `/api` vers Kong). |
+
+## Développer
+
+Node 24 (`.nvmrc`). Deux bases PostgreSQL locales, une par espace.
+
+```bash
+npm ci && npm ci --prefix server
+export DATABASE_URL_PRODUCTION=postgres://…/prolearning DATABASE_URL_DEMO=postgres://…/prolearning_demo
+npm run server:dev            # API sur :5080, migrations appliquées aux deux bases
+npm start                     # front sur :4200, /api relayé vers :5080
+```
+
+Vérifications (les mêmes qu'en CI) :
+
+```bash
+npm run format:check && npm test && npm run build && npm run typecheck:e2e
+(cd server && npm run typecheck && npm test)   # TEST_DATABASE_URL_PRODUCTION / TEST_DATABASE_URL_DEMO
+npm run e2e                   # E2E_DATABASE_URL_PRODUCTION / E2E_DATABASE_URL_DEMO ; PLAYWRIGHT_CHROMIUM_PATH facultatif
+npm run valider -- fixtures/formations/togaf10-m1.formation.json
+```
 
 ## Ordre de réalisation proposé pour le pilote
 

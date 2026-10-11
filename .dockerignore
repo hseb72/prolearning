@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+.git
+.angular
+.github
+docs
+fixtures
+tools
+e2e
+server/test
+**/*.spec.ts
+playwright-report
+test-results
