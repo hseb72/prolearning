@@ -1,0 +1,704 @@
+{
+  "format": "3s-formation",
+  "formatVersion": "1.0",
+  "id": "togaf10",
+  "version": "0.1.0",
+  "langue": "fr",
+  "titre": "Architecture d'entreprise avec TOGAF 10",
+  "sousTitre": "Parcours en ligne en autonomie",
+  "theme": "Architecture et SI",
+  "resume": "Un parcours en neuf modules pour comprendre et pratiquer l'architecture d'entreprise avec le TOGAF Standard, 10e édition, en suivant le cas fictif d'Atelia. Chaque module associe des leçons, des contenus pour approfondir, des exercices et un quiz.\n\n*Version 0.1 : le module 1 est disponible, les suivants arrivent.*",
+  "public": "Architectes, chefs de projet SI, responsables métier impliqués dans la transformation",
+  "prerequis": "Aucun",
+  "objectifs": [
+    "Expliquer à quoi sert une architecture d'entreprise",
+    "Comprendre la méthode ADM et ses phases",
+    "Produire une vision, une analyse des écarts et une feuille de route",
+    "Mettre en place une gouvernance d'architecture légère"
+  ],
+  "dureeEstimeeMinutes": 540,
+  "niveau": "debutant",
+  "motsCles": [
+    "TOGAF",
+    "architecture d'entreprise",
+    "ADM",
+    "urbanisation",
+    "SI"
+  ],
+  "auteurs": [
+    {
+      "nom": "3S - Pro Learning",
+      "role": "Conception pédagogique"
+    }
+  ],
+  "dateRevision": "2026-10-09",
+  "prochaineRevision": "2027-10-09",
+  "droits": "TOGAF est une marque déposée de The Open Group. Ce parcours est une formation interne 3S - Pro Learning qui présente le standard avec ses propres mots ; il ne reproduit pas le texte du standard. Atelia est une entreprise fictive.",
+  "progression": {
+    "deblocage": "sequentiel",
+    "seuilReussite": 0.75
+  },
+  "references": [
+    {
+      "id": "togaf-accueil",
+      "titre": "TOGAF — page de présentation",
+      "source": "The Open Group",
+      "url": "https://www.opengroup.org/togaf",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Point d'entrée officiel : le standard, la bibliothèque, les certifications.",
+      "consulteLe": "2026-10-09"
+    },
+    {
+      "id": "togaf-telechargement",
+      "titre": "The TOGAF Standard, 10th Edition — téléchargements et licences",
+      "source": "The Open Group",
+      "url": "https://www.opengroup.org/togaf-standard-10th-edition-downloads",
+      "type": "officiel",
+      "acces": "inscription",
+      "langue": "en",
+      "note": "Téléchargement gratuit pour un usage non commercial, après inscription ; les conditions d'usage commercial y sont décrites.",
+      "consulteLe": "2026-10-09"
+    },
+    {
+      "id": "togaf-bibliotheque",
+      "titre": "TOGAF Library",
+      "source": "The Open Group",
+      "url": "https://publications.opengroup.org/togaf-library",
+      "type": "officiel",
+      "acces": "inscription",
+      "langue": "en",
+      "note": "La collection des guides de série et documents complémentaires.",
+      "consulteLe": "2026-10-09"
+    },
+    {
+      "id": "togaf-certifications",
+      "titre": "TOGAF Certification Portfolio",
+      "source": "The Open Group",
+      "url": "https://www.opengroup.org/certifications/togaf-certification-portfolio",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Les certifications TOGAF existantes, dont Enterprise Architecture Foundation et Practitioner.",
+      "consulteLe": "2026-10-09"
+    },
+    {
+      "id": "iso-42010",
+      "titre": "ISO/IEC/IEEE 42010:2022 — Software, systems and enterprise — Architecture description",
+      "source": "ISO",
+      "url": "https://www.iso.org/standard/74393.html",
+      "type": "norme",
+      "acces": "payant",
+      "langue": "en",
+      "note": "La norme internationale sur la description d'architecture, dont TOGAF reprend la définition.",
+      "consulteLe": "2026-10-09"
+    }
+  ],
+  "glossaire": [
+    {
+      "terme": "architecture d'entreprise",
+      "definition": "Démarche qui décrit l'existant, la cible et le chemin entre les deux, pour relier la stratégie aux changements concrets de l'organisation et de son système d'information."
+    },
+    {
+      "terme": "BDAT",
+      "definition": "Moyen mnémotechnique des quatre domaines d'architecture : *Business* (métier), *Data* (données), *Application*, *Technology*."
+    },
+    {
+      "terme": "ADM",
+      "definition": "*Architecture Development Method* : la méthode de TOGAF, un cycle de phases pour développer et faire évoluer une architecture. Elle est présentée au module 3."
+    },
+    {
+      "terme": "contenu fondamental",
+      "definition": "Les six documents du TOGAF Standard, 10e édition, qui décrivent le cadre et la méthode, et changent peu."
+    },
+    {
+      "terme": "guides de série",
+      "definition": "Documents complémentaires du TOGAF Standard, plus pratiques, qui évoluent plus souvent que le contenu fondamental (agilité, capacités métier, sécurité…)."
+    },
+    {
+      "terme": "The Open Group",
+      "definition": "Consortium international qui publie et fait évoluer le standard TOGAF, et gère les certifications associées.",
+      "references": [
+        "togaf-accueil"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "m1-pourquoi-ae",
+      "titre": "Pourquoi l'architecture d'entreprise ?",
+      "resume": "Le problème que résout l'architecture d'entreprise, ses quatre domaines, et ce qu'apporte TOGAF 10. On découvre aussi Atelia, le cas qui nous suivra tout au long du parcours.",
+      "objectifs": [
+        "Expliquer à quoi sert une architecture d'entreprise",
+        "Nommer les quatre domaines d'architecture",
+        "Situer TOGAF 10 et sa structure"
+      ],
+      "dureeEstimeeMinutes": 55,
+      "activites": [
+        {
+          "id": "probleme",
+          "type": "lecon",
+          "titre": "Le problème : chaque projet optimise dans son coin",
+          "dureeEstimeeMinutes": 7,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Dans la plupart des organisations, le système d'information s'est construit **projet après projet**. Chaque projet a répondu à un besoin réel, avec un budget, un délai et une équipe. Pris un par un, ces projets sont souvent réussis.\n\nLe problème apparaît quand on regarde l'ensemble. Personne n'avait pour mission de vérifier que les projets s'emboîtaient bien, ni qu'ils allaient tous dans la même direction. Au fil des années, on voit apparaître quatre symptômes :\n\n| Symptôme | À quoi on le reconnaît |\n|---|---|\n| **Doublons** | Plusieurs applications font la même chose, chacune avec ses propres données. |\n| **Incohérences** | Le même client a trois adresses différentes selon le système consulté. |\n| **Dépendances cachées** | Un projet découvre tard qu'il casse une interface utilisée par un autre. |\n| **Investissements flous** | On peine à relier une dépense informatique à un objectif de l'entreprise. |"
+            },
+            {
+              "type": "encadre",
+              "variante": "attention",
+              "markdown": "Ces symptômes ne viennent pas de mauvais projets. Ils viennent de l'**absence d'un cadre commun entre les projets** : chacun optimise son périmètre, personne n'optimise l'ensemble.",
+              "titre": "Ce n'est pas une question de compétence"
+            },
+            {
+              "type": "encadre",
+              "variante": "exemple",
+              "markdown": "Un service commercial lance un outil de gestion des clients. Deux ans plus tard, le service après-vente choisit le sien, mieux adapté à ses besoins. Les deux outils sont bons. Mais il faut désormais saisir chaque client deux fois, et personne ne sait lequel des deux fait foi quand les informations diffèrent."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Pourquoi personne ne voit l'ensemble ?",
+              "markdown": "Trois raisons reviennent souvent :\n\n- **Le découpage budgétaire.** Les budgets sont attribués par projet ou par direction. Un projet n'a ni l'argent ni le mandat pour traiter un problème qui le dépasse.\n- **Le temps.** Le système d'information vit plus longtemps que les équipes : les choix d'hier sont faits par des personnes parties depuis, sans trace de leurs raisons.\n- **L'absence de carte.** Sans description partagée de ce qui existe, chaque équipe découvre l'existant au moment où elle le touche.\n\nL'architecture d'entreprise répond précisément à ces trois points : elle donne un mandat transverse, elle conserve les décisions et leurs raisons, et elle tient la carte à jour."
+            }
+          ]
+        },
+        {
+          "id": "definition",
+          "type": "lecon",
+          "titre": "Ce qu'est une architecture d'entreprise",
+          "dureeEstimeeMinutes": 8,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "L'architecture d'entreprise relie **la stratégie** aux **changements concrets** de l'organisation et de son système d'information. Concrètement, elle décrit trois choses :\n\n1. **L'existant** : comment l'organisation fonctionne aujourd'hui, avec ses processus, ses données, ses applications et sa technologie.\n2. **La cible** : comment elle devra fonctionner pour atteindre ses objectifs.\n3. **Le chemin** : les étapes pour passer de l'un à l'autre, dans un ordre réaliste."
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "Une architecture qui ne décrit que la cible reste un dessin. C'est **le chemin**, autrement dit la feuille de route, qui la rend utile aux décideurs et aux projets."
+            },
+            {
+              "type": "encadre",
+              "variante": "definition",
+              "markdown": "TOGAF donne deux sens au mot *architecture*, selon le contexte :\n\n- les **concepts ou propriétés fondamentaux d'un système** dans son environnement, tels qu'ils se traduisent dans ses éléments, leurs relations, et les principes de sa conception et de son évolution ;\n- la **structure des composants**, leurs relations, et les **principes et lignes directrices** qui gouvernent leur conception et leur évolution dans le temps.",
+              "titre": "La définition de TOGAF"
+            },
+            {
+              "type": "texte",
+              "markdown": "Le second sens est important : une architecture ne se limite pas à des schémas. Elle comprend aussi des **règles** (on les appellera *principes* au module 4) qui orientent les décisions futures."
+            },
+            {
+              "type": "approfondir",
+              "titre": "D'où vient cette définition ?",
+              "markdown": "Le premier sens vient de la norme internationale **ISO/IEC/IEEE 42010**, consacrée à la description d'architecture. TOGAF la reprend telle quelle et y ajoute le second sens, plus concret, centré sur les composants et les règles qui encadrent leur évolution.\n\nLa norme ne dit pas *comment* construire une architecture : elle précise comment la **décrire** (parties prenantes, préoccupations, points de vue, vues). TOGAF, lui, apporte une méthode. Les notions de vue et de point de vue sont détaillées au module 8.",
+              "references": [
+                "iso-42010"
+              ]
+            },
+            {
+              "type": "approfondir",
+              "titre": "Architecture d'entreprise et urbanisation du SI",
+              "markdown": "En France, on parle souvent d'**urbanisation du système d'information**. La démarche utilise la métaphore de la ville : on découpe le SI en zones, quartiers et îlots, et on fait évoluer chaque partie sans remettre en cause l'ensemble.\n\nLes deux démarches se recouvrent largement. L'urbanisation met surtout l'accent sur le découpage du SI et ses règles d'échange ; l'architecture d'entreprise englobe aussi la stratégie, l'organisation et la conduite du changement. Si votre organisation a déjà une cartographie urbanisée, c'est un excellent point de départ pour décrire l'existant."
+            }
+          ]
+        },
+        {
+          "id": "entreprise",
+          "type": "lecon",
+          "titre": "L'« entreprise » : un périmètre à choisir",
+          "dureeEstimeeMinutes": 5,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Pour TOGAF, l'**entreprise** est le niveau le plus élevé de description d'une organisation, avec l'ensemble de ses missions et fonctions. Le mot ne désigne donc pas forcément une société au sens juridique.\n\nL'entreprise, c'est **le périmètre qu'on décide d'architecturer**. Selon le besoin, ce peut être :\n\n- un groupe et toutes ses filiales ;\n- une seule direction métier, par exemple la logistique ;\n- un écosystème qui inclut des fournisseurs et des partenaires."
+            },
+            {
+              "type": "encadre",
+              "variante": "attention",
+              "markdown": "Un contresens fréquent consiste à croire qu'une architecture d'entreprise doit couvrir *toute* la société. C'est rarement souhaitable au départ. On fixe le périmètre au début de chaque démarche, en fonction de l'objectif, de l'autorité de l'équipe et des moyens disponibles.",
+              "titre": "« Entreprise » ne veut pas dire « toute la société »"
+            },
+            {
+              "type": "encadre",
+              "variante": "exemple",
+              "markdown": "Une mutuelle veut simplifier le parcours d'adhésion de ses clients. L'« entreprise » à architecturer peut alors se limiter au parcours d'adhésion : les équipes commerciales, le service de gestion, les partenaires courtiers et les applications qu'ils utilisent. Le reste de la mutuelle est hors périmètre, ce qui n'empêche pas d'en tenir compte comme contexte."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Comment délimiter le périmètre ?",
+              "markdown": "TOGAF propose quatre dimensions pour délimiter le périmètre d'une architecture. Elles sont détaillées au module 3 :\n\n- l'**étendue** : quelle partie de l'organisation est concernée ;\n- la **profondeur** : jusqu'à quel niveau de détail on descend ;\n- la **période** : à quel horizon de temps on se place ;\n- les **domaines** : métier, données, applications, technologie (voir la leçon suivante)."
+            }
+          ]
+        },
+        {
+          "id": "domaines",
+          "type": "lecon",
+          "titre": "Les quatre domaines d'architecture",
+          "dureeEstimeeMinutes": 7,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Pour ne rien oublier, TOGAF décrit une architecture selon **quatre domaines**. On les retient souvent avec l'acronyme anglais **BDAT** :\n\n| Domaine | Ce qu'il décrit | Exemples de questions |\n|---|---|---|\n| **Métier** (*Business*) | La stratégie, les capacités, l'organisation, les processus, les chaînes de valeur | Que doit savoir faire l'entreprise ? Qui fait quoi ? |\n| **Données** (*Data*) | La structure des données logiques et physiques, et leur gestion | Quelles informations sont nécessaires ? Qui en est responsable ? |\n| **Applications** (*Application*) | Les applications, leurs interactions et les processus qu'elles servent | Quel logiciel soutient quel processus ? Comment s'échangent-ils les données ? |\n| **Technologie** (*Technology*) | Les plateformes, le réseau, l'hébergement, le cloud, les logiciels d'infrastructure | Sur quoi tournent les applications ? Où sont hébergées les données ? |"
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "- **Données + applications** forment ensemble les **architectures des systèmes d'information**.\n- Le **métier vient toujours en premier** : il donne leur raison d'être aux trois autres domaines."
+            },
+            {
+              "type": "texte",
+              "markdown": "Le métier a une place particulière. Une application n'a de valeur que par le processus qu'elle soutient ; une donnée n'a de valeur que par la décision ou l'activité qu'elle permet. C'est pourquoi la méthode de TOGAF traite l'architecture métier avant les autres domaines."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Et la sécurité ?",
+              "markdown": "La sécurité n'est pas un cinquième domaine : elle **traverse les quatre**. Elle concerne le métier (qui a le droit de faire quoi), les données (leur classification et leur protection), les applications (l'authentification, les droits) et la technologie (le réseau, l'hébergement).\n\nLe TOGAF Standard consacre un guide de série à l'intégration du risque et de la sécurité dans l'architecture d'entreprise. Il est disponible dans la bibliothèque TOGAF.",
+              "references": [
+                "togaf-bibliotheque"
+              ]
+            },
+            {
+              "type": "approfondir",
+              "titre": "Ce que TOGAF 10 met en avant pour le métier",
+              "markdown": "La 10e édition insiste sur des outils de description du métier qui sont stables dans le temps :\n\n- les **capacités métier** : ce que l'entreprise doit savoir faire, indépendamment de qui le fait et avec quel outil (par exemple « gérer les stocks ») ;\n- les **chaînes de valeur** : les grandes étapes par lesquelles l'entreprise crée de la valeur pour un client ou une partie prenante.\n\nCes notions font l'objet de guides de série et sont travaillées au module 5.",
+              "references": [
+                "togaf-bibliotheque"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "domaines-exercice",
+          "type": "association",
+          "titre": "Chaque élément dans son domaine",
+          "dureeEstimeeMinutes": 3,
+          "consigne": "Associez chaque élément du système d'Atelia au domaine d'architecture qui le décrit.",
+          "paires": [
+            {
+              "id": "p1",
+              "gauche": "Le processus de retour d'un article en magasin",
+              "droite": "Métier"
+            },
+            {
+              "id": "p2",
+              "gauche": "Le modèle de la fiche client",
+              "droite": "Données"
+            },
+            {
+              "id": "p3",
+              "gauche": "Le logiciel de caisse et ses échanges avec le site web",
+              "droite": "Applications"
+            },
+            {
+              "id": "p4",
+              "gauche": "Les serveurs et le réseau des magasins",
+              "droite": "Technologie"
+            }
+          ],
+          "explication": "Un processus relève du métier, la structure d'une information relève des données, un logiciel et ses échanges relèvent des applications, et ce sur quoi tout cela fonctionne relève de la technologie."
+        },
+        {
+          "id": "togaf10",
+          "type": "lecon",
+          "titre": "TOGAF 10 : un socle stable et des guides pratiques",
+          "dureeEstimeeMinutes": 9,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "**TOGAF** est un standard ouvert d'architecture d'entreprise publié par **The Open Group**, un consortium international d'entreprises, d'administrations et d'éditeurs. La **10e édition** est parue en avril 2022.\n\nSon idée principale : séparer ce qui est stable de ce qui évolue avec les pratiques. Le standard comprend donc deux ensembles."
+            },
+            {
+              "type": "texte",
+              "markdown": "**1. Le contenu fondamental** : six documents qui changent peu.\n\n| Document | Ce qu'on y trouve |\n|---|---|\n| Introduction et concepts clés | Le vocabulaire et les notions de base |\n| La méthode ADM | Le cycle de développement d'une architecture, phase par phase |\n| Les techniques de l'ADM | Des outils pour chaque étape : principes, parties prenantes, analyse des écarts… |\n| Appliquer l'ADM | Comment adapter et itérer la méthode selon le contexte |\n| Le contenu d'architecture | Ce qu'on produit : livrables, artefacts, building blocks |\n| Capacité d'architecture et gouvernance | Comment organiser et piloter la fonction architecture |\n\n**2. Les guides de série** : des documents plus pratiques, qui évoluent plus vite. Ils traitent par exemple des capacités métier et des chaînes de valeur, de l'agilité, de l'entreprise numérique, de la sécurité ou des rôles et compétences."
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "On n'applique jamais TOGAF tel quel. C'est une **boîte à outils à adapter** à la taille, à la culture et aux enjeux de l'organisation. Cette adaptation est même la première étape de la méthode (module 4)."
+            },
+            {
+              "type": "encadre",
+              "variante": "cas",
+              "markdown": "| Sujet | TOGAF 9.2 | TOGAF 10 |\n|---|---|---|\n| Structure | Un document en six parties | Contenu fondamental + guides de série |\n| Méthode ADM | Cycle de phases A à H | Inchangée, appliquée de façon plus itérative |\n| Agilité | Peu traitée | Guides dédiés, ADM en sprints |\n| Métier | Scénarios métier | Capacités, chaînes de valeur, cartographies |\n| Nouvelles notions | — | États d'architecture, niveaux d'abstraction (module 2) |\n\nRien de ce que vous avez appris avec TOGAF 9 n'est devenu faux : le cycle ADM, le continuum, le référentiel et la gouvernance sont conservés.",
+              "titre": "Pour ceux qui connaissent TOGAF 9"
+            },
+            {
+              "type": "approfondir",
+              "titre": "Se procurer le standard",
+              "markdown": "Le TOGAF Standard, 10e édition, se télécharge sur le site de The Open Group. Il est **gratuit pour un usage non commercial**, après inscription. Un usage commercial (par exemple vendre des services ou des formations qui s'appuient sur le standard) relève d'une licence commerciale annuelle. Les conditions exactes sont décrites sur la page de téléchargement.\n\nLa **bibliothèque TOGAF** rassemble les guides de série et les documents complémentaires. Le standard est rédigé en anglais.",
+              "references": [
+                "togaf-telechargement",
+                "togaf-bibliotheque",
+                "togaf-accueil"
+              ]
+            },
+            {
+              "type": "approfondir",
+              "titre": "TOGAF et les autres référentiels",
+              "markdown": "TOGAF n'est pas le seul cadre d'architecture d'entreprise, mais c'est l'un des plus répandus. Il se combine souvent avec :\n\n- **ArchiMate**, un langage de modélisation d'architecture, également publié par The Open Group, qui fournit une notation graphique pour les quatre domaines ;\n- des cadres de gestion des services ou de gouvernance du SI, qui couvrent l'exploitation et le pilotage, là où TOGAF couvre la conception et l'évolution de l'architecture.\n\nL'important n'est pas de choisir un cadre « pur », mais d'assembler ce qui est utile à l'organisation.",
+              "references": [
+                "togaf-accueil"
+              ]
+            },
+            {
+              "type": "approfondir",
+              "titre": "Les certifications",
+              "markdown": "The Open Group propose des certifications individuelles sur TOGAF 10, notamment **TOGAF Enterprise Architecture Foundation** (les bases) et **TOGAF Enterprise Architecture Practitioner** (l'application à des cas). Ce parcours n'est pas une préparation à l'examen, mais il couvre l'essentiel du niveau Foundation. Le module 9 y revient.",
+              "references": [
+                "togaf-certifications"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "atelia",
+          "type": "lecon",
+          "titre": "Le cas fil rouge : Atelia",
+          "dureeEstimeeMinutes": 4,
+          "blocs": [
+            {
+              "type": "encadre",
+              "variante": "cas",
+              "markdown": "**Atelia** est une enseigne fictive de maison et de décoration. Elle nous accompagnera dans tous les modules : à chaque étape de la méthode, on l'appliquera à ce cas.",
+              "titre": "Une entreprise fictive"
+            },
+            {
+              "type": "texte",
+              "markdown": "**La situation aujourd'hui**\n\n- Des magasins et un site de vente en ligne, gérés séparément depuis toujours.\n- Deux systèmes de caisse et trois bases de clients différentes.\n- Un client qui a acheté en ligne ne peut pas rapporter l'article en magasin : le magasin ne voit pas la commande.\n\n**L'ambition de la direction**\n\n- Une vision unique de chaque client, quel que soit le canal.\n- Pouvoir commander en ligne, puis retirer ou retourner en magasin.\n- Un stock visible partout, en temps réel.\n- Des investissements informatiques clairement reliés à cette ambition."
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "Face à ce type de situation, le premier réflexe est souvent de chercher un nouvel outil. Le parcours va montrer pourquoi on commence plutôt par **le métier et la vision** : sans eux, on ne sait pas ce qu'on doit comparer."
+            }
+          ]
+        },
+        {
+          "id": "premier-reflexe",
+          "type": "scenario",
+          "titre": "Atelia : votre premier réflexe",
+          "dureeEstimeeMinutes": 4,
+          "contexte": "Vous venez d'être nommé architecte d'entreprise chez Atelia. Deux décisions vous attendent dès la première semaine.",
+          "debut": "n1",
+          "noeuds": {
+            "n1": {
+              "texte": "Le directeur général vous dit : « Il nous faut un nouveau logiciel de caisse commun aux magasins et au site. Trouvez-le-nous. » Que proposez-vous ?",
+              "choix": [
+                {
+                  "texte": "Lancer tout de suite une consultation auprès des éditeurs",
+                  "points": 0,
+                  "suivant": "n2",
+                  "retour": "C'est le réflexe le plus courant, mais sans besoin clarifié, on ne sait pas quels critères comparer. Le logiciel de caisse n'est peut-être qu'une partie de la réponse."
+                },
+                {
+                  "texte": "Clarifier avec lui l'ambition, les enjeux et les personnes concernées",
+                  "points": 2,
+                  "suivant": "n2",
+                  "retour": "Bon réflexe : partir de la vision métier. L'ambition d'Atelia (un client unique, un stock visible partout) dépasse largement la caisse."
+                },
+                {
+                  "texte": "Commencer par inventorier en détail tout le système actuel",
+                  "points": 1,
+                  "suivant": "n2",
+                  "retour": "Connaître l'existant est utile, mais un inventaire complet prend des mois. On décrit l'existant dans la mesure où il éclaire les décisions."
+                }
+              ]
+            },
+            "n2": {
+              "texte": "Le directeur financier demande qui va décider du périmètre : tout Atelia, ou seulement la vente ?",
+              "choix": [
+                {
+                  "texte": "Tout Atelia, pour ne rien oublier",
+                  "points": 0,
+                  "suivant": "fin",
+                  "retour": "Un périmètre trop large dilue l'effort. L'« entreprise » à architecturer est un choix : ici, la vente et la relation client suffisent pour commencer."
+                },
+                {
+                  "texte": "La vente en magasin et en ligne, avec la relation client et le stock",
+                  "points": 2,
+                  "suivant": "fin",
+                  "retour": "Exactement : un périmètre centré sur l'ambition, que l'on pourra élargir plus tard."
+                }
+              ]
+            }
+          },
+          "paliers": [
+            {
+              "minPoints": 4,
+              "etoiles": 3,
+              "message": "Parfait : vision d'abord, périmètre maîtrisé."
+            },
+            {
+              "minPoints": 2,
+              "etoiles": 2,
+              "message": "Bien vu, avec un détour. Relisez les retours."
+            },
+            {
+              "minPoints": 0,
+              "etoiles": 1,
+              "message": "Rejouez pour tester l'approche par la vision."
+            }
+          ]
+        },
+        {
+          "id": "fiches-m1",
+          "type": "fiches",
+          "titre": "Fiches de révision",
+          "obligatoire": false,
+          "dureeEstimeeMinutes": 3,
+          "cartes": [
+            {
+              "recto": "Les trois choses que décrit une architecture d'entreprise",
+              "verso": "L'existant, la cible, et le chemin entre les deux."
+            },
+            {
+              "recto": "Les quatre domaines d'architecture",
+              "verso": "Métier, données, applications, technologie (BDAT)."
+            },
+            {
+              "recto": "Données + applications =",
+              "verso": "Les architectures des systèmes d'information."
+            },
+            {
+              "recto": "L'« entreprise » pour TOGAF",
+              "verso": "Le périmètre qu'on décide d'architecturer : un groupe, une direction, un écosystème…"
+            },
+            {
+              "recto": "Les deux ensembles du TOGAF Standard, 10e édition",
+              "verso": "Le contenu fondamental (six documents stables) et les guides de série (plus pratiques, évoluent plus vite)."
+            },
+            {
+              "recto": "Qui publie TOGAF ?",
+              "verso": "The Open Group, un consortium international."
+            }
+          ]
+        },
+        {
+          "id": "quiz-m1",
+          "type": "quiz",
+          "titre": "Quiz du module 1",
+          "tirage": 5,
+          "seuil": 0.8,
+          "dureeEstimeeMinutes": 5,
+          "questions": [
+            {
+              "id": "q1",
+              "type": "choix_unique",
+              "enonce": "Que décrit une architecture d'entreprise ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "L'existant, la cible et le chemin entre les deux"
+                },
+                {
+                  "id": "b",
+                  "texte": "Uniquement le système d'information cible"
+                },
+                {
+                  "id": "c",
+                  "texte": "L'organigramme de l'entreprise"
+                },
+                {
+                  "id": "d",
+                  "texte": "La liste des projets en cours"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Une cible sans chemin reste un dessin : c'est la feuille de route vers la cible qui rend l'architecture utile."
+            },
+            {
+              "id": "q2",
+              "type": "choix_unique",
+              "enonce": "Quels sont les quatre domaines d'architecture de TOGAF ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Métier, données, applications, technologie"
+                },
+                {
+                  "id": "b",
+                  "texte": "Stratégie, processus, projets, infrastructure"
+                },
+                {
+                  "id": "c",
+                  "texte": "Métier, sécurité, réseau, cloud"
+                },
+                {
+                  "id": "d",
+                  "texte": "Organisation, finance, informatique, juridique"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "On les résume par BDAT : Business, Data, Application, Technology. La sécurité traverse les quatre."
+            },
+            {
+              "id": "q3",
+              "type": "choix_unique",
+              "enonce": "Pour TOGAF, l'« entreprise » désigne…",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Le périmètre qu'on décide d'architecturer, parfois au-delà d'une seule entité juridique"
+                },
+                {
+                  "id": "b",
+                  "texte": "Toujours la société dans son ensemble"
+                },
+                {
+                  "id": "c",
+                  "texte": "Uniquement la direction des systèmes d'information"
+                },
+                {
+                  "id": "d",
+                  "texte": "La maison mère d'un groupe"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "L'entreprise est un choix de périmètre : un groupe, une direction, ou un écosystème avec ses partenaires."
+            },
+            {
+              "id": "q4",
+              "type": "choix_unique",
+              "enonce": "Comment est organisé le TOGAF Standard, 10e édition ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Un contenu fondamental et des guides de série"
+                },
+                {
+                  "id": "b",
+                  "texte": "Un document unique en six parties"
+                },
+                {
+                  "id": "c",
+                  "texte": "Une liste de bonnes pratiques sans méthode"
+                },
+                {
+                  "id": "d",
+                  "texte": "Un logiciel et ses modèles"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Le contenu fondamental (six documents) change peu ; les guides de série, plus pratiques, évoluent plus vite.",
+              "references": [
+                "togaf-accueil"
+              ]
+            },
+            {
+              "id": "q5",
+              "type": "choix_unique",
+              "enonce": "Données + applications forment…",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Les architectures des systèmes d'information"
+                },
+                {
+                  "id": "b",
+                  "texte": "L'architecture technologique"
+                },
+                {
+                  "id": "c",
+                  "texte": "L'architecture métier"
+                },
+                {
+                  "id": "d",
+                  "texte": "Le référentiel d'architecture"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "C'est le périmètre de la phase C de l'ADM, vue au module 5."
+            },
+            {
+              "id": "q6",
+              "type": "choix_multiple",
+              "enonce": "Lesquels sont des symptômes typiques d'une absence d'architecture d'entreprise ? (plusieurs réponses)",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Plusieurs applications font la même chose"
+                },
+                {
+                  "id": "b",
+                  "texte": "Un même client a plusieurs adresses selon le système"
+                },
+                {
+                  "id": "c",
+                  "texte": "Un projet découvre tard qu'il casse une interface"
+                },
+                {
+                  "id": "d",
+                  "texte": "Un projet est livré en avance"
+                }
+              ],
+              "bonnes": [
+                "a",
+                "b",
+                "c"
+              ],
+              "explication": "Doublons, incohérences et dépendances cachées naissent de l'absence de cadre commun. Un projet livré en avance n'en dit rien."
+            },
+            {
+              "id": "q7",
+              "type": "vrai_faux",
+              "enonce": "TOGAF doit s'appliquer tel quel, sans adaptation, pour être utile.",
+              "options": [
+                {
+                  "id": "vrai",
+                  "texte": "Vrai"
+                },
+                {
+                  "id": "faux",
+                  "texte": "Faux"
+                }
+              ],
+              "bonnes": [
+                "faux"
+              ],
+              "explication": "TOGAF est une boîte à outils qu'on adapte au contexte. L'adaptation fait même partie de la méthode, dès la phase préliminaire."
+            },
+            {
+              "id": "q8",
+              "type": "choix_unique",
+              "enonce": "Qu'est-ce qui n'a pas changé entre TOGAF 9.2 et TOGAF 10 ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Le cycle ADM et ses phases"
+                },
+                {
+                  "id": "b",
+                  "texte": "La structure du document"
+                },
+                {
+                  "id": "c",
+                  "texte": "La place des guides de série"
+                },
+                {
+                  "id": "d",
+                  "texte": "Le traitement de l'agilité"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "La méthode est conservée ; TOGAF 10 réorganise le standard et ajoute des guides et quelques notions."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

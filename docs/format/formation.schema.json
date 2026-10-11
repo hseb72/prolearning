@@ -1,0 +1,1094 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://3s-pro-learning.example/schemas/formation-1.0.json",
+  "title": "Formation 3S - Pro Learning, format 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "formatVersion",
+    "id",
+    "version",
+    "langue",
+    "titre",
+    "theme",
+    "resume",
+    "public",
+    "prerequis",
+    "objectifs",
+    "dureeEstimeeMinutes",
+    "auteurs",
+    "dateRevision",
+    "droits",
+    "progression",
+    "modules"
+  ],
+  "properties": {
+    "format": {
+      "const": "3s-formation"
+    },
+    "formatVersion": {
+      "const": "1.0"
+    },
+    "id": {
+      "$ref": "#/$defs/slug"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "langue": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+    },
+    "titre": {
+      "$ref": "#/$defs/texte"
+    },
+    "sousTitre": {
+      "$ref": "#/$defs/texte"
+    },
+    "theme": {
+      "$ref": "#/$defs/texte"
+    },
+    "resume": {
+      "$ref": "#/$defs/markdown"
+    },
+    "public": {
+      "$ref": "#/$defs/texte"
+    },
+    "prerequis": {
+      "$ref": "#/$defs/texte"
+    },
+    "objectifs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/texte"
+      }
+    },
+    "dureeEstimeeMinutes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "niveau": {
+      "enum": [
+        "debutant",
+        "intermediaire",
+        "avance"
+      ]
+    },
+    "motsCles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/texte"
+      }
+    },
+    "auteurs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "nom"
+        ],
+        "properties": {
+          "nom": {
+            "$ref": "#/$defs/texte"
+          },
+          "role": {
+            "$ref": "#/$defs/texte"
+          }
+        }
+      }
+    },
+    "dateRevision": {
+      "$ref": "#/$defs/date"
+    },
+    "prochaineRevision": {
+      "$ref": "#/$defs/date"
+    },
+    "droits": {
+      "$ref": "#/$defs/markdown"
+    },
+    "progression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deblocage",
+        "seuilReussite"
+      ],
+      "properties": {
+        "deblocage": {
+          "enum": [
+            "sequentiel",
+            "libre"
+          ]
+        },
+        "seuilReussite": {
+          "$ref": "#/$defs/ratio"
+        }
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "glossaire": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "terme",
+          "definition"
+        ],
+        "properties": {
+          "terme": {
+            "$ref": "#/$defs/texte"
+          },
+          "definition": {
+            "$ref": "#/$defs/markdown"
+          },
+          "references": {
+            "$ref": "#/$defs/refIds"
+          }
+        }
+      }
+    },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/module"
+      }
+    }
+  },
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "texte": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "markdown": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "refIds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/slug"
+      }
+    },
+    "chemin": {
+      "type": "string",
+      "pattern": "^assets/[A-Za-z0-9_./-]+\\.(png|jpe?g|webp|svg|pdf)$"
+    },
+    "url": {
+      "type": "string",
+      "pattern": "^https?://"
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "titre",
+        "source",
+        "type",
+        "acces",
+        "langue",
+        "consulteLe"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "source": {
+          "$ref": "#/$defs/texte"
+        },
+        "url": {
+          "$ref": "#/$defs/url"
+        },
+        "type": {
+          "enum": [
+            "officiel",
+            "norme",
+            "article",
+            "livre",
+            "video",
+            "interne"
+          ]
+        },
+        "acces": {
+          "enum": [
+            "libre",
+            "inscription",
+            "payant",
+            "interne"
+          ]
+        },
+        "langue": {
+          "type": "string"
+        },
+        "note": {
+          "$ref": "#/$defs/texte"
+        },
+        "consulteLe": {
+          "$ref": "#/$defs/date"
+        }
+      },
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "officiel",
+              "norme",
+              "article",
+              "video"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "url": true
+        },
+        "required": [
+          "url"
+        ]
+      }
+    },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "titre",
+        "resume",
+        "objectifs",
+        "dureeEstimeeMinutes",
+        "activites"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "resume": {
+          "$ref": "#/$defs/markdown"
+        },
+        "objectifs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/texte"
+          }
+        },
+        "dureeEstimeeMinutes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "activites": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/activite"
+          }
+        }
+      }
+    },
+    "activite": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "titre"
+      ],
+      "properties": {
+        "id": true,
+        "titre": true,
+        "type": {
+          "enum": [
+            "lecon",
+            "diaporama",
+            "quiz",
+            "ordre",
+            "association",
+            "scenario",
+            "fiches"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/lecon"
+        },
+        {
+          "$ref": "#/$defs/diaporama"
+        },
+        {
+          "$ref": "#/$defs/quiz"
+        },
+        {
+          "$ref": "#/$defs/ordre"
+        },
+        {
+          "$ref": "#/$defs/association"
+        },
+        {
+          "$ref": "#/$defs/scenario"
+        },
+        {
+          "$ref": "#/$defs/fiches"
+        }
+      ]
+    },
+    "approfondir": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "titre",
+        "markdown"
+      ],
+      "properties": {
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "markdown": {
+          "$ref": "#/$defs/markdown"
+        },
+        "references": {
+          "$ref": "#/$defs/refIds"
+        }
+      }
+    },
+    "bloc": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "markdown"
+          ],
+          "properties": {
+            "type": {
+              "const": "texte"
+            },
+            "markdown": {
+              "$ref": "#/$defs/markdown"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "variante",
+            "markdown"
+          ],
+          "properties": {
+            "type": {
+              "const": "encadre"
+            },
+            "variante": {
+              "enum": [
+                "a_retenir",
+                "attention",
+                "exemple",
+                "cas",
+                "definition"
+              ]
+            },
+            "titre": {
+              "$ref": "#/$defs/texte"
+            },
+            "markdown": {
+              "$ref": "#/$defs/markdown"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "titre",
+            "markdown"
+          ],
+          "properties": {
+            "type": {
+              "const": "approfondir"
+            },
+            "titre": {
+              "$ref": "#/$defs/texte"
+            },
+            "markdown": {
+              "$ref": "#/$defs/markdown"
+            },
+            "references": {
+              "$ref": "#/$defs/refIds"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "alt"
+          ],
+          "properties": {
+            "type": {
+              "const": "image"
+            },
+            "fichier": {
+              "$ref": "#/$defs/chemin"
+            },
+            "url": {
+              "$ref": "#/$defs/url"
+            },
+            "alt": {
+              "$ref": "#/$defs/texte"
+            },
+            "legende": {
+              "$ref": "#/$defs/texte"
+            }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "fichier": true
+              },
+              "required": [
+                "fichier"
+              ]
+            },
+            {
+              "properties": {
+                "url": true
+              },
+              "required": [
+                "url"
+              ]
+            }
+          ]
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "url",
+            "titre"
+          ],
+          "properties": {
+            "type": {
+              "const": "video"
+            },
+            "url": {
+              "$ref": "#/$defs/url"
+            },
+            "titre": {
+              "$ref": "#/$defs/texte"
+            },
+            "transcription": {
+              "$ref": "#/$defs/markdown"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "ids"
+          ],
+          "properties": {
+            "type": {
+              "const": "references"
+            },
+            "ids": {
+              "$ref": "#/$defs/refIds"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "type": true
+      }
+    },
+    "lecon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "titre",
+        "blocs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "obligatoire": {
+          "$ref": "#/$defs/bool"
+        },
+        "dureeEstimeeMinutes": {
+          "$ref": "#/$defs/duree"
+        },
+        "points": {
+          "$ref": "#/$defs/points"
+        },
+        "type": {
+          "const": "lecon"
+        },
+        "blocs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/bloc"
+          }
+        }
+      }
+    },
+    "diaporama": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "titre",
+        "diapos"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "obligatoire": {
+          "$ref": "#/$defs/bool"
+        },
+        "dureeEstimeeMinutes": {
+          "$ref": "#/$defs/duree"
+        },
+        "points": {
+          "$ref": "#/$defs/points"
+        },
+        "type": {
+          "const": "diaporama"
+        },
+        "diapos": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "image",
+              "alt",
+              "explication"
+            ],
+            "properties": {
+              "image": {
+                "$ref": "#/$defs/chemin"
+              },
+              "alt": {
+                "$ref": "#/$defs/texte"
+              },
+              "titre": {
+                "$ref": "#/$defs/texte"
+              },
+              "explication": {
+                "$ref": "#/$defs/markdown"
+              },
+              "approfondir": {
+                "$ref": "#/$defs/approfondir"
+              }
+            }
+          }
+        }
+      }
+    },
+    "quiz": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "titre",
+        "questions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "obligatoire": {
+          "$ref": "#/$defs/bool"
+        },
+        "dureeEstimeeMinutes": {
+          "$ref": "#/$defs/duree"
+        },
+        "points": {
+          "$ref": "#/$defs/points"
+        },
+        "type": {
+          "const": "quiz"
+        },
+        "seuil": {
+          "$ref": "#/$defs/ratio"
+        },
+        "tirage": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "melangerOptions": {
+          "type": "boolean"
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "type",
+              "enonce",
+              "options",
+              "bonnes",
+              "explication"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/slug"
+              },
+              "type": {
+                "enum": [
+                  "choix_unique",
+                  "choix_multiple",
+                  "vrai_faux"
+                ]
+              },
+              "enonce": {
+                "$ref": "#/$defs/markdown"
+              },
+              "options": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "texte"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/$defs/slug"
+                    },
+                    "texte": {
+                      "$ref": "#/$defs/texte"
+                    }
+                  }
+                }
+              },
+              "bonnes": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/slug"
+                }
+              },
+              "explication": {
+                "$ref": "#/$defs/markdown"
+              },
+              "indice": {
+                "$ref": "#/$defs/texte"
+              },
+              "references": {
+                "$ref": "#/$defs/refIds"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "enum": [
+                        "choix_unique",
+                        "vrai_faux"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "bonnes": {
+                      "maxItems": 1,
+                      "type": "array"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "vrai_faux"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "options": {
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ordre": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "titre",
+        "consigne",
+        "elements",
+        "explication"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "obligatoire": {
+          "$ref": "#/$defs/bool"
+        },
+        "dureeEstimeeMinutes": {
+          "$ref": "#/$defs/duree"
+        },
+        "points": {
+          "$ref": "#/$defs/points"
+        },
+        "type": {
+          "const": "ordre"
+        },
+        "consigne": {
+          "$ref": "#/$defs/markdown"
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 15,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "texte"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/slug"
+              },
+              "texte": {
+                "$ref": "#/$defs/texte"
+              }
+            }
+          }
+        },
+        "explication": {
+          "$ref": "#/$defs/markdown"
+        }
+      }
+    },
+    "association": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "titre",
+        "consigne",
+        "paires",
+        "explication"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "obligatoire": {
+          "$ref": "#/$defs/bool"
+        },
+        "dureeEstimeeMinutes": {
+          "$ref": "#/$defs/duree"
+        },
+        "points": {
+          "$ref": "#/$defs/points"
+        },
+        "type": {
+          "const": "association"
+        },
+        "consigne": {
+          "$ref": "#/$defs/markdown"
+        },
+        "paires": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "gauche",
+              "droite"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/slug"
+              },
+              "gauche": {
+                "$ref": "#/$defs/texte"
+              },
+              "droite": {
+                "$ref": "#/$defs/texte"
+              }
+            }
+          }
+        },
+        "explication": {
+          "$ref": "#/$defs/markdown"
+        }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "titre",
+        "debut",
+        "noeuds",
+        "paliers"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "obligatoire": {
+          "$ref": "#/$defs/bool"
+        },
+        "dureeEstimeeMinutes": {
+          "$ref": "#/$defs/duree"
+        },
+        "points": {
+          "$ref": "#/$defs/points"
+        },
+        "type": {
+          "const": "scenario"
+        },
+        "contexte": {
+          "$ref": "#/$defs/markdown"
+        },
+        "debut": {
+          "$ref": "#/$defs/slug"
+        },
+        "noeuds": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/$defs/slug"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "texte",
+              "choix"
+            ],
+            "properties": {
+              "texte": {
+                "$ref": "#/$defs/markdown"
+              },
+              "choix": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "texte",
+                    "points",
+                    "retour",
+                    "suivant"
+                  ],
+                  "properties": {
+                    "texte": {
+                      "$ref": "#/$defs/texte"
+                    },
+                    "points": {
+                      "enum": [
+                        0,
+                        1,
+                        2
+                      ]
+                    },
+                    "retour": {
+                      "$ref": "#/$defs/markdown"
+                    },
+                    "suivant": {
+                      "type": "string",
+                      "pattern": "^([a-z0-9]+(-[a-z0-9]+)*)$"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "paliers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "minPoints",
+              "etoiles",
+              "message"
+            ],
+            "properties": {
+              "minPoints": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "etoiles": {
+                "enum": [
+                  0,
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "message": {
+                "$ref": "#/$defs/texte"
+              }
+            }
+          }
+        }
+      }
+    },
+    "fiches": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "titre",
+        "cartes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "obligatoire": {
+          "$ref": "#/$defs/bool"
+        },
+        "dureeEstimeeMinutes": {
+          "$ref": "#/$defs/duree"
+        },
+        "points": {
+          "$ref": "#/$defs/points"
+        },
+        "type": {
+          "const": "fiches"
+        },
+        "cartes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "recto",
+              "verso"
+            ],
+            "properties": {
+              "recto": {
+                "$ref": "#/$defs/texte"
+              },
+              "verso": {
+                "$ref": "#/$defs/markdown"
+              }
+            }
+          }
+        }
+      }
+    },
+    "bool": {
+      "type": "boolean"
+    },
+    "duree": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "points": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
