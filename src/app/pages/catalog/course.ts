@@ -7,6 +7,7 @@ import { AuthService } from '../../core/auth';
 import { CatalogService } from '../../core/catalog';
 import { apiMessage, RequestsService } from '../../core/requests';
 import { LABELS } from '../../labels';
+import { ConfirmService } from '../../ui/confirm';
 import { Md } from '../../learning/md';
 import { SessionForm } from './session-form';
 
@@ -210,6 +211,7 @@ export class CoursePage {
   private readonly auth = inject(AuthService);
   private readonly service = inject(CatalogService);
   private readonly requests = inject(RequestsService);
+  private readonly confirm = inject(ConfirmService);
   readonly id = input.required<string>();
   protected readonly labels = LABELS.catalog;
   protected readonly r = LABELS.requests;
@@ -271,7 +273,13 @@ export class CoursePage {
   }
 
   protected async cancel(s: SessionView): Promise<void> {
-    if (!confirm(this.labels.sessionForm.confirmCancel(this.range(s)))) return;
+    const ok = await this.confirm.ask({
+      title: this.labels.sessionForm.cancelSession,
+      text: this.labels.sessionForm.confirmCancel(this.range(s)),
+      confirm: this.labels.sessionForm.cancelSession,
+      cancel: LABELS.ui.close,
+    });
+    if (!ok) return;
     try {
       await this.service.cancelSession(s.id);
       this.onSaved(this.labels.sessionForm.cancelledDone);

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { ADMIN, expectNoHorizontalOverflow, login } from './support';
+import { ADMIN, expectNoHorizontalOverflow, login, tab, openAdmin, confirmDialog } from './support';
 
 // Tests lancés depuis la racine du dépôt (npm run e2e).
 const FIXTURE = join(process.cwd(), 'fixtures', 'formations', 'togaf10-m1.formation.json');
@@ -19,7 +19,7 @@ function formationFile(info: TestInfo): { id: string; titre: string; buffer: Buf
 }
 
 async function openFormations(page: Page): Promise<void> {
-  await page.getByRole('link', { name: 'Formations' }).click();
+  await openAdmin(page, 'Formations');
   await expect(page.getByRole('heading', { level: 1, name: 'Formations' })).toBeVisible();
 }
 
@@ -50,10 +50,7 @@ test.describe('formations', () => {
     // L'import se fait depuis la production : l'évaluation est une zone de l'administration.
     await login(page, ADMIN);
     await openFormations(page);
-    await expect(page.locator('app-space-banner section')).toHaveAttribute(
-      'data-space',
-      'production',
-    );
+    await expect(page.locator('.demo[data-space]')).toHaveAttribute('data-space', 'production');
 
     await page.getByLabel('Fichier .formation.json').setInputFiles({
       name: `${file.id}.formation.json`,
@@ -88,7 +85,7 @@ test.describe('formations', () => {
       page.getByRole('navigation', { name: 'Activités du module' }).getByRole('link').first(),
     ).toContainText('(À faire)');
     await expectNoHorizontalOverflow(page);
-    await page.getByRole('link', { name: 'Formations', exact: true }).click();
+    await openAdmin(page, 'Formations');
 
     // Export : le fichier téléchargé est celui déposé, à l'octet près.
     const download = page.waitForEvent('download');
@@ -106,19 +103,19 @@ test.describe('formations', () => {
     await expect(card).toContainText('Copiée en démonstration le');
 
     // Publication, après confirmation.
-    page.once('dialog', (dialog) => dialog.accept());
     await card
       .getByRole('button', { name: `Publier « ${file.titre} », version 0.1.0, en production` })
       .click();
+    await confirmDialog(page, 'Publier en production');
     await expect(page.getByText('Version 0.1.0 publiée en production.')).toBeVisible();
     await expect(card).toContainText('Publiée en production le');
 
     // Les collaborateurs la trouvent dans les parcours en ligne de la production.
-    await page.getByRole('link', { name: 'Parcours en ligne' }).click();
+    await tab(page, 'Mon parcours en ligne').click();
     await expect(page.getByRole('heading', { level: 2, name: file.titre })).toBeVisible();
     // Et la démonstration a sa copie.
     await page.getByRole('button', { name: 'Passer en démonstration' }).click();
-    await page.getByRole('link', { name: 'Parcours en ligne' }).click();
+    await tab(page, 'Mon parcours en ligne').click();
     await expect(page.getByRole('heading', { level: 2, name: file.titre })).toBeVisible();
   });
 });

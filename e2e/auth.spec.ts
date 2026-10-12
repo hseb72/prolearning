@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectNoHorizontalOverflow, login, uniqueEmail } from './support';
+import { expectNoHorizontalOverflow, login, uniqueEmail, tab } from './support';
 
 test.describe('connexion', () => {
   test('renvoie vers la connexion, puis vers la page demandée', async ({ page }, info) => {
@@ -27,9 +27,9 @@ test.describe('connexion', () => {
     page,
   }, info) => {
     await login(page, uniqueEmail('marc', info));
-    await expect(page.locator('.account-role')).toHaveText('Collaborateur');
+    await expect(page.locator('.me-name')).toContainText('· collaborateur');
     await expect(page.getByRole('button', { name: 'Passer en démonstration' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Comptes et rôles' })).toHaveCount(0);
+    await expect(tab(page, 'Administration')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Se déconnecter' }).click();
     await expect(page).toHaveURL(/\/connexion$/);

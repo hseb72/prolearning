@@ -1,13 +1,22 @@
 import { expect, test } from '@playwright/test';
 import { expectNoHorizontalOverflow, login, uniqueEmail } from './support';
 
-test.describe('accueil', () => {
-  test('affiche le portail en français et l’état du service', async ({ page }, info) => {
+test.describe('cadre du portail', () => {
+  test('ouvre le portail en français sur le catalogue, avec onglets et bandeau', async ({
+    page,
+  }, info) => {
     await login(page, uniqueEmail('accueil', info));
-    await expect(page).toHaveTitle('3S - Pro Learning');
+    await expect(page).toHaveTitle('Catalogue — 3S - Pro Learning');
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-    // Le front interroge l'API à travers le relais /api, qui joint les deux bases.
-    await expect(page.getByRole('status')).toHaveText('Le service est disponible.');
+    const nav = page.getByRole('navigation', { name: 'Sections' });
+    await expect(nav.getByRole('link', { name: 'Catalogue' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(nav.getByRole('link', { name: 'Administration' })).toHaveCount(0);
+    await expect(page.locator('.demo[data-space="production"]')).toContainText(
+      'Espace production · données réelles.',
+    );
     await expectNoHorizontalOverflow(page);
   });
 

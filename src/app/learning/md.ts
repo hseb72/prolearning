@@ -6,7 +6,12 @@ import { createMarkdown } from './markdown';
 /** Markdown d'une formation, rendu sans HTML brut et nettoyé (cf. markdown.ts). */
 @Component({
   selector: 'app-md',
-  template: `<div class="md" [class.inline]="inline()" [innerHTML]="html()"></div>`,
+  template: `<div
+    class="md"
+    [class.prose]="!inline()"
+    [class.inline]="inline()"
+    [innerHTML]="html()"
+  ></div>`,
   styles: `
     :host {
       display: block;

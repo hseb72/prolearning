@@ -13,12 +13,10 @@ export const routes: Routes = [
     canActivate: [anonymousGuard],
     loadComponent: () => import('./pages/login/login').then((m) => m.LoginPage),
   },
-  {
-    path: '',
-    title: LABELS.app.name,
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/home/home').then((m) => m.HomePage),
-  },
+  // Le portail s'ouvre sur le catalogue (pas de page d'accueil, comme le prototype).
+  { path: '', pathMatch: 'full', redirectTo: 'catalogue' },
+  { path: 'administration', pathMatch: 'full', redirectTo: 'administration/demandes' },
+  { path: 'demandes/a-traiter', pathMatch: 'full', redirectTo: 'administration/demandes' },
   {
     path: 'parcours',
     title: title(LABELS.learning.title),
@@ -87,7 +85,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/requests/team').then((m) => m.TeamRequestsPage),
   },
   {
-    path: 'demandes/a-traiter',
+    path: 'administration/demandes',
     title: title(LABELS.requests.queueTitle),
     canActivate: [roleGuard('training')],
     loadComponent: () => import('./pages/requests/queue').then((m) => m.RequestQueuePage),

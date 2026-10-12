@@ -5,7 +5,9 @@ import { RouterLink } from '@angular/router';
 import type { FormationRow, ValidationReport } from '@shared/format';
 import { AuthService } from '../../core/auth';
 import { FormationsService } from '../../core/formations';
+import { AdminNav } from '../../layout/admin-nav';
 import { LABELS } from '../../labels';
+import { ConfirmService } from '../../ui/confirm';
 
 type Status = { kind: 'success' | 'error'; text: string };
 
@@ -15,13 +17,14 @@ type Status = { kind: 'success' | 'error'; text: string };
  */
 @Component({
   selector: 'app-formations',
-  imports: [RouterLink],
+  imports: [RouterLink, AdminNav],
   templateUrl: './formations.html',
   styleUrl: './formations.scss',
 })
 export class FormationsPage {
   private readonly auth = inject(AuthService);
   private readonly service = inject(FormationsService);
+  private readonly confirm = inject(ConfirmService);
   private readonly date = new DatePipe('fr');
 
   protected readonly labels = LABELS.formations;
@@ -76,7 +79,12 @@ export class FormationsPage {
   }
 
   protected async publish(formation: FormationRow, version: string): Promise<void> {
-    if (!window.confirm(this.labels.publishConfirm(formation.titre, version))) return;
+    const ok = await this.confirm.ask({
+      title: this.labels.publish,
+      text: this.labels.publishConfirm(formation.titre, version),
+      confirm: this.labels.publish,
+    });
+    if (!ok) return;
     await this.run(async () => {
       const result = await this.service.publish(formation.id, version);
       this.status.set(

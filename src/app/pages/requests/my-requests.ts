@@ -6,6 +6,7 @@ import { formatRange } from '../../catalog/dates';
 import { AuthService } from '../../core/auth';
 import { apiMessage, RequestsService } from '../../core/requests';
 import { LABELS } from '../../labels';
+import { ConfirmService } from '../../ui/confirm';
 import { RequestHistory } from '../../requests/history';
 
 /** « Mes demandes » : inscriptions et, pour les managers, sessions sur mesure. */
@@ -128,6 +129,7 @@ import { RequestHistory } from '../../requests/history';
 export class MyRequestsPage {
   private readonly auth = inject(AuthService);
   private readonly service = inject(RequestsService);
+  private readonly confirm = inject(ConfirmService);
   protected readonly labels = LABELS.requests;
   protected readonly nav = LABELS.nav;
   protected readonly isManager = computed(() => this.auth.hasRole('manager'));
@@ -156,12 +158,25 @@ export class MyRequestsPage {
   protected async cancel(r: RegistrationRequestView): Promise<void> {
     const question =
       r.statut === 'confirmee' ? this.labels.confirmUnregister : this.labels.confirmWithdraw;
-    if (!confirm(question)) return;
+    const action = r.statut === 'confirmee' ? this.labels.unregister : this.labels.withdraw;
+    const ok = await this.confirm.ask({
+      title: action,
+      text: question,
+      confirm: action,
+      cancel: LABELS.ui.close,
+    });
+    if (!ok) return;
     await this.run(() => this.service.cancelRegistration(r.id));
   }
 
   protected async cancelCustom(c: CustomRequestView): Promise<void> {
-    if (!confirm(this.labels.confirmWithdraw)) return;
+    const ok = await this.confirm.ask({
+      title: this.labels.withdraw,
+      text: this.labels.confirmWithdraw,
+      confirm: this.labels.withdraw,
+      cancel: LABELS.ui.close,
+    });
+    if (!ok) return;
     await this.run(() => this.service.cancelCustom(c.id));
   }
 

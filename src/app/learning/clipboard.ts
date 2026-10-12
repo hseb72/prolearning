@@ -46,7 +46,7 @@ export function addCopyButtons(root: HTMLElement): void {
     pre.replaceWith(block);
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'button copy-button';
+    button.className = 'cpy';
     button.textContent = labels.copy;
     button.setAttribute('aria-label', labels.copyCode);
     const status = document.createElement('span');
@@ -56,7 +56,7 @@ export function addCopyButtons(root: HTMLElement): void {
       const ok = await copyText(pre.textContent ?? '');
       button.textContent = ok ? labels.copied : labels.copy;
       status.textContent = ok ? labels.copiedAnnounce : labels.copyFailed;
-      setTimeout(() => (button.textContent = labels.copy), 2000);
+      setTimeout(() => (button.textContent = labels.copy), 1800);
     });
     block.append(button, pre, status);
   }

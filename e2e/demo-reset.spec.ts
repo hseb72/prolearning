@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { ADMIN, expectNoHorizontalOverflow, login } from './support';
+import { ADMIN, expectNoHorizontalOverflow, login, tab, openAdmin, confirmDialog } from './support';
 
 async function play(page: Page, persona: string): Promise<void> {
   await page.getByLabel('Compte joué').selectOption({ label: persona });
-  await expect(page.locator('.account-name')).toContainText(persona.split(' — ')[0]!);
+  await expect(page.locator('.me-name')).toContainText(persona.split(' — ')[0]!);
 }
 
 test('l’administrateur présente la démonstration, puis la réinitialise', async ({ page }) => {
@@ -26,25 +26,25 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   });
   expect(imported.status()).toBe(201);
   await page.getByRole('button', { name: 'Passer en démonstration' }).click();
-  const banner = page.locator('app-space-banner section');
+  const banner = page.locator('.demo[data-space]');
   await expect(banner).toHaveAttribute('data-space', 'demo');
 
   // Le jeu de départ : catalogue fictif, parcours en ligne, demandes en cours.
-  await page.getByRole('link', { name: 'Catalogue' }).click();
+  await tab(page, 'Catalogue').click();
   await expect(
     page.getByRole('heading', { level: 2, name: 'TOGAF 10 : les fondamentaux' }),
   ).toBeVisible();
   await expect(page.getByText('Brouillon, non visible des collaborateurs')).toBeVisible();
 
   await play(page, 'David Moreau — Collaborateur');
-  await page.getByRole('link', { name: 'Mes demandes', exact: true }).click();
+  await tab(page, 'Mes demandes').click();
   await expect(
     page.locator('li.request').filter({ hasText: 'TOGAF 10 : les fondamentaux' }),
   ).toContainText('Inscription confirmée');
 
   // Jouer la manager : valider la demande d'Emma modifie la démonstration…
   await play(page, 'Chloé Bernard — Manager');
-  await page.getByRole('link', { name: 'Mon équipe' }).click();
+  await tab(page, 'Mon équipe').click();
   const toValidate = page.getByRole('region', { name: 'À valider' });
   const emma = toValidate.locator('li.request').filter({ hasText: 'Emma Petit' });
   await expect(emma).toHaveCount(1);
@@ -57,14 +57,14 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   await expect(page.getByText('Aucune demande en attente de votre validation.')).toBeVisible();
 
   // … la réinitialisation rend le jeu de départ, et rejoue l'administratrice fictive.
-  page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Réinitialiser la démonstration' }).click();
+  await confirmDialog(page, 'Réinitialiser la démonstration');
   await expect(
     page.getByText('Démonstration réinitialisée : jeu de départ rechargé.'),
   ).toBeVisible();
-  await expect(page.locator('.account-name')).toContainText('Alice Martin');
+  await expect(page.locator('.me-name')).toContainText('Alice Martin');
   await play(page, 'Chloé Bernard — Manager');
-  await page.getByRole('link', { name: 'Mon équipe' }).click();
+  await tab(page, 'Mon équipe').click();
   await expect(toValidate.locator('li.request').filter({ hasText: 'Emma Petit' })).toHaveCount(1);
 
   // Le bandeau et sa bascule restent utilisables sur un écran de 375 px.
@@ -74,13 +74,13 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
 
   // L'évaluation n'a pas été touchée.
   await play(page, 'Alice Martin — Administrateur');
-  await page.getByRole('link', { name: 'Formations', exact: true }).click();
+  await openAdmin(page, 'Formations');
   await expect(page.getByRole('heading', { name: 'Formation en relecture' })).toBeVisible();
 
   // La production non plus.
   await page.getByRole('button', { name: 'Revenir en production' }).click();
   await expect(banner).toHaveAttribute('data-space', 'production');
-  await page.getByRole('link', { name: 'Catalogue' }).click();
+  await tab(page, 'Catalogue').click();
   await expect(
     page.getByRole('heading', { level: 2, name: 'TOGAF 10 : les fondamentaux' }),
   ).toHaveCount(0);
