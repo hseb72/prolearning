@@ -50,7 +50,7 @@ api:
     OIDC_CLIENT_ID: pro-learning
     # Premiers administrateurs, promus à leur connexion ; ils attribuent ensuite
     # les autres rôles depuis l'application.
-    BOOTSTRAP_ADMIN_EMAILS: sebastien.raimondi@soredi-group.com,sebastien.raimondi@gmail.com
+    BOOTSTRAP_ADMIN_EMAILS: sebastien.raimondi@soredi-group.com,sebastien.raimondi@gmail.com,pierre.rolin@soredi-group.com
   envFrom:
     - prolearning-api-secrets
   pdb:
