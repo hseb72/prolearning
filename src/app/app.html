@@ -40,6 +40,14 @@
       @if (isAdmin()) {
         <li>
           <a
+            routerLink="/administration/formations"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            >{{ nav.formations }}</a
+          >
+        </li>
+        <li>
+          <a
             routerLink="/administration/comptes"
             routerLinkActive="active"
             ariaCurrentWhenActive="page"

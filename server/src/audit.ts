@@ -1,7 +1,14 @@
 import type pg from 'pg';
 
 export type AuditAction =
-  'login' | 'logout' | 'space.switch' | 'user.role' | 'user.manager' | 'user.bootstrap_admin';
+  | 'login'
+  | 'logout'
+  | 'space.switch'
+  | 'user.role'
+  | 'user.manager'
+  | 'user.bootstrap_admin'
+  | 'formation.import'
+  | 'formation.publish';
 
 export interface AuditEntry {
   actorId: number | null;

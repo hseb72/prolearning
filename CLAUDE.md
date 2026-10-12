@@ -89,12 +89,19 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 7. **Démonstration par jeu de rôle** : dans l'espace démonstration, l'administrateur choisit un compte fictif et **joue son rôle** (collaborateur, manager, équipe formation ou administrateur) pour montrer et expliquer les fonctionnalités. Pas de mot de passe ni de compte SSO pour ces comptes fictifs ; le bandeau de démonstration indique le rôle joué. Ce jeu de rôle n'existe pas en production.
 8. **Rôles gérés dans l'application (RBAC)** : Keycloak ne sert qu'à prouver l'identité (`sub`, e-mail, nom). Les rôles (collaborateur, manager, équipe formation, administrateur) et le rattachement de chaque collaborateur à son manager sont tenus dans l'application par les administrateurs. Les premiers administrateurs sont désignés par leur e-mail dans la configuration (`BOOTSTRAP_ADMIN_EMAILS`).
 
+### Choix d'implémentation (étape 2), à confirmer par le porteur du projet
+
+- **HTML brut et liens non http(s)** dans le markdown (§ 9) : signalés en **avertissement** à l'import, sans bloquer ni modifier le fichier ; le lecteur les neutralise à l'affichage. Les supprimer à l'import casserait l'aller-retour sans perte et la parité avec le validateur de référence, qui ne les refuse pas.
+- **Archives `.formation.zip`** (images, PDF) : reportées jusqu'à la demande du seau MinIO au socle. Seuls les `.formation.json` s'importent pour l'instant.
+- **Export** : restitue le fichier importé à l'octet près (texte conservé en base).
+
 ## Structure du dépôt
 
 | Dossier | Contenu |
 |---|---|
 | `src/` | Front Angular (composants autonomes, signaux, sans zone.js). Textes d'interface réunis dans `src/app/labels.ts`. |
 | `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). |
+| `server/src/format/` | Format d'échange : `validate.ts` (schéma + contrôles métier, mêmes verdicts que le validateur de référence, vérifié par un test de parité ; messages en français, chemins au style du § 11), `store.ts` (règles de version du § 11, texte exact conservé pour un export sans perte). `src/publication.ts` est le seul module métier qui touche les deux bases (publication démo → production par export puis import). |
 | `shared/` | Code commun au front et à l'API (types, règles). Imports relatifs suffixés `.js`. |
 | `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |
 | `e2e/` | Tests Playwright (bureau et écran de 375 px). |

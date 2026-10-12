@@ -35,6 +35,8 @@ COPY --from=builder --chown=node:node /app/server/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/server/dist ./dist
 # Les scripts SQL sont cherchés en remontant depuis dist/ : ils doivent être dans /app/db.
 COPY --chown=node:node db /app/db
+# Schéma du format d'échange : la validation à l'import en dépend.
+COPY --chown=node:node docs/format/formation.schema.json /app/docs/format/formation.schema.json
 # Comptes fictifs de l'espace démonstration, chargés au démarrage si la base démo est vide.
 COPY --chown=node:node fixtures/demo /app/fixtures/demo
 
