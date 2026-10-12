@@ -1,150 +1,278 @@
 {
   "description": "Jeu de données de l'espace démonstration : catalogue, sessions et demandes fictives. Les dates sont relatives au jour du chargement (« jour » : nombre de jours à partir d'aujourd'hui), à l'heure de Paris. Les comptes sont désignés par leur clé dans comptes.json ; « formations » liste les fichiers de fixtures/formations chargés en démonstration.",
-  "formations": ["togaf10.formation.json", "kubernetes-fondamentaux.formation.json"],
+  "formations": [
+    "togaf10.formation.json",
+    "kubernetes-fondamentaux.formation.json"
+  ],
   "fiches": [
     {
       "id": "togaf-fondamentaux",
-      "titre": "TOGAF 10 : les fondamentaux",
-      "theme": "Architecture d'entreprise",
-      "resume": "Deux jours pour comprendre ce qu'est une architecture d'entreprise, situer **TOGAF 10** et conduire un premier cycle ADM sur un cas concret.",
+      "titre": "Architecture d'entreprise avec TOGAF 10",
+      "theme": "Architecture et SI",
+      "resume": "Comprendre la méthode **ADM** de TOGAF 10 et l'appliquer à un cas concret : vision, analyse des écarts, feuille de route et gouvernance.",
       "objectifs": [
-        "Expliquer l'intérêt d'une architecture d'entreprise",
-        "Situer les quatre domaines d'architecture",
-        "Conduire les premières phases du cycle ADM"
+        "Comprendre la méthode ADM et ses phases",
+        "Produire une vision, une analyse des écarts et une feuille de route",
+        "Mettre en place une gouvernance d'architecture légère"
       ],
-      "public": "Architectes, urbanistes, chefs de projet SI",
+      "public": "Architectes, chefs de projet SI, responsables métier impliqués dans la transformation",
       "prerequis": "Aucun",
-      "dureeHeures": 14,
+      "dureeHeures": 21,
       "formation": "togaf10",
       "publiee": true
     },
     {
       "id": "kubernetes-fondamentaux",
       "titre": "Kubernetes : les fondamentaux",
-      "theme": "Infrastructure et cloud",
-      "resume": "Parcours en ligne avec **travaux pratiques** sur votre poste : conteneurs, architecture, déploiements, services, configuration, mise à l'échelle et sécurité.",
-      "objectifs": ["Déployer et exposer une application", "Configurer, mettre à l'échelle et dépanner"],
-      "public": "Développeurs, exploitants, architectes",
-      "prerequis": "Utiliser un terminal",
+      "theme": "Cloud et DevOps",
+      "resume": "Construire des conteneurs, puis déployer, exposer, configurer et dépanner une application sur **Kubernetes**, avec des travaux pratiques.",
+      "objectifs": [
+        "Construire et lancer des conteneurs",
+        "Déployer, exposer, configurer et mettre à l'échelle une application sur Kubernetes",
+        "Sécuriser les bases et dépanner un déploiement"
+      ],
+      "public": "Développeurs, administrateurs système et exploitants qui connaissent Linux et le terminal",
+      "prerequis": "Utiliser un terminal ; notions de réseau (adresse IP, port, HTTP)",
+      "dureeHeures": 14,
       "formation": "kubernetes-fondamentaux",
       "publiee": true
     },
     {
-      "id": "archimate-modelisation",
-      "titre": "Modéliser avec ArchiMate",
-      "theme": "Architecture d'entreprise",
-      "resume": "Lire et produire des vues **ArchiMate** : couches métier, applicative et technologique, relations et points de vue.",
-      "objectifs": ["Lire une vue ArchiMate", "Modéliser un processus et ses applications"],
-      "public": "Architectes et analystes métier",
-      "prerequis": "Avoir suivi « TOGAF 10 : les fondamentaux » ou équivalent",
-      "dureeHeures": 7,
+      "id": "agile-projet",
+      "titre": "Piloter un projet en mode agile",
+      "theme": "Gestion de projet",
+      "resume": "Découper un besoin en incréments, animer les rituels d'équipe et suivre l'avancement avec des indicateurs simples.",
+      "objectifs": [
+        "Découper un besoin en incréments",
+        "Animer les rituels d'équipe",
+        "Suivre l'avancement avec des indicateurs simples"
+      ],
+      "public": "Chefs de projet, product owners, managers d'équipe",
+      "prerequis": "Une première expérience de projet",
+      "dureeHeures": 14,
       "publiee": true
     },
     {
-      "id": "conduite-changement",
-      "titre": "Accompagner le changement",
-      "theme": "Management",
-      "resume": "Comprendre les résistances, construire un plan d'accompagnement et communiquer pendant une transformation.",
-      "objectifs": ["Cartographier les acteurs d'un changement", "Bâtir un plan d'accompagnement"],
-      "public": "Managers, chefs de projet",
-      "prerequis": "Aucun",
-      "dureeHeures": 3.5,
-      "publiee": true
-    },
-    {
-      "id": "atelier-collaboratif",
-      "titre": "Animer un atelier collaboratif",
-      "theme": "Management",
-      "resume": "Préparer, animer et conclure un atelier : objectifs, rôles, techniques d'animation et restitution.",
-      "objectifs": ["Préparer un atelier", "Choisir une technique d'animation"],
-      "public": "Toute personne amenée à animer des réunions de travail",
-      "prerequis": "Aucun",
-      "dureeHeures": 7,
-      "publiee": true
-    },
-    {
-      "id": "securite-essentiels",
-      "titre": "Sécurité des SI : les essentiels",
-      "theme": "Sécurité",
-      "resume": "Fiche en préparation : les fondamentaux de la sécurité des systèmes d'information.",
-      "objectifs": [],
+      "id": "rgpd-essentiels",
+      "titre": "RGPD : les essentiels pour tous",
+      "theme": "Conformité",
+      "resume": "Les bons réflexes au quotidien avec les **données personnelles**, et à qui s'adresser en cas de doute.",
+      "objectifs": [
+        "Reconnaître une donnée personnelle",
+        "Connaître les bons réflexes au quotidien",
+        "Savoir à qui s'adresser en cas de doute"
+      ],
       "public": "Tous les collaborateurs",
       "prerequis": "Aucun",
       "dureeHeures": 3.5,
-      "publiee": false
+      "publiee": true
+    },
+    {
+      "id": "tableur-donnees",
+      "titre": "Analyser des données avec un tableur",
+      "theme": "Outils",
+      "resume": "Nettoyer un jeu de données, construire un tableau croisé et présenter un résultat lisible.",
+      "objectifs": [
+        "Nettoyer et structurer un jeu de données",
+        "Construire un tableau croisé",
+        "Présenter un résultat lisible"
+      ],
+      "public": "Collaborateurs qui manipulent des données chiffrées",
+      "prerequis": "Usage courant d'un tableur",
+      "dureeHeures": 7,
+      "publiee": true
+    },
+    {
+      "id": "prise-de-parole",
+      "titre": "Prendre la parole en réunion",
+      "theme": "Efficacité professionnelle",
+      "resume": "Structurer un message court, gérer le trac et les questions, s'appuyer sur un support sans le lire.",
+      "objectifs": [
+        "Structurer un message court",
+        "Gérer le trac et les questions",
+        "S'appuyer sur un support sans le lire"
+      ],
+      "public": "Tous les collaborateurs",
+      "prerequis": "Aucun",
+      "dureeHeures": 7,
+      "publiee": true
+    },
+    {
+      "id": "premiers-pas-manager",
+      "titre": "Premiers pas de manager",
+      "theme": "Management",
+      "resume": "Fixer des objectifs clairs, conduire un entretien individuel, déléguer et suivre.",
+      "objectifs": [
+        "Fixer des objectifs clairs",
+        "Conduire un entretien individuel",
+        "Déléguer et suivre"
+      ],
+      "public": "Managers nommés depuis moins d'un an",
+      "prerequis": "Aucun",
+      "dureeHeures": 14,
+      "publiee": true
     }
   ],
   "sessions": [
     {
+      "cle": "rgpd-distance",
+      "fiche": "rgpd-essentiels",
+      "modalite": "distance",
+      "debut": {
+        "jour": 24,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 24,
+        "heure": "12:30"
+      },
+      "lieu": "Classe virtuelle",
+      "formateur": "Nadia Haddad",
+      "places": 30
+    },
+    {
       "cle": "togaf-distance",
       "fiche": "togaf-fondamentaux",
       "modalite": "distance",
-      "debut": { "jour": 7, "heure": "09:00" },
-      "fin": { "jour": 8, "heure": "17:00" },
-      "lieu": "Teams",
-      "formateur": "Claire Dubois",
-      "places": 8
-    },
-    {
-      "cle": "togaf-lyon",
-      "fiche": "togaf-fondamentaux",
-      "modalite": "site",
-      "debut": { "jour": 28, "heure": "09:00" },
-      "fin": { "jour": 29, "heure": "17:00" },
-      "lieu": "Lyon, Part-Dieu, salle Confluence",
+      "debut": {
+        "jour": 35,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 37,
+        "heure": "17:00"
+      },
+      "lieu": "Classe virtuelle",
       "formateur": "Claire Dubois",
       "places": 12
     },
     {
-      "cle": "togaf-passee",
+      "cle": "agile-site",
+      "fiche": "agile-projet",
+      "modalite": "site",
+      "debut": {
+        "jour": 43,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 44,
+        "heure": "17:00"
+      },
+      "lieu": "Siège, salle Orion",
+      "formateur": "Julien Roche",
+      "places": 12
+    },
+    {
+      "cle": "oral-site",
+      "fiche": "prise-de-parole",
+      "modalite": "site",
+      "debut": {
+        "jour": 46,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 46,
+        "heure": "17:00"
+      },
+      "lieu": "Siège, salle Atlas",
+      "formateur": "Sophie Garnier",
+      "places": 8
+    },
+    {
+      "cle": "k8s-distance",
+      "fiche": "kubernetes-fondamentaux",
+      "modalite": "distance",
+      "debut": {
+        "jour": 49,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 50,
+        "heure": "17:00"
+      },
+      "lieu": "Classe virtuelle",
+      "formateur": "Karim Benali",
+      "places": 10
+    },
+    {
+      "cle": "tableur-lyon",
+      "fiche": "tableur-donnees",
+      "modalite": "site",
+      "debut": {
+        "jour": 52,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 52,
+        "heure": "17:00"
+      },
+      "lieu": "Site de Lyon",
+      "formateur": "Marc Leroy",
+      "places": 8
+    },
+    {
+      "cle": "agile-distance",
+      "fiche": "agile-projet",
+      "modalite": "distance",
+      "debut": {
+        "jour": 57,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 58,
+        "heure": "17:00"
+      },
+      "lieu": "Classe virtuelle",
+      "formateur": "Julien Roche",
+      "places": 14
+    },
+    {
+      "cle": "manager-distance",
+      "fiche": "premiers-pas-manager",
+      "modalite": "distance",
+      "debut": {
+        "jour": 92,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 93,
+        "heure": "17:00"
+      },
+      "lieu": "Classe virtuelle",
+      "formateur": "Sophie Garnier",
+      "places": 10
+    },
+    {
+      "cle": "togaf-site",
       "fiche": "togaf-fondamentaux",
       "modalite": "site",
-      "debut": { "jour": -30, "heure": "09:00" },
-      "fin": { "jour": -29, "heure": "17:00" },
-      "lieu": "Paris, siège, salle Seine",
+      "debut": {
+        "jour": 98,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 100,
+        "heure": "17:00"
+      },
+      "lieu": "Siège, salle Atlas",
       "formateur": "Claire Dubois",
       "places": 10
     },
     {
-      "cle": "archimate-paris",
-      "fiche": "archimate-modelisation",
+      "cle": "k8s-site",
+      "fiche": "kubernetes-fondamentaux",
       "modalite": "site",
-      "debut": { "jour": 14, "heure": "09:00" },
-      "fin": { "jour": 14, "heure": "17:00" },
-      "lieu": "Paris, siège, salle Seine",
-      "formateur": "Marc Leroy",
-      "places": 3
-    },
-    {
-      "cle": "archimate-distance",
-      "fiche": "archimate-modelisation",
-      "modalite": "distance",
-      "debut": { "jour": 42, "heure": "09:00" },
-      "fin": { "jour": 42, "heure": "17:00" },
-      "lieu": "Teams",
-      "formateur": "Marc Leroy",
-      "places": 10
-    },
-    {
-      "cle": "changement-distance",
-      "fiche": "conduite-changement",
-      "modalite": "distance",
-      "debut": { "jour": 10, "heure": "14:00" },
-      "fin": { "jour": 10, "heure": "17:30" },
-      "lieu": "Teams",
-      "formateur": "Sophie Garnier",
-      "places": 10
-    },
-    {
-      "cle": "atelier-annule",
-      "fiche": "atelier-collaboratif",
-      "modalite": "site",
-      "debut": { "jour": 21, "heure": "09:00" },
-      "fin": { "jour": 21, "heure": "17:00" },
-      "lieu": "Lyon, Part-Dieu, salle Rhône",
-      "formateur": "Sophie Garnier",
-      "places": 8,
-      "annulee": true
+      "debut": {
+        "jour": 105,
+        "heure": "09:00"
+      },
+      "fin": {
+        "jour": 106,
+        "heure": "17:00"
+      },
+      "lieu": "Siège, salle Orion",
+      "formateur": "Karim Benali",
+      "places": 8
     }
   ],
   "inscriptions": [
@@ -153,8 +281,16 @@
       "session": "togaf-distance",
       "motif": "Je rejoins le projet de refonte du SI des magasins.",
       "etapes": [
-        { "statut": "attente_formation", "par": "manager", "commentaire": "Accord, c'est utile pour le projet." },
-        { "statut": "confirmee", "par": "formation", "commentaire": "Le lien Teams vous sera envoyé la veille." }
+        {
+          "statut": "attente_formation",
+          "par": "manager",
+          "commentaire": "Accord, c'est utile pour le projet."
+        },
+        {
+          "statut": "confirmee",
+          "par": "formation",
+          "commentaire": "Le lien Teams vous sera envoyé la veille."
+        }
       ]
     },
     {
@@ -165,28 +301,38 @@
     },
     {
       "compte": "collab1",
-      "session": "archimate-paris",
+      "session": "agile-site",
       "motif": "",
-      "etapes": [{ "statut": "attente_formation", "par": "manager", "commentaire": "" }]
+      "etapes": [
+        {
+          "statut": "attente_formation",
+          "par": "manager",
+          "commentaire": ""
+        }
+      ]
     },
     {
       "compte": "collab2",
-      "session": "changement-distance",
+      "session": "oral-site",
       "motif": "",
       "etapes": [
-        { "statut": "refusee", "par": "manager", "commentaire": "Pas ce trimestre : on en reparle en janvier." }
+        {
+          "statut": "refusee",
+          "par": "manager",
+          "commentaire": "Pas ce trimestre : on en reparle en janvier."
+        }
       ]
     }
   ],
   "surMesure": [
     {
       "compte": "manager",
-      "fiche": "archimate-modelisation",
-      "sujet": "ArchiMate appliqué à nos processus logistiques",
+      "fiche": "agile-projet",
+      "sujet": "Agilité appliquée à nos projets logistiques",
       "modalite": "site",
       "participants": 6,
       "periode": "Avant la fin du trimestre",
-      "details": "Une journée dans nos locaux, avec nos propres processus comme exemples.",
+      "details": "Deux jours dans nos locaux, avec nos propres projets comme exemples.",
       "etapes": []
     },
     {
@@ -196,7 +342,13 @@
       "participants": 4,
       "periode": "Janvier",
       "details": "",
-      "etapes": [{ "statut": "en_cours", "par": "formation", "commentaire": "Nous cherchons un intervenant." }]
+      "etapes": [
+        {
+          "statut": "en_cours",
+          "par": "formation",
+          "commentaire": "Nous cherchons un intervenant."
+        }
+      ]
     }
   ]
 }

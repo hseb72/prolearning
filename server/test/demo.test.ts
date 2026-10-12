@@ -38,16 +38,16 @@ describe.skipIf(!databasesAvailable)('jeu de démonstration et réinitialisation
 
   it('charge un jeu complet et cohérent', async () => {
     const summary = await loadDemo(databases.demo);
-    expect(summary).toEqual({ comptes: 5, formations: 2, fiches: 6, sessions: 7, demandes: 6 });
+    expect(summary).toEqual({ comptes: 5, formations: 2, fiches: 7, sessions: 10, demandes: 6 });
 
     await post('/api/space', { space: 'demo' });
     const catalogue = (await get('/api/catalogue')).json();
-    expect(catalogue).toHaveLength(6); // l'administrateur joué voit aussi le brouillon
+    expect(catalogue).toHaveLength(7);
     const togaf = (await get('/api/catalogue/togaf-fondamentaux')).json();
     expect(togaf.formationId).toBe('togaf10');
     expect(togaf.formats).toEqual(['distance', 'site', 'en-ligne']);
     const distance = togaf.sessions.find((s: Json) => s.modalite === 'distance');
-    expect(distance).toMatchObject({ places: 8, placesRestantes: 7 });
+    expect(distance).toMatchObject({ places: 12, placesRestantes: 11 });
     expect(new Date(distance.debut).getTime()).toBeGreaterThan(Date.now());
 
     // Les demandes ont leur historique, signé par les comptes fictifs.
@@ -86,13 +86,13 @@ describe.skipIf(!databasesAvailable)('jeu de démonstration et réinitialisation
 
     const res = await post('/api/demo/reinitialisation');
     expect(res.statusCode).toBe(200);
-    expect(res.json().resume.fiches).toBe(6);
+    expect(res.json().resume.fiches).toBe(7);
     // Le compte joué revient à l'administrateur fictif par défaut.
     expect(res.json().me.actor.displayName).toBe('Alice Martin');
 
     const demoCourses = await databases.demo.query('SELECT id FROM pl_courses ORDER BY id');
     expect(demoCourses.rows.map((r) => r.id)).not.toContain('ajout-demo');
-    expect(demoCourses.rows).toHaveLength(6);
+    expect(demoCourses.rows).toHaveLength(7);
     const prod = await databases.production.query('SELECT id FROM pl_courses');
     expect(prod.rows).toEqual([{ id: 'prod-seule' }]);
     const log = await databases.production.query(
