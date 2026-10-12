@@ -1,0 +1,332 @@
+<app-admin-nav />
+<p class="eyebrow">Administration</p>
+<h1>Composants</h1>
+<p class="lead">
+  Les composants de l’interface et leurs états, dans les deux thèmes. Données fictives : rien n’est
+  enregistré.
+</p>
+
+<div class="themes">
+  @for (theme of themes; track theme.id) {
+    <div class="theme-scope" [attr.data-theme]="theme.id">
+      <h2>{{ theme.label }}</h2>
+      <ng-container *ngTemplateOutlet="gallery; context: { $implicit: theme.id }" />
+    </div>
+  }
+</div>
+
+<ng-template #gallery let-t>
+  <section [attr.aria-labelledby]="t + '-buttons'">
+    <h3 [id]="t + '-buttons'">Boutons et liens</h3>
+    <div class="demo-row">
+      <button class="btn" type="button">Demander l’inscription</button>
+      <button class="btn ghost" type="button">Garder</button>
+      <button class="btn small" type="button">Voir la fiche</button>
+      <button class="btn navy" type="button">Importer</button>
+      <button class="btn" type="button" disabled>Désactivé</button>
+      <button class="link" type="button">Annuler la demande</button>
+    </div>
+  </section>
+
+  <section [attr.aria-labelledby]="t + '-tags'">
+    <h3 [id]="t + '-tags'">Pastilles et statuts</h3>
+    <div class="tags">
+      <app-tag kind="online">En ligne</app-tag>
+      <app-tag kind="distance">À distance</app-tag>
+      <app-tag kind="site">Sur site</app-tag>
+      <app-tag>2 jours</app-tag>
+    </div>
+    <div class="demo-row">
+      @for (status of statuses; track status) {
+        <app-status [status]="status" />
+      }
+      <app-status status="en_cours" />
+      <span class="status st-attente">{{ labels.status.attente }}</span>
+    </div>
+    @for (status of statuses; track status) {
+      <app-request-steps [status]="status" />
+    }
+    <app-request-steps status="en_cours" kind="surMesure" />
+  </section>
+
+  <section [attr.aria-labelledby]="t + '-stats'">
+    <h3 [id]="t + '-stats'">Chiffres clés et filtres</h3>
+    <div class="stats">
+      <app-stat [value]="7" label="formations" />
+      <app-stat [value]="10" label="sessions à venir" />
+      <app-stat [value]="2" label="parcours en ligne" />
+    </div>
+    <div class="filters">
+      <app-filter-chips label="Modalité" [options]="modalities" [(value)]="modality" />
+      <select class="search" aria-label="Thème">
+        <option>Tous les thèmes</option>
+        <option>Cloud et DevOps</option>
+      </select>
+      <input
+        class="search"
+        type="search"
+        placeholder="Rechercher une formation"
+        aria-label="Rechercher une formation"
+      />
+    </div>
+  </section>
+
+  <section [attr.aria-labelledby]="t + '-form'">
+    <h3 [id]="t + '-form'">Formulaire</h3>
+    <form class="card f" (submit)="$event.preventDefault()">
+      <div class="row2">
+        <div>
+          <label class="l" [for]="t + '-sujet'">Sujet</label>
+          <input class="inp" [id]="t + '-sujet'" value="Kubernetes pour l’équipe" />
+        </div>
+        <div>
+          <label class="l" [for]="t + '-participants'">Participants</label>
+          <input class="inp" [id]="t + '-participants'" type="number" value="8" />
+          <span class="small muted">Nombre approximatif</span>
+        </div>
+      </div>
+      <fieldset>
+        <legend class="l">Modalité</legend>
+        <div class="radios">
+          <label><input type="radio" [name]="t + '-mod'" checked /> À distance</label>
+          <label><input type="radio" [name]="t + '-mod'" /> Sur site</label>
+          <label><input type="radio" [name]="t + '-mod'" /> Indifférent</label>
+        </div>
+      </fieldset>
+      <div>
+        <label class="l" [for]="t + '-msg'">Précisions</label>
+        <textarea class="inp" [id]="t + '-msg'" rows="3"></textarea>
+      </div>
+    </form>
+  </section>
+
+  <section [attr.aria-labelledby]="t + '-cards'">
+    <h3 [id]="t + '-cards'">Cartes</h3>
+    <div class="grid">
+      <app-course-card
+        theme="Cloud et DevOps"
+        heading="Kubernetes : les fondamentaux"
+        [modes]="['online', 'distance', 'site']"
+        duration="3 jours (21 h)"
+        info="Parcours en ligne disponible · 2 sessions"
+      >
+        <button class="btn small" type="button">Voir la fiche</button>
+      </app-course-card>
+      <app-course-card
+        theme="Gestion de projet"
+        heading="Piloter un projet en mode agile"
+        [modes]="['distance']"
+        duration="2 jours (14 h)"
+      >
+        <button class="btn small" type="button">Voir la fiche</button>
+      </app-course-card>
+    </div>
+    <div class="list" style="margin-top: 16px">
+      <app-session-row
+        [start]="start"
+        heading="Kubernetes : les fondamentaux"
+        modalite="site"
+        [tags]="['3 jours', 'Lyon']"
+        [remaining]="4"
+        [capacity]="10"
+      >
+        <button class="btn small" type="button">Demander l’inscription</button>
+      </app-session-row>
+      <app-session-row
+        [start]="start"
+        heading="Piloter un projet en mode agile"
+        modalite="distance"
+        [tags]="['2 jours', 'Teams']"
+        [remaining]="0"
+        [capacity]="12"
+      >
+        <button class="btn ghost small" type="button">Demande envoyée</button>
+      </app-session-row>
+    </div>
+    <app-empty class="card" style="margin-top: 16px">
+      Aucune demande pour l’instant. <button class="link" type="button">Voir les sessions</button>
+    </app-empty>
+  </section>
+
+  <section [attr.aria-labelledby]="t + '-dialogs'">
+    <h3 [id]="t + '-dialogs'">Dialogue, confirmation, toast</h3>
+    <div class="demo-row">
+      <button class="btn ghost" type="button" (click)="setDialog(t, true)">
+        Ouvrir un dialogue
+      </button>
+      <button class="btn ghost" type="button" (click)="askConfirm()">
+        Demander une confirmation
+      </button>
+      <button class="btn ghost" type="button" (click)="showToast()">Afficher un toast</button>
+    </div>
+    <app-dialog
+      [labelledBy]="t + '-dlg-title'"
+      [open]="dialogOpen() === t"
+      (openChange)="setDialog(t, $event)"
+    >
+      <p class="eyebrow">Demande d’inscription</p>
+      <h2 [id]="t + '-dlg-title'">Kubernetes : les fondamentaux</h2>
+      <p class="muted">Votre manager valide la demande, puis l’équipe formation la confirme.</p>
+      <div>
+        <label class="l" [for]="t + '-dlg-msg'">Message (facultatif)</label>
+        <textarea class="inp" [id]="t + '-dlg-msg'" rows="3"></textarea>
+      </div>
+      <div class="acts">
+        <button class="btn ghost" type="button" (click)="setDialog(t, false)">Annuler</button>
+        <button class="btn" type="button" (click)="setDialog(t, false)">Envoyer la demande</button>
+      </div>
+    </app-dialog>
+  </section>
+
+  <section [attr.aria-labelledby]="t + '-admin'">
+    <h3 [id]="t + '-admin'">Administration</h3>
+    <div class="bo-wrap">
+      <table class="bo">
+        <caption class="visually-hidden">
+          Demandes (exemple)
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Demandeur</th>
+            <th scope="col">Formation</th>
+            <th scope="col">Statut</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Emma Petit</td>
+            <td>Kubernetes : les fondamentaux</td>
+            <td><app-status status="attente_formation" /></td>
+            <td>
+              <div class="bo-acts">
+                <button class="btn small" type="button">Accepter</button>
+                <button class="btn ghost small" type="button">Refuser</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: 16px">
+      <app-drop-zone accept=".json" (file)="dropped.set($event.name)" />
+      @if (dropped()) {
+        <p class="small muted">Fichier choisi : {{ dropped() }}</p>
+      }
+    </div>
+    <app-import-report
+      name="kubernetes.formation.json"
+      [errors]="['modules[2].activites[0].questions : au moins une question est requise']"
+      [warnings]="['modules[0].activites[1].blocs[0].markdown : HTML brut ignoré à l’affichage']"
+    />
+    <app-import-report
+      name="togaf10.formation.json"
+      [warnings]="['references[3].url : lien non http(s) neutralisé']"
+    />
+  </section>
+
+  <section [attr.aria-labelledby]="t + '-path'">
+    <h3 [id]="t + '-path'">Parcours en ligne</h3>
+    <div class="hero">
+      <div class="card">
+        <div class="xp">
+          <app-progress-ring [value]="4" [max]="9" />
+          <div style="flex: 1">
+            <p class="eyebrow">Niveau 3</p>
+            <div class="lvl">Praticien</div>
+            <app-progress-bar [value]="45" label="Vers le niveau suivant" />
+            <p class="small muted">320 points · encore 280 pour Confirmé</p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="badges">
+          @for (badge of badges; track badge.id) {
+            <app-badge [id]="badge.id" [earned]="badge.earned" />
+          }
+        </div>
+      </div>
+    </div>
+    <div class="demo-row">
+      <app-progress-ring [value]="0" [max]="9" />
+      <app-progress-ring [value]="9" [max]="9" />
+    </div>
+    <div class="map">
+      <button
+        appModuleTile
+        type="button"
+        num="1"
+        heading="Introduction"
+        sub="Terminé · à revoir quand vous voulez"
+        state="done"
+      ></button>
+      <button
+        appModuleTile
+        type="button"
+        num="2"
+        heading="Le contenu"
+        sub="5 activités · 40 min"
+        state="next"
+      ></button>
+      <button
+        appModuleTile
+        type="button"
+        num="3"
+        heading="L’ADM"
+        sub="Verrouillé · terminez le module 2"
+        state="locked"
+      ></button>
+      <button
+        appModuleTile
+        type="button"
+        num="4"
+        heading="Phases A à D"
+        sub="6 activités · 55 min"
+      ></button>
+    </div>
+  </section>
+
+  <section [attr.aria-labelledby]="t + '-reader'">
+    <h3 [id]="t + '-reader'">Lecteur</h3>
+    <app-callout variant="a_retenir"
+      ><p>Une architecture décrit l’existant, la cible et le chemin.</p></app-callout
+    >
+    <app-callout variant="attention" heading="Piège classique"
+      ><p>Commencer par l’outil.</p></app-callout
+    >
+    <app-callout variant="exemple"
+      ><p>Une enseigne de 40 magasins modernise ses caisses.</p></app-callout
+    >
+    <app-callout variant="definition"
+      ><p>Un artefact décrit un aspect de l’architecture.</p></app-callout
+    >
+    <app-callout variant="cas" label="Point de départ"
+      ><p>Un cluster local et kubectl.</p></app-callout
+    >
+    <app-deepen heading="Les quatre domaines">
+      <div class="prose"><p>Métier, données, applications, technologie.</p></div>
+      <app-references [ids]="referenceIds" [all]="references" />
+    </app-deepen>
+    <p class="q">Que décrit une architecture d’entreprise ?</p>
+    <div class="opts">
+      <button appQuizOption type="button" letter="A">L’existant seulement</button>
+      <button appQuizOption type="button" letter="B" state="ok">
+        L’existant, la cible et le chemin
+      </button>
+      <button appQuizOption type="button" letter="C" state="ko">Le choix d’un logiciel</button>
+    </div>
+    <div class="fb good" aria-live="polite">
+      <strong>Bonne réponse.</strong> C’est la définition du module 1.
+    </div>
+    <app-code-block [code]="code" />
+    <ol class="tp-steps">
+      <li
+        appTpStep
+        heading="Lister les pods"
+        markdown="Exécutez `kubectl get pods`."
+        result="La commande affiche le pod **web-0**."
+      ></li>
+      <li appTpStep heading="Nettoyer" markdown="Supprimez l’espace de noms de démonstration."></li>
+    </ol>
+  </section>
+</ng-template>

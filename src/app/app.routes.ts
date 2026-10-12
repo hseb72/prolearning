@@ -123,6 +123,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/users/users').then((m) => m.UsersPage),
   },
   {
+    // Bibliothèque de composants (SPEC-UI § 4), page interne non listée dans les onglets.
+    path: 'administration/composants',
+    title: title('Composants'),
+    canActivate: [roleGuard('admin')],
+    loadComponent: () => import('./pages/components/components').then((m) => m.ComponentsPage),
+  },
+  {
     path: 'acces-refuse',
     title: title(LABELS.forbidden.title),
     loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage),

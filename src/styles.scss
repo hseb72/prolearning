@@ -100,6 +100,42 @@
   @include dark-tokens;
 }
 
+// Un thème imposé à une partie de la page (page des composants : clair et sombre côte à côte).
+.theme-scope {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 16px;
+
+  &[data-theme='light'] {
+    @include light-tokens;
+  }
+
+  &[data-theme='dark'] {
+    @include dark-tokens;
+  }
+}
+
+// Composants Angular dont l'hôte porte la classe du prototype : blocs par défaut.
+app-callout,
+app-course-card,
+app-deepen,
+app-drop-zone,
+app-empty,
+app-import-report,
+app-progress-bar,
+app-code-block,
+app-session-row {
+  display: block;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 // ── Base ─────────────────────────────────────────────────────────────────────
 
 * {
@@ -850,9 +886,15 @@ table.bo {
   .w {
     color: var(--warn);
   }
+
+  .ok {
+    color: var(--good);
+  }
 }
 
 .drop {
+  display: block;
+  cursor: pointer;
   border: 2px dashed var(--line);
   border-radius: 14px;
   padding: 24px;
@@ -861,6 +903,11 @@ table.bo {
 
   &.over {
     border-color: var(--accent);
+  }
+
+  &:focus-within {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
   }
 }
 

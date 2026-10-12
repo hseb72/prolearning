@@ -22,9 +22,61 @@ export const LABELS = {
     formations: 'Formations',
     users: 'Comptes et rôles',
   },
+  /** Composants communs de l'interface (SPEC-UI § 4), libellés du prototype. */
   ui: {
     cancel: 'Annuler',
     close: 'Fermer',
+    status: {
+      envoyee: 'Envoyée',
+      en_cours: 'En cours de traitement',
+      acceptee: 'Acceptée',
+      attente: 'Liste d’attente',
+      refusee: 'Refusée',
+      annulee: 'Annulée',
+    },
+    steps: {
+      label: 'Avancement de la demande',
+      reached: 'étape franchie',
+      inscription: ['Envoyée', 'Validation manager', 'Décision'],
+      surMesure: ['Envoyée', 'En traitement', 'Décision'],
+    },
+    modalities: { online: 'En ligne', distance: 'À distance', site: 'Sur site' },
+    seats: (left: number, capacity: number) =>
+      left > 0 ? `${left} place${left > 1 ? 's' : ''} sur ${capacity}` : 'Complet',
+    access: {
+      libre: 'Accès libre',
+      inscription: 'Inscription requise',
+      payant: 'Payant',
+      interne: 'Interne',
+    } as Record<string, string>,
+    language: (code: string) => (code === 'en' ? 'en anglais' : `en ${code}`),
+    newTab: ' (nouvel onglet)',
+    callouts: {
+      a_retenir: 'À retenir',
+      attention: 'Attention',
+      exemple: 'Exemple',
+      definition: 'Définition',
+      cas: 'Cas',
+    },
+    deepen: 'Approfondir',
+    expectedResult: 'Résultat attendu',
+    ring: (done: number, total: number) =>
+      `${done} module${done > 1 ? 's' : ''} terminé${done > 1 ? 's' : ''} sur ${total}`,
+    progress: (percent: number) => `${percent} %`,
+    badgeEarned: 'obtenu',
+    badgeLocked: 'pas encore obtenu',
+    report: {
+      errors: (n: number) => `${n} erreur${n > 1 ? 's' : ''} bloquante${n > 1 ? 's' : ''}`,
+      valid: 'format valide',
+      warnings: (n: number) => `${n} avertissement${n > 1 ? 's' : ''}`,
+      error: 'Erreur : ',
+      warning: 'Avertissement : ',
+    },
+    drop: {
+      choose: 'Choisir un fichier',
+      orDrop: 'ou le déposer ici',
+      hint: 'Validation du format avant tout import',
+    },
   },
   nav: {
     learning: 'Mon parcours en ligne',
