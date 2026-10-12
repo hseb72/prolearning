@@ -1,0 +1,75 @@
+.status:empty {
+  display: none;
+}
+
+.users {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+
+  th,
+  td {
+    padding: var(--space-1);
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  thead th {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .name,
+  .email {
+    display: block;
+  }
+
+  .email {
+    font-weight: 400;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  select {
+    width: 100%;
+  }
+}
+
+// Petits écrans : chaque compte devient une fiche, chaque cellule porte son intitulé.
+@media (max-width: 48rem) {
+  .users {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+
+    tr,
+    th,
+    td {
+      display: block;
+    }
+
+    tr {
+      padding: var(--space-1) 0;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    th,
+    td {
+      border-bottom: none;
+    }
+
+    td::before {
+      content: attr(data-label);
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+  }
+}

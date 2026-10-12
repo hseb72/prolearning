@@ -1,0 +1,12 @@
+dist
+coverage
+node_modules
+.angular
+playwright-report
+test-results
+package-lock.json
+docs/format
+fixtures
+tools
+CLAUDE.md
+LISEZMOI.md

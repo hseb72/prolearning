@@ -1,0 +1,60 @@
+<a class="skip-link" href="#contenu">{{ labels.skipToContent }}</a>
+
+<app-space-banner />
+
+<header class="site-header">
+  <a class="brand" routerLink="/">
+    <span class="brand-mark" aria-hidden="true">3S</span>
+    <span class="brand-text">
+      <span class="brand-name">{{ labels.name }}</span>
+      <span class="brand-tagline">{{ labels.tagline }}</span>
+    </span>
+  </a>
+
+  @if (me(); as me) {
+    <div class="account">
+      <p class="account-name">
+        <span class="visually-hidden">{{
+          me.space === 'demo' ? labels.playingAs : labels.connectedAs
+        }}</span>
+        {{ me.actor.displayName }}
+        <span class="account-role">{{ roles[me.actor.role] }}</span>
+      </p>
+      <button class="button logout" type="button" (click)="logout()">{{ labels.logout }}</button>
+    </div>
+  }
+</header>
+
+@if (me()) {
+  <nav class="site-nav" [attr.aria-label]="labels.mainNav">
+    <ul>
+      <li>
+        <a
+          routerLink="/"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          ariaCurrentWhenActive="page"
+          >{{ nav.home }}</a
+        >
+      </li>
+      @if (isAdmin()) {
+        <li>
+          <a
+            routerLink="/administration/comptes"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            >{{ nav.users }}</a
+          >
+        </li>
+      }
+    </ul>
+  </nav>
+}
+
+<main id="contenu" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer class="site-footer">
+  <p>{{ labels.footer }}</p>
+</footer>

@@ -1,0 +1,28 @@
+# Compilation
+/dist
+/out-tsc
+/tmp
+
+# Node
+node_modules
+npm-debug.log
+
+# Angular
+/.angular/cache
+
+# Serveur
+/server/dist
+/server/.env
+
+# Tests
+/coverage
+/playwright-report
+/test-results
+__screenshots__/
+
+# Éditeurs et système
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db

@@ -70,15 +70,56 @@ Sécurité de l'import : markdown sans HTML brut et nettoyé, SVG nettoyés, lie
 - Connexion : prévoir le SSO d'entreprise (OIDC) ; une connexion locale suffit pour le pilote si le SSO n'est pas prêt.
 - Marque : identité 3S - Pro Learning (bleu nuit #14213D, orange #E07A2E / #B5561A, fond #F7F5F0 ; titres Source Serif 4, texte IBM Plex Sans), thèmes clair et sombre.
 
-## Décisions à prendre au démarrage (à confirmer avec le porteur du projet)
+## Décisions de démarrage
 
-1. **Hébergement** : interne, ou cloud (dans l'Union européenne).
-2. **Pile technique.** Proposition par défaut si rien n'est imposé : TypeScript de bout en bout, Next.js, PostgreSQL, Prisma, Auth.js (OIDC), Vitest et Playwright pour les tests.
-3. **Isolation des espaces** : colonne `space` sur chaque table, ou schéma PostgreSQL par espace.
-4. **Validation manager** obligatoire ou simple information (règle RH).
-5. **Visibilité des résultats** des parcours en ligne (apprenant seul, manager, RH).
+Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe par lui.
 
-Ne pas trancher ces points seul : poser la question, puis consigner la réponse ici.
+1. **Hébergement** : cible définitive sur le cluster décrit dans [`hseb72/homelab-platform`](https://github.com/hseb72/homelab-platform), en suivant le **pattern `shared`** de [`hseb72/platform-patterns`](https://github.com/hseb72/platform-patterns) (chart `app` publié en OCI, version épinglée). L'application est un **locataire** du socle : PostgreSQL, MinIO et Kong mutualisés, ressources déclarées côté socle (issue « Nouveau locataire »), secrets créés hors Git. Le protocole à suivre est `homelab-platform/CONSUMING.md` ; le déploiement de `hseb72/treasurehunters` (`deploy/`) sert de modèle, y compris pour les écarts connus entre le chart `app` 0.4.0 et le socle (`HTTPRoute` et provisionnement du chart désactivés, Ingress `kong` et `nginx` en manifestes locaux).
+   - Front : `prolearning.crealcs.com`. API : `api.prolearning.crealcs.com`, exposée via Kong ; le front relaie `/api` vers Kong (même origine, pas de CORS).
+   - SSO : Keycloak de Soredi, émetteur OIDC `https://sso.crealcs.com/realms/soredi`. Le client OIDC est déclaré par le porteur du projet, qui fournit l'identifiant et le secret (secret créé hors Git, jamais versionné).
+   - MinIO (fichiers déposés, images des formations) : demandé au socle dès que nécessaire, pas avant.
+2. **Pile technique** : la même que les autres applications du cluster (modèle : `treasurehunters`). TypeScript de bout en bout ; **front Angular** servi par nginx ; **API Node.js (Fastify)** accessible via Kong ; PostgreSQL (`pg`, migrations SQL versionnées appliquées au démarrage sous verrou consultatif) ; validation par `zod` ; paquet `shared/` commun au front et à l'API ; Vitest ; Playwright pour les tests de bout en bout. Images sur GHCR, déploiement Argo CD.
+3. **Isolation des espaces** : **une base PostgreSQL par espace** (`prolearning` pour la production, `prolearning_demo` pour la démonstration), donc deux locataires du socle, chacun avec son rôle. Aucune requête ne peut joindre les deux bases. La publication démo → production passe par l'export puis l'import au format d'échange.
+4. **Validation manager** : obligatoire pour les inscriptions aux **sessions en direct** (à distance ou sur site). Aucune validation pour les **parcours en ligne en autonomie**.
+5. **Visibilité des résultats** des parcours en ligne : **l'apprenant seul**. Il peut choisir de publier sa réussite et ses badges à son management ou à la communauté ; rien n'est publié sans son action.
+
+6. **Une seule installation** du front et de l'API pour les deux espaces : l'API ouvre une connexion par base (`server/src/databases.ts`, seul module autorisé à le faire) et choisit la base à chaque requête. Un non-administrateur est toujours servi par la production.
+7. **Démonstration par jeu de rôle** : dans l'espace démonstration, l'administrateur choisit un compte fictif et **joue son rôle** (collaborateur, manager, équipe formation ou administrateur) pour montrer et expliquer les fonctionnalités. Pas de mot de passe ni de compte SSO pour ces comptes fictifs ; le bandeau de démonstration indique le rôle joué. Ce jeu de rôle n'existe pas en production.
+8. **Rôles gérés dans l'application (RBAC)** : Keycloak ne sert qu'à prouver l'identité (`sub`, e-mail, nom). Les rôles (collaborateur, manager, équipe formation, administrateur) et le rattachement de chaque collaborateur à son manager sont tenus dans l'application par les administrateurs. Les premiers administrateurs sont désignés par leur e-mail dans la configuration (`BOOTSTRAP_ADMIN_EMAILS`).
+
+## Structure du dépôt
+
+| Dossier | Contenu |
+|---|---|
+| `src/` | Front Angular (composants autonomes, signaux, sans zone.js). Textes d'interface réunis dans `src/app/labels.ts`. |
+| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). |
+| `shared/` | Code commun au front et à l'API (types, règles). Imports relatifs suffixés `.js`. |
+| `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |
+| `e2e/` | Tests Playwright (bureau et écran de 375 px). |
+| `docker/` | Images `api` (Node 24, non-root) et `web` (nginx non privilégié, relais `/api` vers Kong). |
+| `fixtures/demo/` | Comptes fictifs de l'espace démonstration, chargés au démarrage si la base démo est vide. |
+| `docs/keycloak.md` | Déclaration du client Keycloak et configuration du SSO. |
+
+## Développer
+
+Node 24 (`.nvmrc`). Deux bases PostgreSQL locales, une par espace.
+
+```bash
+npm ci && npm ci --prefix server
+export DATABASE_URL_PRODUCTION=postgres://…/prolearning DATABASE_URL_DEMO=postgres://…/prolearning_demo
+export AUTH_DEV_LOGIN=true BOOTSTRAP_ADMIN_EMAILS=moi@soredi.example   # connexion sans Keycloak
+npm run server:dev            # API sur :5080, migrations appliquées aux deux bases
+npm start                     # front sur :4200, /api relayé vers :5080
+```
+
+Vérifications (les mêmes qu'en CI) :
+
+```bash
+npm run format:check && npm test && npm run build && npm run typecheck:e2e
+(cd server && npm run typecheck && npm test)   # TEST_DATABASE_URL_PRODUCTION / TEST_DATABASE_URL_DEMO
+npm run e2e                   # E2E_DATABASE_URL_PRODUCTION / E2E_DATABASE_URL_DEMO ; PLAYWRIGHT_CHROMIUM_PATH facultatif
+npm run valider -- fixtures/formations/togaf10-m1.formation.json
+```
 
 ## Ordre de réalisation proposé pour le pilote
 

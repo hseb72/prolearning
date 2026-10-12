@@ -1,0 +1,39 @@
+<div class="login">
+  <h1>{{ labels.title }}</h1>
+  <p>{{ labels.intro }}</p>
+
+  @if (errorText(); as error) {
+    <p class="message error" role="alert">{{ error }}</p>
+  }
+
+  @if (config(); as cfg) {
+    @if (cfg.sso) {
+      <a class="button primary" [href]="ssoHref()">{{ labels.sso }}</a>
+    } @else if (!cfg.devLogin) {
+      <p class="message">{{ labels.ssoUnavailable }}</p>
+    }
+
+    @if (cfg.devLogin) {
+      <section class="dev" aria-labelledby="dev-title">
+        <h2 id="dev-title">{{ labels.devTitle }}</h2>
+        <p class="hint">{{ labels.devWarning }}</p>
+        <form (submit)="devLogin($event)" novalidate>
+          <label for="dev-email">{{ labels.devEmail }}</label>
+          <input
+            id="dev-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+            [attr.aria-invalid]="devError() ? 'true' : null"
+            [attr.aria-describedby]="devError() ? 'dev-error' : null"
+          />
+          @if (devError(); as error) {
+            <p id="dev-error" class="field-error">{{ error }}</p>
+          }
+          <button class="button" type="submit" [disabled]="busy()">{{ labels.devSubmit }}</button>
+        </form>
+      </section>
+    }
+  }
+</div>
