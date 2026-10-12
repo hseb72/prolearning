@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { ADMIN, expectNoHorizontalOverflow, login, uniqueEmail } from './support';
+import { ADMIN, expectNoHorizontalOverflow, login, uniqueEmail, tab, openAdmin } from './support';
 
 const inDays = (days: number, hours: number) => {
   const d = new Date(Date.now() + days * 24 * 3600 * 1000);
@@ -66,14 +66,14 @@ test.describe('demandes', () => {
     await expect(
       page.getByText('Votre demande : En attente de validation du manager'),
     ).toBeVisible();
-    await page.getByRole('link', { name: 'Mes demandes', exact: true }).first().click();
+    await tab(page, 'Mes demandes').click();
     const mine = page.locator('li.request').filter({ hasText: course.titre });
     await expect(mine).toContainText('En attente de validation du manager');
     await expectNoHorizontalOverflow(page);
 
     // Le manager valide, au clavier.
     await switchTo(page, manager);
-    await page.getByRole('link', { name: 'Mon équipe' }).click();
+    await tab(page, 'Mon équipe').click();
     const toValidate = page.locator('li.request').filter({ hasText: course.titre });
     await expect(toValidate).toContainText('Pour le projet Atelia.');
     await toValidate.getByLabel('Commentaire (facultatif)').fill('Accord, bonne formation.');
@@ -84,7 +84,7 @@ test.describe('demandes', () => {
 
     // L'équipe formation confirme : une place est prise.
     await switchTo(page, ADMIN);
-    await page.getByRole('link', { name: 'Demandes à traiter' }).click();
+    await openAdmin(page, 'Demandes');
     const toConfirm = page.locator('li.request').filter({ hasText: course.titre });
     await expect(toConfirm).toContainText('2 places restantes sur 2');
     await toConfirm.getByRole('button', { name: /^Confirmer l’inscription de/ }).click();
@@ -93,7 +93,7 @@ test.describe('demandes', () => {
 
     // La collaboratrice voit sa place confirmée et l'historique.
     await switchTo(page, collab);
-    await page.getByRole('link', { name: 'Mes demandes', exact: true }).click();
+    await tab(page, 'Mes demandes').click();
     await expect(mine).toContainText('Inscription confirmée');
     await mine.getByText('Historique').click();
     await expect(mine).toContainText('Accord, bonne formation.');
@@ -109,7 +109,7 @@ test.describe('demandes', () => {
     const sujet = `Atelier ArchiMate ${info.project.name} ${Date.now()}`;
 
     await switchTo(page, manager);
-    await page.getByRole('link', { name: 'Mes demandes', exact: true }).click();
+    await tab(page, 'Mes demandes').click();
     await page.getByRole('link', { name: 'Demander une session sur mesure' }).click();
     await page.getByLabel('Sujet').fill(sujet);
     await page.getByLabel('Modalité souhaitée').selectOption({ label: 'Sur site' });
@@ -122,7 +122,7 @@ test.describe('demandes', () => {
     await expect(mine).toContainText('Transmise à l’équipe formation');
 
     await switchTo(page, ADMIN);
-    await page.getByRole('link', { name: 'Demandes à traiter' }).click();
+    await openAdmin(page, 'Demandes');
     const item = page.locator('li.request').filter({ hasText: sujet });
     await item.getByLabel('Réponse au demandeur (facultatif)').fill('Session le 20 novembre.');
     await item.getByRole('button', { name: `Accepter la demande « ${sujet} »` }).click();
@@ -130,7 +130,7 @@ test.describe('demandes', () => {
     await expect(item).toContainText('Acceptée');
 
     await switchTo(page, manager);
-    await page.getByRole('link', { name: 'Mes demandes', exact: true }).click();
+    await tab(page, 'Mes demandes').click();
     await expect(mine).toContainText('Acceptée');
     await mine.getByText('Historique').click();
     await expect(mine).toContainText('Session le 20 novembre.');
@@ -139,8 +139,8 @@ test.describe('demandes', () => {
 
   test('les pages de validation sont réservées', async ({ page }, info) => {
     await login(page, uniqueEmail('simple', info));
-    await expect(page.getByRole('link', { name: 'Mon équipe' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Demandes à traiter' })).toHaveCount(0);
+    await expect(tab(page, 'Mon équipe')).toHaveCount(0);
+    await expect(tab(page, 'Administration')).toHaveCount(0);
     await page.goto('/demandes/a-traiter');
     await expect(page.getByRole('heading', { level: 1, name: 'Accès non autorisé' })).toBeVisible();
   });

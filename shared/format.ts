@@ -3,8 +3,8 @@
  * l'interface et l'API se partagent. Le format est un contrat, on ne le change pas ici.
  */
 
-/** Versions du format que la plateforme sait lire (§ 13). */
-export const SUPPORTED_FORMAT_VERSIONS = ['1.0'] as const;
+/** Versions du format que la plateforme sait lire (§ 13) : 1.1 ajoute l'activité `pratique`. */
+export const SUPPORTED_FORMAT_VERSIONS = ['1.0', '1.1'] as const;
 
 /** Taille maximale d'un fichier `.formation.json` (§ 1 : 10 Mo par fichier). */
 export const MAX_FORMATION_BYTES = 10 * 1024 * 1024;
@@ -39,9 +39,11 @@ export interface FormationVersionRow {
   formatVersion: string;
   importedAt: string;
   importedBy: string | null;
-  origine: 'import' | 'publication';
-  /** Démonstration seulement : date de publication de cette version en production. */
+  origine: 'import' | 'publication' | 'copie';
+  /** Évaluation : date de publication de cette version en production. */
   publishedAt: string | null;
+  /** Évaluation : date de la dernière copie de cette version en démonstration. */
+  copiedToDemoAt: string | null;
 }
 
 export interface FormationRow {
@@ -52,9 +54,15 @@ export interface FormationRow {
   versions: FormationVersionRow[];
 }
 
-/** Résultat d'une publication démonstration → production. */
+/** Résultat d'une publication évaluation → production. */
 export interface PublishResult {
   publiee: boolean;
   refus?: string;
   action?: 'nouvelle' | 'nouvelle-version';
+}
+
+/** Résultat d'une copie évaluation → démonstration. */
+export interface DemoCopyResult {
+  copiee: boolean;
+  refus?: string;
 }

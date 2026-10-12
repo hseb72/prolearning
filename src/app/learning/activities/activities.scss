@@ -168,3 +168,41 @@ summary {
 .stars {
   font-size: 1.125rem;
 }
+
+// Travaux pratiques
+.tp-files,
+.tp-steps {
+  padding-left: 0;
+  list-style: none;
+}
+
+.tp-steps {
+  counter-reset: none;
+}
+
+.tp-file,
+.tp-steps > li {
+  margin-bottom: var(--space-3);
+
+  h3 {
+    margin-bottom: var(--space-1);
+    overflow-wrap: anywhere;
+  }
+}
+
+.tp-file pre {
+  margin-top: var(--space-1);
+}
+
+.tp-check fieldset {
+  margin: var(--space-3) 0 var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.tp-file .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}

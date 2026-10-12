@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { ADMIN, expectNoHorizontalOverflow, login, uniqueEmail } from './support';
+import {
+  ADMIN,
+  expectNoHorizontalOverflow,
+  login,
+  uniqueEmail,
+  tab,
+  confirmDialog,
+} from './support';
 
 /** Date de saisie (heure de Paris) dans `days` jours, au format d'un champ datetime-local. */
 function localDate(days: number, time: string): string {
@@ -16,7 +23,7 @@ test.describe('catalogue et sessions', () => {
 
     // L'administrateur a les droits de l'équipe formation.
     await login(page, ADMIN);
-    await page.getByRole('link', { name: 'Catalogue' }).click();
+    await tab(page, 'Catalogue').click();
     await page.getByRole('link', { name: 'Nouvelle fiche' }).click();
     await expect(
       page.getByRole('heading', { level: 1, name: 'Nouvelle fiche formation' }),
@@ -57,11 +64,11 @@ test.describe('catalogue et sessions', () => {
     await expect(sessions.first()).toContainText('Lieu : Lyon, salle Confluence');
     await expect(sessions.first()).toContainText('6 places restantes sur 6');
 
-    page.once('dialog', (dialog) => dialog.accept());
     await sessions
       .nth(1)
       .getByRole('button', { name: /Annuler la session/ })
       .click();
+    await confirmDialog(page, 'Annuler la session');
     await expect(page.getByText('Session annulée.')).toBeVisible();
     await expect(sessions.nth(1)).toContainText('Annulée');
     await expectNoHorizontalOverflow(page);
@@ -69,7 +76,7 @@ test.describe('catalogue et sessions', () => {
 
     // Un collaborateur trouve la fiche par le filtre de format, puis dans l'agenda.
     await login(page, uniqueEmail('catalogue', info));
-    await page.getByRole('link', { name: 'Catalogue' }).click();
+    await tab(page, 'Catalogue').click();
     await page.getByLabel('Rechercher').fill('archimate');
     await page.getByLabel('Format', { exact: true }).selectOption({ label: 'À distance' });
     await expect(page.getByRole('heading', { level: 2, name: titre })).toHaveCount(0);
@@ -85,7 +92,7 @@ test.describe('catalogue et sessions', () => {
     await expect(page.getByRole('button', { name: 'Programmer une session' })).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
 
-    await page.getByRole('link', { name: 'Sessions', exact: true }).click();
+    await tab(page, 'Sessions').click();
     const entry = page.locator('li.session').filter({ hasText: titre });
     await expect(entry).toHaveCount(1);
     await expect(entry).toContainText('6 places restantes sur 6');
@@ -94,7 +101,7 @@ test.describe('catalogue et sessions', () => {
 
   test('la création de fiche est réservée à l’équipe formation', async ({ page }, info) => {
     await login(page, uniqueEmail('curieux', info));
-    await page.getByRole('link', { name: 'Catalogue' }).click();
+    await tab(page, 'Catalogue').click();
     await expect(page.getByRole('link', { name: 'Nouvelle fiche' })).toHaveCount(0);
     await page.goto('/catalogue/nouvelle');
     await expect(page.getByRole('heading', { level: 1, name: 'Accès non autorisé' })).toBeVisible();

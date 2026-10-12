@@ -37,8 +37,10 @@ COPY --from=builder --chown=node:node /app/server/dist ./dist
 COPY --chown=node:node db /app/db
 # Schéma du format d'échange : la validation à l'import en dépend.
 COPY --chown=node:node docs/format/formation.schema.json /app/docs/format/formation.schema.json
-# Comptes fictifs de l'espace démonstration, chargés au démarrage si la base démo est vide.
+# Jeu de l'espace démonstration (comptes, catalogue, demandes, formations), chargé au
+# démarrage si la base démo est vide et à chaque réinitialisation.
 COPY --chown=node:node fixtures/demo /app/fixtures/demo
+COPY --chown=node:node fixtures/formations /app/fixtures/formations
 
 # Compte non privilégié de l'image de base (uid 1000).
 USER node

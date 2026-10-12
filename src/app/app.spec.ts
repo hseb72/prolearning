@@ -34,7 +34,7 @@ describe('App', () => {
 
   it('affiche la marque et un lien d’évitement vers le contenu', () => {
     const el = render(null);
-    expect(el.querySelector('.brand-name')?.textContent).toContain(LABELS.app.name);
+    expect(el.querySelector('.logo')?.textContent).toContain(LABELS.app.name);
     expect(el.querySelector('.skip-link')?.getAttribute('href')).toBe('#contenu');
     expect(el.querySelector('main#contenu')).not.toBeNull();
     expect(el.querySelector('nav')).toBeNull();
@@ -42,10 +42,12 @@ describe('App', () => {
 
   it('montre à un collaborateur son nom et son rôle, sans bandeau ni administration', () => {
     const el = render(me());
-    expect(el.querySelector('.account-name')?.textContent).toContain('Léa Dupont');
-    expect(el.querySelector('.account-role')?.textContent).toContain('Collaborateur');
-    expect(el.querySelector('app-space-banner section')).toBeNull();
-    expect(el.textContent).not.toContain(LABELS.nav.users);
+    expect(el.querySelector('.me-name')?.textContent).toContain('Léa Dupont · collaborateur');
+    expect(el.querySelector('.spacesw')).toBeNull();
+    const banner = el.querySelector('.demo[data-space]');
+    expect(banner?.getAttribute('data-space')).toBe('production');
+    expect(banner?.textContent).toContain(LABELS.space.productionBanner);
+    expect(el.querySelector('nav.nav')?.textContent).not.toContain(LABELS.nav.admin);
   });
 
   it('signale l’espace production à un administrateur et propose la démonstration', () => {
@@ -56,11 +58,12 @@ describe('App', () => {
       role: 'admin' as const,
     };
     const el = render(me({ user: admin, actor: admin, canSwitchSpace: true }));
-    const banner = el.querySelector('app-space-banner section');
+    const banner = el.querySelector('.demo[data-space]');
     expect(banner?.getAttribute('data-space')).toBe('production');
     expect(banner?.textContent).toContain(LABELS.space.productionBanner);
-    expect(banner?.textContent).toContain(LABELS.space.toDemo);
-    expect(el.textContent).toContain(LABELS.nav.users);
+    const toDemo = el.querySelector(`.spacesw button[aria-label="${LABELS.space.toDemo}"]`);
+    expect(toDemo?.getAttribute('aria-pressed')).toBe('false');
+    expect(el.querySelector('nav.nav')?.textContent).toContain(LABELS.nav.admin);
   });
 
   it('signale la démonstration et le rôle joué', () => {
@@ -78,12 +81,12 @@ describe('App', () => {
     };
     const el = render(me({ user: admin, actor: persona, space: 'demo', canSwitchSpace: true }));
     TestBed.inject(HttpTestingController).match('/api/space/personas');
-    const banner = el.querySelector('app-space-banner section');
+    const banner = el.querySelector('.demo[data-space]');
     expect(banner?.getAttribute('data-space')).toBe('demo');
     expect(banner?.textContent).toContain(LABELS.space.demoBanner);
-    expect(banner?.textContent).toContain('David Moreau — Collaborateur');
-    expect(el.querySelector('.account-name')?.textContent).toContain('David Moreau');
+    expect(el.querySelector('#persona')?.textContent).toContain('David Moreau — Collaborateur');
+    expect(el.querySelector('.me-name')?.textContent).toContain('David Moreau · collaborateur');
     // Le compte joué est un collaborateur : pas d'administration, même pour un administrateur.
-    expect(el.textContent).not.toContain(LABELS.nav.users);
+    expect(el.querySelector('nav.nav')?.textContent).not.toContain(LABELS.nav.admin);
   });
 });

@@ -1,0 +1,202 @@
+{
+  "description": "Jeu de données de l'espace démonstration : catalogue, sessions et demandes fictives. Les dates sont relatives au jour du chargement (« jour » : nombre de jours à partir d'aujourd'hui), à l'heure de Paris. Les comptes sont désignés par leur clé dans comptes.json ; « formations » liste les fichiers de fixtures/formations chargés en démonstration.",
+  "formations": ["togaf10.formation.json", "kubernetes-fondamentaux.formation.json"],
+  "fiches": [
+    {
+      "id": "togaf-fondamentaux",
+      "titre": "TOGAF 10 : les fondamentaux",
+      "theme": "Architecture d'entreprise",
+      "resume": "Deux jours pour comprendre ce qu'est une architecture d'entreprise, situer **TOGAF 10** et conduire un premier cycle ADM sur un cas concret.",
+      "objectifs": [
+        "Expliquer l'intérêt d'une architecture d'entreprise",
+        "Situer les quatre domaines d'architecture",
+        "Conduire les premières phases du cycle ADM"
+      ],
+      "public": "Architectes, urbanistes, chefs de projet SI",
+      "prerequis": "Aucun",
+      "dureeHeures": 14,
+      "formation": "togaf10",
+      "publiee": true
+    },
+    {
+      "id": "kubernetes-fondamentaux",
+      "titre": "Kubernetes : les fondamentaux",
+      "theme": "Infrastructure et cloud",
+      "resume": "Parcours en ligne avec **travaux pratiques** sur votre poste : conteneurs, architecture, déploiements, services, configuration, mise à l'échelle et sécurité.",
+      "objectifs": ["Déployer et exposer une application", "Configurer, mettre à l'échelle et dépanner"],
+      "public": "Développeurs, exploitants, architectes",
+      "prerequis": "Utiliser un terminal",
+      "formation": "kubernetes-fondamentaux",
+      "publiee": true
+    },
+    {
+      "id": "archimate-modelisation",
+      "titre": "Modéliser avec ArchiMate",
+      "theme": "Architecture d'entreprise",
+      "resume": "Lire et produire des vues **ArchiMate** : couches métier, applicative et technologique, relations et points de vue.",
+      "objectifs": ["Lire une vue ArchiMate", "Modéliser un processus et ses applications"],
+      "public": "Architectes et analystes métier",
+      "prerequis": "Avoir suivi « TOGAF 10 : les fondamentaux » ou équivalent",
+      "dureeHeures": 7,
+      "publiee": true
+    },
+    {
+      "id": "conduite-changement",
+      "titre": "Accompagner le changement",
+      "theme": "Management",
+      "resume": "Comprendre les résistances, construire un plan d'accompagnement et communiquer pendant une transformation.",
+      "objectifs": ["Cartographier les acteurs d'un changement", "Bâtir un plan d'accompagnement"],
+      "public": "Managers, chefs de projet",
+      "prerequis": "Aucun",
+      "dureeHeures": 3.5,
+      "publiee": true
+    },
+    {
+      "id": "atelier-collaboratif",
+      "titre": "Animer un atelier collaboratif",
+      "theme": "Management",
+      "resume": "Préparer, animer et conclure un atelier : objectifs, rôles, techniques d'animation et restitution.",
+      "objectifs": ["Préparer un atelier", "Choisir une technique d'animation"],
+      "public": "Toute personne amenée à animer des réunions de travail",
+      "prerequis": "Aucun",
+      "dureeHeures": 7,
+      "publiee": true
+    },
+    {
+      "id": "securite-essentiels",
+      "titre": "Sécurité des SI : les essentiels",
+      "theme": "Sécurité",
+      "resume": "Fiche en préparation : les fondamentaux de la sécurité des systèmes d'information.",
+      "objectifs": [],
+      "public": "Tous les collaborateurs",
+      "prerequis": "Aucun",
+      "dureeHeures": 3.5,
+      "publiee": false
+    }
+  ],
+  "sessions": [
+    {
+      "cle": "togaf-distance",
+      "fiche": "togaf-fondamentaux",
+      "modalite": "distance",
+      "debut": { "jour": 7, "heure": "09:00" },
+      "fin": { "jour": 8, "heure": "17:00" },
+      "lieu": "Teams",
+      "formateur": "Claire Dubois",
+      "places": 8
+    },
+    {
+      "cle": "togaf-lyon",
+      "fiche": "togaf-fondamentaux",
+      "modalite": "site",
+      "debut": { "jour": 28, "heure": "09:00" },
+      "fin": { "jour": 29, "heure": "17:00" },
+      "lieu": "Lyon, Part-Dieu, salle Confluence",
+      "formateur": "Claire Dubois",
+      "places": 12
+    },
+    {
+      "cle": "togaf-passee",
+      "fiche": "togaf-fondamentaux",
+      "modalite": "site",
+      "debut": { "jour": -30, "heure": "09:00" },
+      "fin": { "jour": -29, "heure": "17:00" },
+      "lieu": "Paris, siège, salle Seine",
+      "formateur": "Claire Dubois",
+      "places": 10
+    },
+    {
+      "cle": "archimate-paris",
+      "fiche": "archimate-modelisation",
+      "modalite": "site",
+      "debut": { "jour": 14, "heure": "09:00" },
+      "fin": { "jour": 14, "heure": "17:00" },
+      "lieu": "Paris, siège, salle Seine",
+      "formateur": "Marc Leroy",
+      "places": 3
+    },
+    {
+      "cle": "archimate-distance",
+      "fiche": "archimate-modelisation",
+      "modalite": "distance",
+      "debut": { "jour": 42, "heure": "09:00" },
+      "fin": { "jour": 42, "heure": "17:00" },
+      "lieu": "Teams",
+      "formateur": "Marc Leroy",
+      "places": 10
+    },
+    {
+      "cle": "changement-distance",
+      "fiche": "conduite-changement",
+      "modalite": "distance",
+      "debut": { "jour": 10, "heure": "14:00" },
+      "fin": { "jour": 10, "heure": "17:30" },
+      "lieu": "Teams",
+      "formateur": "Sophie Garnier",
+      "places": 10
+    },
+    {
+      "cle": "atelier-annule",
+      "fiche": "atelier-collaboratif",
+      "modalite": "site",
+      "debut": { "jour": 21, "heure": "09:00" },
+      "fin": { "jour": 21, "heure": "17:00" },
+      "lieu": "Lyon, Part-Dieu, salle Rhône",
+      "formateur": "Sophie Garnier",
+      "places": 8,
+      "annulee": true
+    }
+  ],
+  "inscriptions": [
+    {
+      "compte": "collab1",
+      "session": "togaf-distance",
+      "motif": "Je rejoins le projet de refonte du SI des magasins.",
+      "etapes": [
+        { "statut": "attente_formation", "par": "manager", "commentaire": "Accord, c'est utile pour le projet." },
+        { "statut": "confirmee", "par": "formation", "commentaire": "Le lien Teams vous sera envoyé la veille." }
+      ]
+    },
+    {
+      "compte": "collab2",
+      "session": "togaf-distance",
+      "motif": "Pour mieux suivre les ateliers d'architecture.",
+      "etapes": []
+    },
+    {
+      "compte": "collab1",
+      "session": "archimate-paris",
+      "motif": "",
+      "etapes": [{ "statut": "attente_formation", "par": "manager", "commentaire": "" }]
+    },
+    {
+      "compte": "collab2",
+      "session": "changement-distance",
+      "motif": "",
+      "etapes": [
+        { "statut": "refusee", "par": "manager", "commentaire": "Pas ce trimestre : on en reparle en janvier." }
+      ]
+    }
+  ],
+  "surMesure": [
+    {
+      "compte": "manager",
+      "fiche": "archimate-modelisation",
+      "sujet": "ArchiMate appliqué à nos processus logistiques",
+      "modalite": "site",
+      "participants": 6,
+      "periode": "Avant la fin du trimestre",
+      "details": "Une journée dans nos locaux, avec nos propres processus comme exemples.",
+      "etapes": []
+    },
+    {
+      "compte": "manager",
+      "sujet": "Prise de parole en réunion",
+      "modalite": "distance",
+      "participants": 4,
+      "periode": "Janvier",
+      "details": "",
+      "etapes": [{ "statut": "en_cours", "par": "formation", "commentaire": "Nous cherchons un intervenant." }]
+    }
+  ]
+}

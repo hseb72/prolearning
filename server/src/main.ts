@@ -3,7 +3,7 @@ import { OidcLogin } from './auth/oidc.js';
 import { purgeExpired } from './auth/sessions.js';
 import { loadConfig } from './config.js';
 import { closeDatabases, createDatabases } from './databases.js';
-import { ensureDemoAccounts } from './demo.js';
+import { loadDemo } from './demo.js';
 import { migrateAll } from './migrate.js';
 
 const config = loadConfig();
@@ -17,8 +17,13 @@ for (const [space, names] of Object.entries(applied)) {
       : `Base ${space} : aucune migration à appliquer`,
   );
 }
-const created = await ensureDemoAccounts(databases.demo);
-if (created) console.log(`Base demo : ${created} comptes fictifs créés`);
+// Base démo vide (premier démarrage) : chargement du jeu de démonstration.
+const loaded = await loadDemo(databases.demo, { onlyIfEmpty: true });
+if (loaded) {
+  console.log(
+    `Base demo : jeu chargé — ${loaded.comptes} comptes, ${loaded.formations} formations, ${loaded.fiches} fiches, ${loaded.sessions} sessions, ${loaded.demandes} demandes`,
+  );
+}
 
 const app = buildApp({
   databases,

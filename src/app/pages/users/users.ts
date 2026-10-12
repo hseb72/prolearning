@@ -5,12 +5,13 @@ import type { UserRow, UserUpdate } from '@shared/auth';
 import { hasRole, isRole, ROLES } from '@shared/roles';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth';
+import { AdminNav } from '../../layout/admin-nav';
 import { LABELS } from '../../labels';
 
 /** Comptes et rôles de l'espace actif (RBAC tenu dans l'application). */
 @Component({
   selector: 'app-users',
-  imports: [DatePipe],
+  imports: [DatePipe, AdminNav],
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })

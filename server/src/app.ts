@@ -2,7 +2,7 @@ import cookie from '@fastify/cookie';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { MAX_FORMATION_BYTES } from '../../shared/format.js';
 import type { HealthReport } from '../../shared/health.js';
-import { SPACES } from '../../shared/spaces.js';
+import { DATABASE_NAMES } from '../../shared/spaces.js';
 import { registerAuthRoutes, type AuthSettings } from './auth/routes.js';
 import { registerCatalogRoutes } from './catalog-routes.js';
 import { resolveContext, sessionToken } from './context.js';
@@ -57,11 +57,11 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
     request.auth = await resolveContext(databases, sessionToken(request));
   });
 
-  // Sonde de vie et de disponibilité (chart `app` : api.healthPath). Elle vérifie la
-  // base de chaque espace : une API qui n'en joint qu'une n'est pas en état de servir.
+  // Sonde de vie et de disponibilité (chart `app` : api.healthPath). Elle vérifie les trois
+  // bases : une API qui n'en joint qu'une partie n'est pas en état de servir.
   app.get('/api/health', async (_request, reply) => {
     const checks = await Promise.all(
-      SPACES.map(async (space) => {
+      DATABASE_NAMES.map(async (space) => {
         try {
           await withTimeout(databases[space].query('SELECT 1'), HEALTH_TIMEOUT_MS);
           return [space, 'ok'] as const;
@@ -80,7 +80,7 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
   registerAuthRoutes(app, databases, auth);
   registerSpaceRoutes(app, databases);
   registerUserRoutes(app);
-  registerFormationRoutes(app);
+  registerFormationRoutes(app, databases);
   registerPublicationRoutes(app, databases);
   registerLearningRoutes(app);
   registerCatalogRoutes(app);

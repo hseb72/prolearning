@@ -7,7 +7,7 @@ import { toMe } from './auth/routes.js';
 import { setSessionSpace } from './auth/sessions.js';
 import { resolveContext } from './context.js';
 import type { Databases } from './databases.js';
-import { findDefaultPersona } from './demo.js';
+import { findDefaultPersona, loadDemo } from './demo.js';
 import { findUser, listUsers, toSummary } from './users.js';
 
 const switchBody = z.object({
@@ -68,5 +68,32 @@ export function registerSpaceRoutes(app: FastifyInstance, databases: Databases):
     });
     const updated = await resolveContext(databases, ctx.token);
     return toMe(updated!);
+  });
+
+  /**
+   * Réinitialisation de la démonstration à partir de `fixtures/` : base démo vidée, jeu
+   * rechargé. La production n'est pas touchée, sauf pour journaliser qui l'a demandée.
+   */
+  app.post('/api/demo/reinitialisation', async (request, reply) => {
+    const ctx = request.auth;
+    if (!ctx)
+      return reply.code(401).send({ error: 'unauthenticated', message: 'Connexion requise.' });
+    if (!isAdmin(request))
+      return reply.code(403).send({ error: 'forbidden', message: 'Accès non autorisé.' });
+
+    const summary = (await loadDemo(databases.demo))!;
+    // Les identifiants des comptes fictifs repartent de 1 : on rejoue le compte par défaut.
+    if (ctx.space === 'demo') {
+      const persona = await findDefaultPersona(databases.demo);
+      await setSessionSpace(databases.production, ctx.token, 'demo', persona?.id ?? null);
+    }
+    await audit(databases.production, {
+      actorId: ctx.user.id,
+      actorLabel: ctx.user.email,
+      action: 'demo.reset',
+      details: { ...summary },
+    });
+    const updated = await resolveContext(databases, ctx.token);
+    return { me: toMe(updated!), resume: summary };
   });
 }

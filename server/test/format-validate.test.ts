@@ -12,6 +12,7 @@ import { validateFormation } from '../src/format/validate.js';
 const ROOT = join(import.meta.dirname, '..', '..');
 const REFERENCE = join(ROOT, 'tools', 'valider-formation.js');
 const FIXTURE = join(ROOT, 'fixtures', 'formations', 'togaf10-m1.formation.json');
+const K8S = join(ROOT, 'fixtures', 'formations', 'kubernetes-fondamentaux.formation.json');
 
 type Formation = Record<string, any>;
 const base = (): Formation => JSON.parse(readFileSync(FIXTURE, 'utf8'));
@@ -122,6 +123,67 @@ const CASES: [string, (f: Formation) => Formation | string][] = [
   ['fichier avec BOM', (f) => '﻿' + JSON.stringify(f)],
 ];
 
+/** Format 1.1 : cas propres à l'activité `pratique`, sur la formation Kubernetes. */
+const k8s = (): Formation => JSON.parse(readFileSync(K8S, 'utf8'));
+const pratique = (f: Formation): Formation => {
+  for (const m of f['modules']) {
+    const found = m.activites.find((a: Formation) => a['type'] === 'pratique');
+    if (found) return found;
+  }
+  throw new Error('Aucune activité pratique dans la formation Kubernetes.');
+};
+const CASES_1_1: [string, (f: Formation) => Formation | string][] = [
+  ['formation Kubernetes (1.1)', (f) => f],
+  ['pratique dans une formation 1.0', (f) => ({ ...f, formatVersion: '1.0' })],
+  [
+    'pratique : vérifications en double',
+    (f) => {
+      const p = pratique(f);
+      p.verification = [...p.verification, p.verification[0]];
+      return f;
+    },
+  ],
+  [
+    'pratique : fichiers en double',
+    (f) => {
+      const p = pratique(f);
+      p.fichiers = [
+        { nom: 'a.yaml', contenu: 'x' },
+        { nom: 'a.yaml', contenu: 'y' },
+      ];
+      return f;
+    },
+  ],
+  [
+    'pratique : référence inconnue',
+    (f) => {
+      pratique(f).references = ['inconnue'];
+      return f;
+    },
+  ],
+  [
+    'pratique : référence inconnue dans la solution',
+    (f) => {
+      pratique(f).solution = { titre: 'Solution', markdown: 'x', references: ['absente'] };
+      return f;
+    },
+  ],
+  [
+    'pratique : chemin de fichier qui remonte',
+    (f) => {
+      pratique(f).fichiers = [{ nom: '../secret.yaml', contenu: 'x' }];
+      return f;
+    },
+  ],
+  [
+    'pratique : sans vérification',
+    (f) => {
+      pratique(f).verification = [];
+      return f;
+    },
+  ],
+];
+
 let dir: string;
 beforeAll(() => {
   dir = mkdtempSync(join(tmpdir(), 'pl-format-'));
@@ -152,8 +214,11 @@ function reference(file: string): { ok: boolean; lines: string[] } {
 }
 
 describe('validation du format, à parité avec le validateur de référence', () => {
-  it.each(CASES)('%s', (name, transform) => {
-    const result = transform(base());
+  it.each([
+    ...CASES.map(([name, transform]) => [name, transform, base] as const),
+    ...CASES_1_1.map(([name, transform]) => [name, transform, k8s] as const),
+  ])('%s', (name, transform, load) => {
+    const result = transform(load());
     const content = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
     const file = join(dir, `${name.replace(/\W+/g, '-')}.formation.json`);
     writeFileSync(file, content, 'utf8');
@@ -194,7 +259,7 @@ describe('validation du format, à parité avec le validateur de référence', (
     expect(report.ok).toBe(false);
     expect(report.erreurs[0]).toEqual({
       chemin: 'formatVersion',
-      message: 'Version de format « 2.0 » inconnue de la plateforme (versions lues : 1.0).',
+      message: 'Version de format « 2.0 » inconnue de la plateforme (versions lues : 1.0, 1.1).',
     });
     expect(report.formation?.id).toBe('togaf10');
   });

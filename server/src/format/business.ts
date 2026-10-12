@@ -104,6 +104,24 @@ export function businessChecks(document: unknown): {
             `${w}.elements`,
           );
           break;
+        case 'pratique': {
+          // Format 1.1 (§ 6.8) : l'activité n'existe pas en 1.0.
+          if (f['formatVersion'] === '1.0') {
+            // Message identique à celui du validateur de référence (apostrophe droite comprise).
+            err(w, "l'activité « pratique » exige formatVersion 1.1");
+          }
+          duplicates(
+            list(a['verification']).map((v) => obj(v)['id']),
+            `${w}.verification`,
+          );
+          duplicates(
+            list(a['fichiers']).map((x) => obj(x)['nom']),
+            `${w}.fichiers`,
+          );
+          cite(a['references'], w);
+          if (a['solution']) cite(obj(a['solution'])['references'], `${w}.solution`);
+          break;
+        }
         case 'association': {
           const paires = list(a['paires']).map(obj);
           duplicates(

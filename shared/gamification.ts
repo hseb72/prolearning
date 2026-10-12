@@ -14,6 +14,8 @@ export const DEFAULT_POINTS = {
   /** Par étoile. */
   scenario: 20,
   fiches: 10,
+  /** Travaux pratiques (format 1.1, § 6.8). */
+  pratique: 30,
 } as const;
 
 /** Bonus par module terminé (§ 10). */

@@ -5,7 +5,6 @@
 .github
 docs
 !docs/format/formation.schema.json
-fixtures/formations
 tools
 e2e
 server/test

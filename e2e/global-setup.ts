@@ -8,6 +8,7 @@ export default function globalSetup(): void {
       ...process.env,
       TEST_DATABASE_URL_PRODUCTION: process.env['E2E_DATABASE_URL_PRODUCTION'],
       TEST_DATABASE_URL_DEMO: process.env['E2E_DATABASE_URL_DEMO'],
+      TEST_DATABASE_URL_EVALUATION: process.env['E2E_DATABASE_URL_EVALUATION'],
     },
   });
 }

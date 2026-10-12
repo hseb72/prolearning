@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // Tests de bout en bout : le front (ng serve, qui relaie /api) et l'API, sur deux
-// vraies bases (E2E_DATABASE_URL_PRODUCTION / E2E_DATABASE_URL_DEMO).
+// vraies bases (E2E_DATABASE_URL_PRODUCTION / E2E_DATABASE_URL_DEMO / E2E_DATABASE_URL_EVALUATION).
 // PLAYWRIGHT_CHROMIUM_PATH permet d'utiliser un Chromium déjà installé.
 const executablePath = process.env['PLAYWRIGHT_CHROMIUM_PATH'] || undefined;
 
@@ -19,16 +19,25 @@ export default defineConfig({
     launchOptions: { executablePath },
   },
   projects: [
-    { name: 'bureau', use: { ...devices['Desktop Chrome'] } },
+    { name: 'bureau', testIgnore: /demo-reset/, use: { ...devices['Desktop Chrome'] } },
     // Exigence transverse : parcours clé utilisable sur un écran de 375 px de large.
     {
       name: 'mobile-375',
+      testIgnore: /demo-reset/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 375, height: 740 },
         isMobile: true,
         hasTouch: true,
       },
+    },
+    // La réinitialisation de la démonstration remplace toute la base démo : elle passe
+    // seule, après les autres tests, qui utilisent aussi cet espace.
+    {
+      name: 'demonstration',
+      testMatch: /demo-reset/,
+      dependencies: ['bureau', 'mobile-375'],
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
   webServer: [
@@ -39,6 +48,7 @@ export default defineConfig({
       env: {
         DATABASE_URL_PRODUCTION: process.env['E2E_DATABASE_URL_PRODUCTION'] ?? '',
         DATABASE_URL_DEMO: process.env['E2E_DATABASE_URL_DEMO'] ?? '',
+        DATABASE_URL_EVALUATION: process.env['E2E_DATABASE_URL_EVALUATION'] ?? '',
         LOG_LEVEL: 'warn',
         AUTH_DEV_LOGIN: 'true',
         BOOTSTRAP_ADMIN_EMAILS: 'admin@soredi.example',

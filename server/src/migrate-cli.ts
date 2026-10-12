@@ -1,4 +1,4 @@
-// Applique les migrations aux deux bases puis s'arrête (usage : npm run migrate).
+// Applique les migrations aux trois bases (production, démonstration, évaluation) puis s'arrête (usage : npm run migrate).
 import { loadConfig } from './config.js';
 import { closeDatabases, createDatabases } from './databases.js';
 import { migrateAll } from './migrate.js';

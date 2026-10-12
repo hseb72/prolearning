@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { anonymousGuard, authGuard, roleGuard } from './core/guards';
 import { LABELS } from './labels';
+import { LearningService } from './learning/learning.service';
+import { PREVIEW_MODE, READER_MODE } from './learning/reader-mode';
 
 const title = (page: string) => `${page} — ${LABELS.app.name}`;
 
@@ -11,12 +13,10 @@ export const routes: Routes = [
     canActivate: [anonymousGuard],
     loadComponent: () => import('./pages/login/login').then((m) => m.LoginPage),
   },
-  {
-    path: '',
-    title: LABELS.app.name,
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/home/home').then((m) => m.HomePage),
-  },
+  // Le portail s'ouvre sur le catalogue (pas de page d'accueil, comme le prototype).
+  { path: '', pathMatch: 'full', redirectTo: 'catalogue' },
+  { path: 'administration', pathMatch: 'full', redirectTo: 'administration/demandes' },
+  { path: 'demandes/a-traiter', pathMatch: 'full', redirectTo: 'administration/demandes' },
   {
     path: 'parcours',
     title: title(LABELS.learning.title),
@@ -85,10 +85,30 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/requests/team').then((m) => m.TeamRequestsPage),
   },
   {
-    path: 'demandes/a-traiter',
+    path: 'administration/demandes',
     title: title(LABELS.requests.queueTitle),
     canActivate: [roleGuard('training')],
     loadComponent: () => import('./pages/requests/queue').then((m) => m.RequestQueuePage),
+  },
+  // Relecture d'une formation en évaluation : le lecteur, en aperçu (rien n'est enregistré).
+  {
+    path: 'administration/evaluation',
+    canActivate: [roleGuard('admin')],
+    providers: [LearningService, { provide: READER_MODE, useValue: PREVIEW_MODE }],
+    children: [
+      {
+        path: ':formation',
+        title: title(LABELS.formations.review),
+        loadComponent: () =>
+          import('./pages/learning/formation').then((m) => m.LearningFormationPage),
+      },
+      {
+        path: ':formation/:module/:activite',
+        title: title(LABELS.formations.review),
+        loadComponent: () =>
+          import('./pages/learning/activity').then((m) => m.LearningActivityPage),
+      },
+    ],
   },
   {
     path: 'administration/formations',
@@ -101,6 +121,13 @@ export const routes: Routes = [
     title: title(LABELS.users.title),
     canActivate: [roleGuard('admin')],
     loadComponent: () => import('./pages/users/users').then((m) => m.UsersPage),
+  },
+  {
+    // Bibliothèque de composants (SPEC-UI § 4), page interne non listée dans les onglets.
+    path: 'administration/composants',
+    title: title('Composants'),
+    canActivate: [roleGuard('admin')],
+    loadComponent: () => import('./pages/components/components').then((m) => m.ComponentsPage),
   },
   {
     path: 'acces-refuse',

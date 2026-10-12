@@ -70,7 +70,7 @@ shared:
   gatewayDataplaneNamespace: gateway
   networkPolicy:
     enabled: true
-  # Les deux bases sont provisionnées par le socle (locataires `prolearning` et
-  # `prolearning-demo` déclarés dans homelab-platform/database/values.yaml).
+  # Les trois bases sont provisionnées par le socle (locataires `prolearning`,
+  # `prolearning-demo` et `prolearning-eval` déclarés dans homelab-platform/database/values.yaml).
   provisioning:
     enabled: false

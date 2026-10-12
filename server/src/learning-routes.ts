@@ -1,10 +1,14 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest, preHandlerHookHandler } from 'fastify';
+import type pg from 'pg';
 import { z } from 'zod';
 import { DEFAULT_POINTS } from '../../shared/gamification.js';
 import type {
+  ActivityState,
+  ActivityStatus,
   CompletionResult,
   ExerciseCorrection,
   FormationCard,
+  FormationProgress,
   LearnerFormationResponse,
   QuizAttempt,
   QuizCorrection,
@@ -50,6 +54,7 @@ const learnerKey = (ctx: RequestContext) => `${ctx.space}:${ctx.actor.id}`;
  */
 export function registerLearningRoutes(app: FastifyInstance): void {
   const auth = { preHandler: requireAuth };
+  registerReader(app, learnerBackend);
 
   app.get('/api/parcours', auth, async (request): Promise<FormationCard[]> => {
     const ctx = request.auth!;
@@ -77,15 +82,130 @@ export function registerLearningRoutes(app: FastifyInstance): void {
     const ctx = request.auth!;
     return learnerProfile(ctx.db, ctx.actor.id, await allCurrentFormations(ctx.db));
   });
+}
 
-  app.get('/api/parcours/:formation', auth, async (request, reply) => {
+/** Résultat d'une activité, tel que l'API le corrige. */
+type ActivityResult = {
+  status: Exclude<ActivityStatus, 'a-faire'>;
+  score: number | null;
+  points: number;
+};
+
+/**
+ * Où le lecteur lit les formations et ce qu'il fait des résultats : l'apprenant de l'espace
+ * actif (progression enregistrée), ou l'aperçu d'évaluation (rien n'est enregistré).
+ */
+export interface ReaderBackend {
+  prefix: string;
+  guard: preHandlerHookHandler;
+  db(request: FastifyRequest): pg.Pool;
+  key(ctx: RequestContext): string;
+  progress(request: FastifyRequest, formation: RawFormation): Promise<FormationProgress>;
+  record(
+    request: FastifyRequest,
+    formation: RawFormation,
+    moduleId: string,
+    activity: RawActivity,
+    result: ActivityResult,
+  ): Promise<CompletionResult>;
+  startQuiz(
+    request: FastifyRequest,
+    formation: RawFormation,
+    moduleId: string,
+    activity: RawActivity,
+    questionIds: string[],
+  ): Promise<number>;
+  /** Questions de la tentative, si elle peut être corrigée (une seule fois). */
+  finishQuiz(
+    request: FastifyRequest,
+    formation: RawFormation,
+    moduleId: string,
+    activity: RawActivity,
+    tentative: number,
+    answered: string[],
+  ): Promise<string[] | null>;
+}
+
+/** L'apprenant : son compte dans l'espace actif, progression enregistrée. */
+const learnerBackend: ReaderBackend = {
+  prefix: '/api/parcours',
+  guard: requireAuth,
+  db: (request) => request.auth!.db,
+  key: learnerKey,
+  progress: (request, formation) =>
+    formationProgress(request.auth!.db, request.auth!.actor.id, formation),
+  record: (request, formation, moduleId, activity, result) =>
+    recordResult(request.auth!.db, request.auth!.actor.id, formation, moduleId, activity, result),
+  async startQuiz(request, formation, moduleId, activity, ids) {
+    const ctx = request.auth!;
+    const res = await ctx.db.query<{ id: string }>(
+      `INSERT INTO pl_quiz_attempts (user_id, formation_id, module_id, activite_id, question_ids)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id::text`,
+      [ctx.actor.id, formation.id, moduleId, activity.id, ids],
+    );
+    return Number(res.rows[0]!.id);
+  },
+  async finishQuiz(request, formation, moduleId, activity, tentative) {
+    const ctx = request.auth!;
+    // Une tentative ne se corrige qu'une fois, pour son apprenant et son activité.
+    const attempt = await ctx.db.query<{ question_ids: string[] }>(
+      `UPDATE pl_quiz_attempts SET submitted_at = now()
+       WHERE id = $1 AND user_id = $2 AND formation_id = $3 AND module_id = $4 AND activite_id = $5
+         AND submitted_at IS NULL AND created_at > now() - interval '1 day'
+       RETURNING question_ids`,
+      [tentative, ctx.actor.id, formation.id, moduleId, activity.id],
+    );
+    return attempt.rows[0]?.question_ids ?? null;
+  },
+};
+
+/**
+ * Aperçu d'évaluation : l'administrateur relit une formation importée dans le lecteur.
+ * Tout est ouvert, les exercices sont corrigés, mais rien n'est enregistré : l'évaluation
+ * n'a ni comptes ni progression (CLAUDE.md, « Espaces »).
+ */
+export function previewBackend(evaluation: pg.Pool, guard: preHandlerHookHandler): ReaderBackend {
+  return {
+    prefix: '/api/evaluation/parcours',
+    guard,
+    db: () => evaluation,
+    key: (ctx) => `evaluation:${ctx.user.id}`,
+    progress: async (_request, formation) => ({
+      activites: Object.fromEntries(formation.modules.map((m) => [m.id, {}])),
+      modules: Object.fromEntries(
+        formation.modules.map((m) => [m.id, { debloque: true, termine: false }]),
+      ),
+      points: 0,
+      terminee: false,
+    }),
+    record: async (_request, _formation, _moduleId, _activity, result) => {
+      const etat: ActivityState = {
+        statut: result.status,
+        points: result.points,
+        score: result.score,
+      };
+      return { etat, moduleTermine: false };
+    },
+    // Sans enregistrement, la tentative est rejouée telle quelle : les questions corrigées
+    // sont celles auxquelles l'aperçu répond.
+    startQuiz: async () => 0,
+    finishQuiz: async (_request, _formation, _moduleId, _activity, _tentative, answered) =>
+      answered,
+  };
+}
+
+/** Lecture d'une formation et corrections, pour l'apprenant ou pour l'aperçu. */
+export function registerReader(app: FastifyInstance, backend: ReaderBackend): void {
+  const auth = { preHandler: backend.guard };
+
+  app.get(`${backend.prefix}/:formation`, auth, async (request, reply) => {
     const ctx = request.auth!;
     const id = slug.safeParse((request.params as Record<string, unknown>)['formation']);
-    const formation = id.success ? await currentFormation(ctx.db, id.data) : null;
+    const formation = id.success ? await currentFormation(backend.db(request), id.data) : null;
     if (!formation) return notFound(reply, 'Formation introuvable.');
     const response: LearnerFormationResponse = {
-      formation: toLearnerFormation(formation, learnerKey(ctx)),
-      progression: await formationProgress(ctx.db, ctx.actor.id, formation),
+      formation: toLearnerFormation(formation, backend.key(ctx)),
+      progression: await backend.progress(request, formation),
     };
     return response;
   });
@@ -111,7 +231,7 @@ export function registerLearningRoutes(app: FastifyInstance): void {
       notFound(reply, 'Activité introuvable.');
       return null;
     }
-    const formation = await currentFormation(ctx.db, params.data.formation);
+    const formation = await currentFormation(backend.db(request), params.data.formation);
     const found = formation && findActivity(formation, params.data.module, params.data.activite);
     if (!formation || !found) {
       notFound(reply, 'Activité introuvable.');
@@ -124,7 +244,7 @@ export function registerLearningRoutes(app: FastifyInstance): void {
       });
       return null;
     }
-    const progress = await formationProgress(ctx.db, ctx.actor.id, formation);
+    const progress = await backend.progress(request, formation);
     if (!progress.modules[found.module.id]?.debloque) {
       await reply
         .code(409)
@@ -136,17 +256,17 @@ export function registerLearningRoutes(app: FastifyInstance): void {
       formation,
       moduleId: found.module.id,
       activity: found.activity,
-      seed: activitySeed(learnerKey(ctx), formation.id, found.module.id, found.activity.id),
+      seed: activitySeed(backend.key(ctx), formation.id, found.module.id, found.activity.id),
     };
   }
 
-  const base = '/api/parcours/:formation/modules/:module/activites/:activite';
+  const base = `${backend.prefix}/:formation/modules/:module/activites/:activite`;
 
   // Leçon, diaporama, fiches : terminées quand l'apprenant le déclare.
   app.post(`${base}/terminee`, auth, async (request, reply): Promise<CompletionResult | void> => {
     const t = await target(request, reply, ['lecon', 'diaporama', 'fiches']);
     if (!t) return;
-    return recordResult(t.ctx.db, t.ctx.actor.id, t.formation, t.moduleId, t.activity, {
+    return backend.record(request, t.formation, t.moduleId, t.activity, {
       status: 'faite',
       score: null,
       points: defaultPoints(t.activity),
@@ -157,16 +277,12 @@ export function registerLearningRoutes(app: FastifyInstance): void {
     const t = await target(request, reply, ['quiz']);
     if (!t) return;
     const ids = drawQuestions(t.activity);
-    const res = await t.ctx.db.query<{ id: string }>(
-      `INSERT INTO pl_quiz_attempts (user_id, formation_id, module_id, activite_id, question_ids)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id::text`,
-      [t.ctx.actor.id, t.formation.id, t.moduleId, t.activity.id, ids],
-    );
-    return { tentative: Number(res.rows[0]!.id), questions: askedQuestions(t.activity, ids) };
+    const tentative = await backend.startQuiz(request, t.formation, t.moduleId, t.activity, ids);
+    return { tentative, questions: askedQuestions(t.activity, ids) };
   });
 
   const quizBody = z.object({
-    tentative: z.number().int().positive(),
+    tentative: z.number().int().nonnegative(),
     reponses: z.record(z.string(), z.array(z.string()).max(50)),
   });
 
@@ -178,15 +294,14 @@ export function registerLearningRoutes(app: FastifyInstance): void {
       if (!t) return;
       const body = quizBody.safeParse(request.body);
       if (!body.success) return invalid(reply);
-      // Une tentative ne se corrige qu'une fois, pour son apprenant et son activité.
-      const attempt = await t.ctx.db.query<{ question_ids: string[] }>(
-        `UPDATE pl_quiz_attempts SET submitted_at = now()
-       WHERE id = $1 AND user_id = $2 AND formation_id = $3 AND module_id = $4 AND activite_id = $5
-         AND submitted_at IS NULL AND created_at > now() - interval '1 day'
-       RETURNING question_ids`,
-        [body.data.tentative, t.ctx.actor.id, t.formation.id, t.moduleId, t.activity.id],
+      const questionIds = await backend.finishQuiz(
+        request,
+        t.formation,
+        t.moduleId,
+        t.activity,
+        body.data.tentative,
+        Object.keys(body.data.reponses),
       );
-      const questionIds = attempt.rows[0]?.question_ids;
       // Une question retirée par une nouvelle version entre le tirage et la réponse est ignorée.
       const known = new Set((t.activity['questions'] as { id: string }[]).map((q) => q.id));
       const asked = questionIds?.filter((id) => known.has(id));
@@ -207,18 +322,11 @@ export function registerLearningRoutes(app: FastifyInstance): void {
             ? override
             : 0
           : DEFAULT_POINTS.quiz * graded.bonnesReponses;
-      const recorded = await recordResult(
-        t.ctx.db,
-        t.ctx.actor.id,
-        t.formation,
-        t.moduleId,
-        t.activity,
-        {
-          status: reussi ? 'reussie' : 'echouee',
-          score: ratio,
-          points,
-        },
-      );
+      const recorded = await backend.record(request, t.formation, t.moduleId, t.activity, {
+        status: reussi ? 'reussie' : 'echouee',
+        score: ratio,
+        points,
+      });
       return { ...graded, seuil, reussi, ...recorded };
     },
   );
@@ -231,18 +339,11 @@ export function registerLearningRoutes(app: FastifyInstance): void {
     const body = orderBody.safeParse(request.body);
     if (!body.success) return invalid(reply);
     const { juste, solution } = gradeOrder(t.activity, t.seed, body.data.ordre);
-    const recorded = await recordResult(
-      t.ctx.db,
-      t.ctx.actor.id,
-      t.formation,
-      t.moduleId,
-      t.activity,
-      {
-        status: 'faite',
-        score: juste ? 1 : 0,
-        points: juste ? defaultPoints(t.activity) : 0,
-      },
-    );
+    const recorded = await backend.record(request, t.formation, t.moduleId, t.activity, {
+      status: 'faite',
+      score: juste ? 1 : 0,
+      points: juste ? defaultPoints(t.activity) : 0,
+    });
     return { juste, solution, explication: t.activity['explication'], ...recorded };
   });
 
@@ -259,21 +360,37 @@ export function registerLearningRoutes(app: FastifyInstance): void {
       const body = associationBody.safeParse(request.body);
       if (!body.success) return invalid(reply);
       const { juste, solution } = gradeAssociation(t.activity, t.seed, body.data.reponses);
-      const recorded = await recordResult(
-        t.ctx.db,
-        t.ctx.actor.id,
-        t.formation,
-        t.moduleId,
-        t.activity,
-        {
-          status: 'faite',
-          score: juste ? 1 : 0,
-          points: juste ? defaultPoints(t.activity) : 0,
-        },
-      );
+      const recorded = await backend.record(request, t.formation, t.moduleId, t.activity, {
+        status: 'faite',
+        score: juste ? 1 : 0,
+        points: juste ? defaultPoints(t.activity) : 0,
+      });
       return { juste, solution, explication: t.activity['explication'], ...recorded };
     },
   );
+
+  // Travaux pratiques (§ 6.8) : terminés quand l'apprenant a coché toute la vérification.
+  const practiceBody = z.object({ cochees: z.array(z.string().max(64)).max(12) });
+
+  app.post(`${base}/pratique`, auth, async (request, reply): Promise<CompletionResult | void> => {
+    const t = await target(request, reply, ['pratique']);
+    if (!t) return;
+    const body = practiceBody.safeParse(request.body);
+    if (!body.success) return invalid(reply);
+    const expected = (t.activity['verification'] as { id: string }[]).map((v) => v.id);
+    const checked = new Set(body.data.cochees);
+    if (!expected.every((id) => checked.has(id))) {
+      return reply.code(400).send({
+        error: 'incomplete',
+        message: 'Cochez toutes les vérifications pour terminer les travaux pratiques.',
+      });
+    }
+    return backend.record(request, t.formation, t.moduleId, t.activity, {
+      status: 'faite',
+      score: null,
+      points: defaultPoints(t.activity),
+    });
+  });
 
   const scenarioBody = z.object({ chemin: z.array(z.number().int().min(0).max(20)).max(200) });
 
@@ -285,18 +402,11 @@ export function registerLearningRoutes(app: FastifyInstance): void {
     const step = replayScenario(t.activity, body.data.chemin);
     if ('error' in step) return reply.code(400).send({ error: 'invalid', message: step.error });
     if ('noeud' in step) return step;
-    const recorded = await recordResult(
-      t.ctx.db,
-      t.ctx.actor.id,
-      t.formation,
-      t.moduleId,
-      t.activity,
-      {
-        status: 'faite',
-        score: step.fin.etoiles,
-        points: defaultPoints(t.activity, step.fin.etoiles),
-      },
-    );
+    const recorded = await backend.record(request, t.formation, t.moduleId, t.activity, {
+      status: 'faite',
+      score: step.fin.etoiles,
+      points: defaultPoints(t.activity, step.fin.etoiles),
+    });
     return { ...(step.retour ? { retour: step.retour } : {}), fin: { ...step.fin, ...recorded } };
   });
 }

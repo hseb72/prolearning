@@ -146,8 +146,9 @@ describe.skipIf(!databasesAvailable)('isolation des espaces', () => {
 });
 
 /**
- * Garde-fou statique : seuls les modules d'infrastructure manipulent les deux bases. Le
- * code métier reçoit `request.auth.db`, la base de l'espace actif, et rien d'autre.
+ * Garde-fou statique : seuls les modules d'infrastructure, et ceux qui font passer les
+ * formations d'une base à l'autre (évaluation → production ou démonstration), manipulent
+ * plusieurs bases. Le code métier reçoit `request.auth.db`, la base de l'espace actif.
  */
 describe('accès aux bases', () => {
   const ALLOWED = new Set([
@@ -159,6 +160,7 @@ describe('accès aux bases', () => {
     'migrate-cli.ts',
     'space-routes.ts',
     'publication.ts',
+    'formation-routes.ts',
     'auth/routes.ts',
   ]);
 

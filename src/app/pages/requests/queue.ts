@@ -10,6 +10,7 @@ import type {
 import { formatRange } from '../../catalog/dates';
 import { AuthService } from '../../core/auth';
 import { apiMessage, RequestsService } from '../../core/requests';
+import { AdminNav } from '../../layout/admin-nav';
 import { LABELS } from '../../labels';
 import { DecisionForm } from '../../requests/decision';
 import { RequestHistory } from '../../requests/history';
@@ -17,8 +18,9 @@ import { RequestHistory } from '../../requests/history';
 /** Équipe formation : confirmation des inscriptions et traitement des demandes sur mesure. */
 @Component({
   selector: 'app-request-queue',
-  imports: [RouterLink, DecisionForm, RequestHistory],
+  imports: [RouterLink, DecisionForm, RequestHistory, AdminNav],
   template: `
+    <app-admin-nav />
     <h1>{{ labels.queueTitle }}</h1>
     <p>{{ labels.queueIntro }}</p>
     <div aria-live="polite">

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { ADMIN, expectNoHorizontalOverflow, login, uniqueEmail } from './support';
+import { ADMIN, expectNoHorizontalOverflow, login, uniqueEmail, tab } from './support';
 
 // Tests lancés depuis la racine du dépôt (npm run e2e).
 const FIXTURE = join(process.cwd(), 'fixtures', 'formations', 'togaf10-m1.formation.json');
@@ -36,7 +36,6 @@ async function publishExample(page: Page, info: TestInfo): Promise<Formation> {
 
   await login(page, ADMIN);
   const api = page.request;
-  expect((await api.post('/api/space', { data: { space: 'demo' } })).status()).toBe(200);
   const imported = await api.post('/api/formations/import', {
     headers: { 'content-type': 'application/octet-stream' },
     data: Buffer.from(JSON.stringify(formation, null, 2), 'utf8'),
@@ -68,7 +67,7 @@ test.describe('parcours en ligne', () => {
     const module = formation.modules[0]!;
 
     await login(page, uniqueEmail('apprenant', info));
-    await page.getByRole('link', { name: 'Parcours en ligne' }).click();
+    await tab(page, 'Mon parcours en ligne').click();
     await expect(page.getByRole('heading', { level: 1, name: 'Parcours en ligne' })).toBeVisible();
     await expect(page.getByText('Pas encore de badge')).toBeVisible();
     await page.getByRole('link', { name: `Ouvrir le parcours « ${formation.titre} »` }).click();

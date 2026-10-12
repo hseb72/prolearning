@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type pg from 'pg';
-import { SPACES, type Space } from '../../shared/spaces.js';
+import { DATABASE_NAMES, type DatabaseName } from '../../shared/spaces.js';
 import type { Databases } from './databases.js';
 
 /** Identifiant arbitraire du verrou consultatif des migrations (« PL » en ASCII). */
@@ -60,13 +60,13 @@ export async function migrate(pool: pg.Pool, dir: string = migrationsDir()): Pro
   }
 }
 
-/** Applique les migrations à la base de chaque espace : les deux schémas restent identiques. */
+/** Applique les migrations à chaque base (production, démo, évaluation) : les schémas restent identiques. */
 export async function migrateAll(
   databases: Databases,
   dir?: string,
-): Promise<Record<Space, string[]>> {
-  const result = {} as Record<Space, string[]>;
-  for (const space of SPACES) {
+): Promise<Record<DatabaseName, string[]>> {
+  const result = {} as Record<DatabaseName, string[]>;
+  for (const space of DATABASE_NAMES) {
     try {
       result[space] = await migrate(databases[space], dir);
     } catch (err) {
