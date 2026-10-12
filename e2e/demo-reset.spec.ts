@@ -59,9 +59,12 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   await expect(page.getByText(/validée : elle part à l’équipe formation/)).toBeVisible();
   await expect(page.getByText('Aucune demande en attente de votre validation.')).toBeVisible();
 
-  // … la réinitialisation rend le jeu de départ, et rejoue l'administratrice fictive.
-  await page.getByRole('button', { name: 'Réinitialiser la démonstration' }).click();
-  await confirmDialog(page, 'Réinitialiser la démonstration');
+  // … la réinitialisation (Administration › Formations) rend le jeu de départ, et rejoue
+  // l'administratrice fictive.
+  await play(page, 'Alice Martin — Administrateur');
+  await openAdmin(page, 'Formations');
+  await page.getByRole('button', { name: 'Réinitialiser l’espace démonstration' }).click();
+  await confirmDialog(page, 'Réinitialiser l’espace démonstration');
   await expect(
     page.getByText('Démonstration réinitialisée : jeu de départ rechargé.'),
   ).toBeVisible();
@@ -72,15 +75,17 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
     toValidate.locator('app-request-card').filter({ hasText: 'Emma Petit' }),
   ).toHaveCount(1);
 
-  // Le bandeau et sa bascule restent utilisables sur un écran de 375 px.
-  await page.setViewportSize({ width: 375, height: 740 });
-  await expect(page.getByRole('button', { name: 'Réinitialiser la démonstration' })).toBeVisible();
-  await expectNoHorizontalOverflow(page);
-
-  // L'évaluation n'a pas été touchée.
+  // L'évaluation n'a pas été touchée ; la réinitialisation reste accessible sur 375 px.
   await play(page, 'Alice Martin — Administrateur');
+  await page.setViewportSize({ width: 375, height: 740 });
   await openAdmin(page, 'Formations');
-  await expect(page.getByRole('heading', { name: 'Formation en relecture' })).toBeVisible();
+  await expect(
+    page.locator('article.formation').filter({ hasText: 'Formation en relecture' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Réinitialiser l’espace démonstration' }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 
   // La production non plus.
   await page.getByRole('button', { name: 'Revenir en production' }).click();

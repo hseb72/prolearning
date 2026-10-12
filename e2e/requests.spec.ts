@@ -86,7 +86,7 @@ test.describe('demandes', () => {
     // L'équipe formation confirme : une place est prise.
     await switchTo(page, ADMIN);
     await openAdmin(page, 'Demandes');
-    const toConfirm = page.locator('li.request').filter({ hasText: course.titre });
+    const toConfirm = page.locator('tr.request').filter({ hasText: course.titre });
     await expect(toConfirm).toContainText('2 places restantes sur 2');
     await toConfirm.getByRole('button', { name: /^Confirmer l’inscription de/ }).click();
     await expect(page.getByText(/Inscription de .* confirmée\./)).toBeVisible();
@@ -129,7 +129,7 @@ test.describe('demandes', () => {
 
     await switchTo(page, ADMIN);
     await openAdmin(page, 'Demandes');
-    const item = page.locator('li.request').filter({ hasText: sujet });
+    const item = page.locator('tr.request').filter({ hasText: sujet });
     await item.getByLabel('Réponse au demandeur (facultatif)').fill('Session le 20 novembre.');
     await item.getByRole('button', { name: `Accepter la demande « ${sujet} »` }).click();
     await expect(page.getByText('Demande mise à jour.')).toBeVisible();

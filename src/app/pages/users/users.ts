@@ -23,6 +23,9 @@ export class UsersPage {
   protected readonly roleLabels = LABELS.roles;
   protected readonly roles = ROLES;
   protected readonly demo = computed(() => this.auth.space() === 'demo');
+  protected readonly eyebrow = computed(() =>
+    LABELS.requests.adminEyebrow(this.demo() ? LABELS.space.demoName : LABELS.space.productionName),
+  );
 
   // Relu à chaque changement d'espace ou de compte joué : jamais les comptes de l'autre espace.
   protected readonly users = httpResource<UserRow[]>(() => {

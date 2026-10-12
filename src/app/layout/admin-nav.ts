@@ -42,8 +42,11 @@ import { LABELS } from '../labels';
   `,
   styles: `
     a.chipbtn {
-      color: inherit;
+      color: var(--ink);
       text-decoration: none;
+    }
+    a.chipbtn[aria-pressed='true'] {
+      color: var(--on-navy);
     }
   `,
 })

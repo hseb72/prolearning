@@ -20,24 +20,24 @@ function formationFile(info: TestInfo): { id: string; titre: string; buffer: Buf
 
 async function openFormations(page: Page): Promise<void> {
   await openAdmin(page, 'Formations');
-  await expect(page.getByRole('heading', { level: 1, name: 'Formations' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Formations en ligne' })).toBeVisible();
 }
 
 test.describe('formations', () => {
   test('rend un rapport lisible pour un fichier invalide', async ({ page }) => {
     await login(page, ADMIN);
     await openFormations(page);
-    await page.getByLabel('Fichier .formation.json').setInputFiles({
+    await page.getByLabel('Choisir un fichier').setInputFiles({
       name: 'cassee.formation.json',
       mimeType: 'application/json',
       buffer: Buffer.from(
         JSON.stringify({ format: '3s-formation', formatVersion: '1.0', id: 'x' }),
       ),
     });
-    await page.getByRole('button', { name: 'Vérifier le fichier' }).click();
     const report = page.getByRole('region', { name: 'Rapport de validation' });
-    await expect(report).toContainText('Fichier refusé');
-    await expect(report.getByRole('listitem').first()).toContainText('racine du fichier');
+    await expect(report).toContainText('cassee.formation.json');
+    await expect(report).toContainText(/erreurs? bloquantes?/);
+    await expect(report.locator('div.e').first()).toContainText('racine du fichier');
     await expect(report).toContainText('requiert la propriété modules');
     await expectNoHorizontalOverflow(page);
   });
@@ -52,21 +52,18 @@ test.describe('formations', () => {
     await openFormations(page);
     await expect(page.locator('.demo[data-space]')).toHaveAttribute('data-space', 'production');
 
-    await page.getByLabel('Fichier .formation.json').setInputFiles({
+    await page.getByLabel('Choisir un fichier').setInputFiles({
       name: `${file.id}.formation.json`,
       mimeType: 'application/json',
       buffer: file.buffer,
     });
-    await page.getByRole('button', { name: 'Vérifier le fichier' }).click();
-    await expect(
-      page.getByText(`Fichier valide : « ${file.titre} », version 0.1.0.`),
-    ).toBeVisible();
+    const report = page.getByRole('region', { name: 'Rapport de validation' });
+    await expect(report).toContainText('format valide');
+    await expect(report).toContainText(`${file.titre} · version 0.1.0`);
 
-    await page.getByRole('button', { name: 'Importer en évaluation' }).click();
-    await expect(page.getByText('Formation importée en évaluation.')).toBeVisible();
-    const card = page
-      .getByRole('listitem')
-      .filter({ has: page.getByRole('heading', { name: file.titre }) });
+    await report.getByRole('button', { name: 'Importer dans l’espace d’évaluation' }).click();
+    await expect(page.locator('.toast')).toContainText('Formation importée en évaluation.');
+    const card = page.locator('article.formation').filter({ hasText: file.titre });
     await expect(card).toContainText('0.1.0');
     await expect(card).toContainText('courante');
     await expectNoHorizontalOverflow(page);
@@ -99,7 +96,7 @@ test.describe('formations', () => {
     await card
       .getByRole('button', { name: `Copier « ${file.titre} », version 0.1.0, en démonstration` })
       .click();
-    await expect(page.getByText(/Version 0\.1\.0 copiée en démonstration/)).toBeVisible();
+    await expect(page.locator('.toast')).toContainText('Version 0.1.0 copiée en démonstration');
     await expect(card).toContainText('Copiée en démonstration le');
 
     // Publication, après confirmation.
@@ -107,7 +104,7 @@ test.describe('formations', () => {
       .getByRole('button', { name: `Publier « ${file.titre} », version 0.1.0, en production` })
       .click();
     await confirmDialog(page, 'Publier en production');
-    await expect(page.getByText('Version 0.1.0 publiée en production.')).toBeVisible();
+    await expect(page.locator('.toast')).toContainText('Version 0.1.0 publiée en production.');
     await expect(card).toContainText('Publiée en production le');
 
     // Les collaborateurs la trouvent dans les parcours en ligne de la production.

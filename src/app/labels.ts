@@ -103,6 +103,8 @@ export const LABELS = {
     admin: 'administrateur',
   } satisfies Record<Role, string>,
   space: {
+    productionName: 'Production',
+    demoName: 'Démonstration',
     productionBanner: 'Espace production · données réelles.',
     demoBanner:
       'Espace démonstration · données de test, visibles des seuls administrateurs. Les formations importées, elles, attendent dans l’espace d’évaluation (Administration).',
@@ -565,7 +567,23 @@ export const LABELS = {
     validated: (name: string) => `Demande de ${name} validée : elle part à l’équipe formation.`,
     refused: (name: string) => `Demande de ${name} refusée.`,
     // File de l'équipe formation
-    queueTitle: 'Demandes à traiter',
+    adminEyebrow: (space: string) => `Administration · ${space}`,
+    queueStats: {
+      todo: 'À traiter',
+      doing: 'En cours',
+      accepted: 'Acceptées',
+      refused: 'Refusées',
+    },
+    queueTable: {
+      caption: 'Demandes à traiter',
+      request: 'Demande',
+      requester: 'Demandeur',
+      details: 'Détails',
+      status: 'Statut',
+      actions: 'Actions',
+    },
+    queueEmpty: 'Aucune demande à traiter.',
+    queueTitle: 'Traiter les demandes',
     queueIntro:
       'Inscriptions validées par les managers, à confirmer dans la limite des places, et demandes de sessions sur mesure.',
     toConfirm: 'Inscriptions à confirmer',
@@ -635,7 +653,22 @@ export const LABELS = {
     courseLabel: (titre: string) => `Voir la fiche « ${titre} »`,
   },
   formations: {
-    title: 'Formations',
+    title: 'Formations en ligne',
+    lead: 'Importez une formation au format 3S (.formation.json). Elle arrive dans l’espace d’évaluation, réservé aux administrateurs, pour relecture. Vous la publiez ensuite en production, et vous pouvez aussi la copier dans l’espace démonstration.',
+    dropHint: 'Validation du format avant tout import · 10 Mo au plus',
+    importToEval: 'Importer dans l’espace d’évaluation',
+    summary: (titre: string, version: string) => `${titre} · version ${version}`,
+    evalHeading: 'Espace d’évaluation',
+    adminsTag: 'administrateurs',
+    demoHeading: 'Espace démonstration',
+    prodHeading: 'Espace production',
+    noDemo: 'Aucune formation copiée en démo.',
+    noProd: 'Aucune formation publiée en production.',
+    inDemo: 'En démo',
+    inProd: 'En production',
+    resetDemo: 'Réinitialiser l’espace démonstration',
+    resetDemoInfo:
+      'remet les sessions d’exemple et efface les demandes et formations de démo. L’espace d’évaluation et la production ne sont pas touchés.',
     intro:
       'Importez une formation au format d’échange 3S (fichier .formation.json) dans l’espace d’évaluation, relisez-la dans le lecteur, puis publiez-la en production. Vous pouvez aussi la copier en démonstration pour la montrer.',
     evaluationNote:
