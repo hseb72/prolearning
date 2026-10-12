@@ -32,9 +32,9 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   // Le jeu de départ : catalogue fictif, parcours en ligne, demandes en cours.
   await tab(page, 'Catalogue').click();
   await expect(
-    page.getByRole('heading', { level: 2, name: 'TOGAF 10 : les fondamentaux' }),
+    page.getByRole('heading', { level: 3, name: 'TOGAF 10 : les fondamentaux' }),
   ).toBeVisible();
-  await expect(page.getByText('Brouillon, non visible des collaborateurs')).toBeVisible();
+  await expect(page.getByText('Brouillon', { exact: true })).toBeVisible();
 
   await play(page, 'David Moreau — Collaborateur');
   await tab(page, 'Mes demandes').click();
@@ -82,6 +82,6 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   await expect(banner).toHaveAttribute('data-space', 'production');
   await tab(page, 'Catalogue').click();
   await expect(
-    page.getByRole('heading', { level: 2, name: 'TOGAF 10 : les fondamentaux' }),
+    page.getByRole('heading', { level: 3, name: 'TOGAF 10 : les fondamentaux' }),
   ).toHaveCount(0);
 });

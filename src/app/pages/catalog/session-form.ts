@@ -11,20 +11,25 @@ let nextId = 0;
 @Component({
   selector: 'app-session-form',
   template: `
-    <form class="panel" (submit)="save($event)" [attr.aria-labelledby]="uid + '-heading'">
-      <h3 [id]="uid + '-heading'">{{ session() ? labels.editHeading : labels.add }}</h3>
-      <div class="form-grid two">
-        <div class="field">
-          <label [for]="uid + '-modalite'">{{ labels.modalite }}</label>
-          <select [id]="uid + '-modalite'" (change)="modalite.set($any($event.target).value)">
+    <form class="f" (submit)="save($event)" aria-labelledby="session-form-title">
+      <h2 id="session-form-title">{{ session() ? labels.editHeading : labels.add }}</h2>
+      <div class="row2">
+        <div class="fld">
+          <label class="l" [for]="uid + '-modalite'">{{ labels.modalite }}</label>
+          <select
+            class="inp"
+            [id]="uid + '-modalite'"
+            (change)="modalite.set($any($event.target).value)"
+          >
             @for (m of modalites; track m) {
               <option [value]="m" [selected]="m === modalite()">{{ formats[m] }}</option>
             }
           </select>
         </div>
-        <div class="field">
-          <label [for]="uid + '-places'">{{ labels.places }}</label>
+        <div class="fld">
+          <label class="l" [for]="uid + '-places'">{{ labels.places }}</label>
           <input
+            class="inp"
             [id]="uid + '-places'"
             type="number"
             min="1"
@@ -34,9 +39,10 @@ let nextId = 0;
             (input)="places.set(+$any($event.target).value)"
           />
         </div>
-        <div class="field">
-          <label [for]="uid + '-debut'">{{ labels.debut }}</label>
+        <div class="fld">
+          <label class="l" [for]="uid + '-debut'">{{ labels.debut }}</label>
           <input
+            class="inp"
             [id]="uid + '-debut'"
             type="datetime-local"
             required
@@ -44,9 +50,10 @@ let nextId = 0;
             (input)="debut.set($any($event.target).value)"
           />
         </div>
-        <div class="field">
-          <label [for]="uid + '-fin'">{{ labels.fin }}</label>
+        <div class="fld">
+          <label class="l" [for]="uid + '-fin'">{{ labels.fin }}</label>
           <input
+            class="inp"
             [id]="uid + '-fin'"
             type="datetime-local"
             required
@@ -54,41 +61,47 @@ let nextId = 0;
             (input)="fin.set($any($event.target).value)"
           />
         </div>
-        <div class="field">
-          <label [for]="uid + '-lieu'">{{ labels.lieu }}</label>
-          <input
-            [id]="uid + '-lieu'"
-            type="text"
-            maxlength="500"
-            [attr.aria-describedby]="uid + '-lieu-hint'"
-            [value]="lieu()"
-            (input)="lieu.set($any($event.target).value)"
-          />
-          <p class="hint" [id]="uid + '-lieu-hint'">{{ labels.lieuHint }}</p>
-        </div>
-        <div class="field">
-          <label [for]="uid + '-formateur'">{{ labels.formateur }}</label>
-          <input
-            [id]="uid + '-formateur'"
-            type="text"
-            maxlength="200"
-            [value]="formateur()"
-            (input)="formateur.set($any($event.target).value)"
-          />
-        </div>
+      </div>
+      <div class="fld">
+        <label class="l" [for]="uid + '-lieu'">{{ labels.lieu }}</label>
+        <small [id]="uid + '-lieu-hint'">{{ labels.lieuHint }}</small>
+        <input
+          class="inp"
+          [id]="uid + '-lieu'"
+          type="text"
+          maxlength="500"
+          [attr.aria-describedby]="uid + '-lieu-hint'"
+          [value]="lieu()"
+          (input)="lieu.set($any($event.target).value)"
+        />
+      </div>
+      <div class="fld">
+        <label class="l" [for]="uid + '-formateur'">{{ labels.formateur }}</label>
+        <input
+          class="inp"
+          [id]="uid + '-formateur'"
+          type="text"
+          maxlength="200"
+          [value]="formateur()"
+          (input)="formateur.set($any($event.target).value)"
+        />
       </div>
       <div aria-live="polite">
         @if (error(); as e) {
-          <p class="message error" role="alert">{{ e }}</p>
+          <p class="fb bad" role="alert">{{ e }}</p>
         }
       </div>
-      <div class="actions">
-        <button class="button primary" type="submit" [disabled]="busy()">{{ labels.save }}</button>
-        <button class="button" type="button" (click)="closed.emit()">{{ labels.cancel }}</button>
+      <div class="acts">
+        <button class="btn ghost" type="button" (click)="closed.emit()">{{ labels.cancel }}</button>
+        <button class="btn" type="submit" [disabled]="busy()">{{ labels.save }}</button>
       </div>
     </form>
   `,
-  styleUrl: './catalog.scss',
+  styles: `
+    h2 {
+      margin: 0;
+    }
+  `,
 })
 export class SessionForm implements OnInit {
   private readonly service = inject(CatalogService);

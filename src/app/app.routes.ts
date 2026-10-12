@@ -1,10 +1,20 @@
-import { Routes } from '@angular/router';
+import type { Routes, UrlMatchResult, UrlSegment } from '@angular/router';
 import { anonymousGuard, authGuard, roleGuard } from './core/guards';
 import { LABELS } from './labels';
 import { LearningService } from './learning/learning.service';
 import { PREVIEW_MODE, READER_MODE } from './learning/reader-mode';
 
 const title = (page: string) => `${page} — ${LABELS.app.name}`;
+
+/** « /catalogue » et « /catalogue/:id » (sauf « nouvelle »), sur la même route. */
+export function catalogMatcher(segments: UrlSegment[]): UrlMatchResult | null {
+  if (segments[0]?.path !== 'catalogue') return null;
+  if (segments.length === 1) return { consumed: segments };
+  if (segments.length === 2 && segments[1]!.path !== 'nouvelle') {
+    return { consumed: segments, posParams: { id: segments[1]! } };
+  }
+  return null;
+}
 
 export const routes: Routes = [
   {
@@ -36,7 +46,9 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/learning/activity').then((m) => m.LearningActivityPage),
   },
   {
-    path: 'catalogue',
+    // /catalogue et /catalogue/:id partagent la même page : la fiche s'ouvre en dialogue
+    // par-dessus le catalogue, sans le recharger.
+    matcher: catalogMatcher,
     title: title(LABELS.catalog.title),
     canActivate: [authGuard],
     loadComponent: () => import('./pages/catalog/catalog').then((m) => m.CatalogPage),
@@ -48,9 +60,9 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/catalog/course-form').then((m) => m.CourseFormPage),
   },
   {
-    path: 'catalogue/:id',
-    title: title(LABELS.catalog.title),
-    canActivate: [authGuard],
+    path: 'catalogue/:id/sessions',
+    title: title(LABELS.catalog.sessionsHeading),
+    canActivate: [roleGuard('training')],
     loadComponent: () => import('./pages/catalog/course').then((m) => m.CoursePage),
   },
   {

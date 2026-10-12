@@ -59,3 +59,34 @@ const dateTimeFormat = new Intl.DateTimeFormat('fr-FR', {
 export function formatDateTime(iso: string): string {
   return dateTimeFormat.format(new Date(iso));
 }
+
+const isoDayFormat = new Intl.DateTimeFormat('en-CA', {
+  timeZone: TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+const shortDayFormat = new Intl.DateTimeFormat('fr-FR', {
+  timeZone: TIME_ZONE,
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+/** « 16 novembre 2026 », pour les lignes de session. */
+export function formatDate(iso: string): string {
+  return shortDayFormat.format(new Date(iso));
+}
+
+/**
+ * Durée d'une session, en jours de calendrier à Paris : 0 pour une demi-journée (4 h 30 au
+ * plus le même jour), sinon le nombre de jours couverts.
+ */
+export function sessionDays(debutIso: string, finIso: string): number {
+  const debut = new Date(debutIso);
+  const fin = new Date(finIso);
+  const day = (d: Date) => Date.parse(`${isoDayFormat.format(d)}T00:00:00Z`);
+  const days = Math.round((day(fin) - day(debut)) / 86_400_000) + 1;
+  if (days === 1 && fin.getTime() - debut.getTime() <= 4.5 * 3_600_000) return 0;
+  return days;
+}

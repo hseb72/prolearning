@@ -12,19 +12,22 @@ import { LABELS } from '../../labels';
   selector: 'app-course-form',
   imports: [RouterLink],
   template: `
-    <p>
-      <a [routerLink]="id() ? ['/catalogue', id()] : ['/catalogue']">{{ labels.back }}</a>
+    <p class="crumbs">
+      <a [routerLink]="id() ? ['/catalogue', id()] : ['/catalogue']">← {{ labels.back }}</a>
     </p>
+    <p class="eyebrow">{{ labels.eyebrow }}</p>
     <h1>{{ id() ? labels.editTitle(titre() || id()!) : labels.newTitle }}</h1>
 
     @if (id() && !loaded()) {
       <p role="status">{{ labels.loading }}</p>
     } @else {
-      <form class="form-grid" (submit)="save($event)">
+      <form class="card f" (submit)="save($event)">
         @if (!id()) {
-          <div class="field">
-            <label for="course-id">{{ f.id }}</label>
+          <div class="fld">
+            <label class="l" for="course-id">{{ f.id }}</label>
+            <small id="course-id-hint">{{ f.idHint }}</small>
             <input
+              class="inp"
               id="course-id"
               type="text"
               required
@@ -34,12 +37,12 @@ import { LABELS } from '../../labels';
               [value]="slug()"
               (input)="slug.set($any($event.target).value)"
             />
-            <p class="hint" id="course-id-hint">{{ f.idHint }}</p>
           </div>
         }
-        <div class="field">
-          <label for="course-titre">{{ f.titre }}</label>
+        <div class="fld">
+          <label class="l" for="course-titre">{{ f.titre }}</label>
           <input
+            class="inp"
             id="course-titre"
             type="text"
             required
@@ -48,9 +51,10 @@ import { LABELS } from '../../labels';
             (input)="titre.set($any($event.target).value)"
           />
         </div>
-        <div class="field">
-          <label for="course-theme">{{ f.theme }}</label>
+        <div class="fld">
+          <label class="l" for="course-theme">{{ f.theme }}</label>
           <input
+            class="inp"
             id="course-theme"
             type="text"
             required
@@ -59,9 +63,11 @@ import { LABELS } from '../../labels';
             (input)="theme.set($any($event.target).value)"
           />
         </div>
-        <div class="field">
-          <label for="course-resume">{{ f.resume }}</label>
+        <div class="fld">
+          <label class="l" for="course-resume">{{ f.resume }}</label>
+          <small id="course-resume-hint">{{ f.resumeHint }}</small>
           <textarea
+            class="inp"
             id="course-resume"
             required
             maxlength="5000"
@@ -69,22 +75,23 @@ import { LABELS } from '../../labels';
             [value]="resume()"
             (input)="resume.set($any($event.target).value)"
           ></textarea>
-          <p class="hint" id="course-resume-hint">{{ f.resumeHint }}</p>
         </div>
-        <div class="field">
-          <label for="course-objectifs">{{ f.objectifs }}</label>
+        <div class="fld">
+          <label class="l" for="course-objectifs">{{ f.objectifs }}</label>
+          <small id="course-objectifs-hint">{{ f.objectifsHint }}</small>
           <textarea
+            class="inp"
             id="course-objectifs"
             aria-describedby="course-objectifs-hint"
             [value]="objectifs()"
             (input)="objectifs.set($any($event.target).value)"
           ></textarea>
-          <p class="hint" id="course-objectifs-hint">{{ f.objectifsHint }}</p>
         </div>
-        <div class="form-grid two">
-          <div class="field">
-            <label for="course-public">{{ f.public }}</label>
+        <div class="row2">
+          <div class="fld">
+            <label class="l" for="course-public">{{ f.public }}</label>
             <input
+              class="inp"
               id="course-public"
               type="text"
               maxlength="1000"
@@ -92,9 +99,10 @@ import { LABELS } from '../../labels';
               (input)="audience.set($any($event.target).value)"
             />
           </div>
-          <div class="field">
-            <label for="course-prerequis">{{ f.prerequis }}</label>
+          <div class="fld">
+            <label class="l" for="course-prerequis">{{ f.prerequis }}</label>
             <input
+              class="inp"
               id="course-prerequis"
               type="text"
               maxlength="1000"
@@ -102,9 +110,11 @@ import { LABELS } from '../../labels';
               (input)="prerequis.set($any($event.target).value)"
             />
           </div>
-          <div class="field">
-            <label for="course-duree">{{ f.duree }}</label>
+          <div class="fld">
+            <label class="l" for="course-duree">{{ f.duree }}</label>
+            <small id="course-duree-hint">{{ f.dureeHint }}</small>
             <input
+              class="inp"
               id="course-duree"
               type="number"
               min="0.5"
@@ -114,11 +124,14 @@ import { LABELS } from '../../labels';
               [value]="duree()"
               (input)="duree.set($any($event.target).value)"
             />
-            <p class="hint" id="course-duree-hint">{{ f.dureeHint }}</p>
           </div>
-          <div class="field">
-            <label for="course-formation">{{ f.formation }}</label>
-            <select id="course-formation" (change)="formationId.set($any($event.target).value)">
+          <div class="fld">
+            <label class="l" for="course-formation">{{ f.formation }}</label>
+            <select
+              class="inp"
+              id="course-formation"
+              (change)="formationId.set($any($event.target).value)"
+            >
               <option value="">{{ f.noFormation }}</option>
               @for (o of options.value() ?? []; track o.id) {
                 <option [value]="o.id" [selected]="o.id === formationId()">{{ o.titre }}</option>
@@ -126,30 +139,29 @@ import { LABELS } from '../../labels';
             </select>
           </div>
         </div>
-        <div class="checkbox">
+        <label class="chk">
           <input
             id="course-publiee"
             type="checkbox"
             [checked]="publiee()"
             (change)="publiee.set($any($event.target).checked)"
           />
-          <label for="course-publiee">{{ f.publiee }}</label>
-        </div>
+          <span>{{ f.publiee }}</span>
+        </label>
         <div aria-live="polite">
           @if (error(); as e) {
-            <p class="message error" role="alert">{{ e }}</p>
+            <p class="fb bad" role="alert">{{ e }}</p>
           }
         </div>
-        <div class="actions">
-          <button class="button primary" type="submit" [disabled]="busy()">{{ f.save }}</button>
-          <a class="button" [routerLink]="id() ? ['/catalogue', id()] : ['/catalogue']">{{
+        <div class="acts">
+          <button class="btn" type="submit" [disabled]="busy()">{{ f.save }}</button>
+          <a class="btn ghost" [routerLink]="id() ? ['/catalogue', id()] : ['/catalogue']">{{
             f.cancel
           }}</a>
         </div>
       </form>
     }
   `,
-  styleUrl: './catalog.scss',
 })
 export class CourseFormPage {
   private readonly auth = inject(AuthService);
@@ -239,7 +251,7 @@ export class CourseFormPage {
     try {
       if (this.id()) await this.service.updateCourse(id, input);
       else await this.service.createCourse({ id, ...input });
-      await this.router.navigate(['/catalogue', id]);
+      await this.router.navigate(['/catalogue', id, 'sessions']);
     } catch (error) {
       const message = error instanceof HttpErrorResponse ? error.error?.message : null;
       this.error.set(typeof message === 'string' ? message : this.f.failed);

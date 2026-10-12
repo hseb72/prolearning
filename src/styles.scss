@@ -748,6 +748,31 @@ label.l {
   }
 }
 
+// Champ : libellé, aide facultative, puis contrôle (label.l reste lié par for/id).
+.fld {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+
+  small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+}
+
+// Titre de page et action principale sur la même ligne.
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+
+  h1 {
+    margin-bottom: 8px;
+  }
+}
+
 .inp {
   border: 1px solid var(--line);
   background: var(--bg);

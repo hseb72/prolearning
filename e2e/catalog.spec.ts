@@ -59,10 +59,10 @@ test.describe('catalogue et sessions', () => {
       await form.getByRole('button', { name: 'Enregistrer la session' }).click();
       await expect(page.getByText('Session enregistrée.')).toBeVisible();
     }
-    const sessions = page.locator('li.session');
+    const sessions = page.locator('app-session-row');
     await expect(sessions).toHaveCount(2);
     await expect(sessions.first()).toContainText('Lieu : Lyon, salle Confluence');
-    await expect(sessions.first()).toContainText('6 places restantes sur 6');
+    await expect(sessions.first()).toContainText('6 places sur 6');
 
     await sessions
       .nth(1)
@@ -77,25 +77,34 @@ test.describe('catalogue et sessions', () => {
     // Un collaborateur trouve la fiche par le filtre de format, puis dans l'agenda.
     await login(page, uniqueEmail('catalogue', info));
     await tab(page, 'Catalogue').click();
-    await page.getByLabel('Rechercher').fill('archimate');
-    await page.getByLabel('Format', { exact: true }).selectOption({ label: 'À distance' });
-    await expect(page.getByRole('heading', { level: 2, name: titre })).toHaveCount(0);
-    await page.getByLabel('Format', { exact: true }).selectOption({ label: 'Sur site' });
-    await expect(page.getByRole('heading', { level: 2, name: titre })).toBeVisible();
+    await page.getByLabel('Rechercher une formation').fill('archimate');
+    const formats = page.getByRole('group', { name: 'Format' });
+    await formats.getByRole('button', { name: 'À distance' }).click();
+    await expect(page.getByRole('heading', { level: 3, name: titre })).toHaveCount(0);
+    await formats.getByRole('button', { name: 'Sur site' }).click();
+    await expect(formats.getByRole('button', { name: 'Sur site' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByRole('heading', { level: 3, name: titre })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.getByRole('link', { name: `Voir la fiche « ${titre} »` }).click();
 
-    await expect(page.getByRole('heading', { level: 1, name: titre })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Modifier la fiche' })).toHaveCount(0);
-    await expect(page.locator('li.session')).toHaveCount(1);
-    await expect(page.locator('li.session')).toContainText('Sur site');
-    await expect(page.getByRole('button', { name: 'Programmer une session' })).toHaveCount(0);
+    // La fiche s'ouvre en dialogue, par-dessus le catalogue.
+    const sheet = page.getByRole('dialog', { name: titre });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'Modifier la fiche' })).toHaveCount(0);
+    await expect(sheet.locator('.next li')).toHaveCount(1);
+    await expect(sheet.locator('.next li')).toContainText('Sur site');
+    await expect(sheet.getByRole('button', { name: /S’inscrire à la session du/ })).toBeVisible();
     await expectNoHorizontalOverflow(page);
+    await sheet.getByRole('button', { name: 'Fermer' }).click();
+    await expect(page).toHaveURL(/\/catalogue$/);
 
     await tab(page, 'Sessions').click();
-    const entry = page.locator('li.session').filter({ hasText: titre });
+    const entry = page.locator('app-session-row').filter({ hasText: titre });
     await expect(entry).toHaveCount(1);
-    await expect(entry).toContainText('6 places restantes sur 6');
+    await expect(entry).toContainText('6 places sur 6');
     await expectNoHorizontalOverflow(page);
   });
 

@@ -1,11 +1,16 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import type { CourseCard, Format } from '@shared/catalog';
-import { formatDay } from '../../catalog/dates';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import type { CourseCard as Course, Format, SessionView } from '@shared/catalog';
 import { AuthService } from '../../core/auth';
 import { LABELS } from '../../labels';
-import { Md } from '../../learning/md';
+import { CourseCard } from '../../ui/course-card';
+import { Dialog } from '../../ui/dialog';
+import { EmptyState } from '../../ui/empty';
+import { FilterChips } from '../../ui/filter-chips';
+import { Stat } from '../../ui/stat';
+import { Tag } from '../../ui/tag';
+import { CourseSheet, FORMAT_KIND } from './course-sheet';
 
 const normalize = (s: string) =>
   s
@@ -13,138 +18,151 @@ const normalize = (s: string) =>
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase();
 
-/** Catalogue des formations, avec recherche et filtres (thème, format). */
+type FormatFilter = 'toutes' | Format;
+
+/**
+ * Catalogue (SPEC-UI, capture 01) : chiffres clés, filtres, cartes. La fiche d'une
+ * formation s'ouvre en dialogue par-dessus, à l'adresse /catalogue/:id.
+ */
 @Component({
   selector: 'app-catalog',
-  imports: [RouterLink, Md],
+  imports: [RouterLink, CourseCard, CourseSheet, Dialog, EmptyState, FilterChips, Stat, Tag],
   template: `
-    <div class="page-heading">
-      <h1>{{ labels.title }}</h1>
+    <p class="eyebrow">{{ labels.eyebrow }}</p>
+    <div class="page-head">
+      <h1>{{ labels.heading }}</h1>
       @if (team()) {
-        <a class="button primary" routerLink="/catalogue/nouvelle">{{ labels.newCourse }}</a>
+        <a class="btn" routerLink="/catalogue/nouvelle">{{ labels.newCourse }}</a>
       }
     </div>
-    <p>{{ labels.intro }}</p>
+    <p class="lead">{{ labels.intro }}</p>
 
     @if (courses.isLoading() && !courses.hasValue()) {
       <p role="status">{{ labels.loading }}</p>
     } @else if (courses.error()) {
-      <p class="message error" role="alert">{{ labels.loadFailed }}</p>
-    } @else if (!courses.value()?.length) {
-      <p>{{ labels.emptyCatalog }}</p>
+      <p class="fb bad" role="alert">{{ labels.loadFailed }}</p>
     } @else {
-      <form
-        class="filters"
-        role="search"
-        [attr.aria-label]="labels.filters"
-        (submit)="$event.preventDefault()"
-      >
-        <div class="field">
-          <label for="catalog-search">{{ labels.search }}</label>
-          <input
-            id="catalog-search"
-            type="search"
-            [placeholder]="labels.searchHint"
-            [value]="query()"
-            (input)="query.set($any($event.target).value)"
-          />
-        </div>
-        <div class="field">
-          <label for="catalog-theme">{{ labels.theme }}</label>
-          <select id="catalog-theme" (change)="theme.set($any($event.target).value)">
-            <option value="">{{ labels.allThemes }}</option>
-            @for (t of themes(); track t) {
-              <option [value]="t" [selected]="t === theme()">{{ t }}</option>
-            }
-          </select>
-        </div>
-        <div class="field">
-          <label for="catalog-format">{{ labels.format }}</label>
-          <select id="catalog-format" (change)="format.set($any($event.target).value)">
-            <option value="">{{ labels.allFormats }}</option>
-            @for (f of formatOptions; track f) {
-              <option [value]="f" [selected]="f === format()">{{ labels.formats[f] }}</option>
-            }
-          </select>
-        </div>
-      </form>
-
-      <p role="status" class="hint">{{ labels.results(filtered().length) }}</p>
+      <div class="stats">
+        <app-stat [value]="all().length" [label]="labels.stats.courses(all().length)" />
+        <app-stat [value]="sessionCount()" [label]="labels.stats.sessions(sessionCount())" />
+        <app-stat [value]="onlineCount()" [label]="labels.stats.online" />
+      </div>
+      <div class="filters" role="search" [attr.aria-label]="labels.filters">
+        <app-filter-chips [label]="labels.format" [options]="formatOptions" [(value)]="format" />
+        <select
+          class="search"
+          [attr.aria-label]="labels.theme"
+          (change)="theme.set($any($event.target).value)"
+        >
+          <option value="">{{ labels.allThemes }}</option>
+          @for (t of themes(); track t) {
+            <option [value]="t" [selected]="t === theme()">{{ t }}</option>
+          }
+        </select>
+        <input
+          class="search"
+          type="search"
+          [attr.aria-label]="labels.searchPlaceholder"
+          [placeholder]="labels.searchPlaceholder"
+          [value]="query()"
+          (input)="query.set($any($event.target).value)"
+        />
+      </div>
+      <p class="visually-hidden" role="status">{{ labels.results(filtered().length) }}</p>
       @if (!filtered().length) {
-        <p>{{ labels.empty }}</p>
-      }
-      <ul class="course-list">
-        @for (course of filtered(); track course.id) {
-          <li class="course-card">
-            <p class="hint">{{ course.theme }}</p>
-            <h2>{{ course.titre }}</h2>
-            @if (!course.publiee) {
-              <p class="draft">{{ labels.draft }}</p>
-            }
-            <app-md [text]="course.resume" />
-            <ul class="tags" [attr.aria-label]="labels.formatsOffered">
-              @for (f of course.formats; track f) {
-                <li class="tag" [attr.data-format]="f">{{ labels.formats[f] }}</li>
-              }
-            </ul>
-            <p class="hint">
-              @if (course.dureeHeures) {
-                {{ labels.duration(course.dureeHeures) }} ·
-              }
-              {{
-                course.prochaineSession
-                  ? labels.nextSession(day(course.prochaineSession))
-                  : labels.noSession
-              }}
-            </p>
-            <a
-              class="button"
-              [routerLink]="['/catalogue', course.id]"
-              [attr.aria-label]="labels.seeLabel(course.titre)"
-              >{{ labels.see }}</a
+        <app-empty>{{ all().length ? labels.emptyFilter : labels.emptyCatalog }}</app-empty>
+      } @else {
+        <div class="grid">
+          @for (c of filtered(); track c.id) {
+            <app-course-card
+              [theme]="c.theme"
+              [heading]="c.titre"
+              [modes]="modes(c)"
+              [duration]="c.dureeHeures ? labels.duration(c.dureeHeures) : ''"
+              [info]="labels.cardInfo(!!c.formationId, sessionsOf(c.id))"
             >
-          </li>
-        }
-      </ul>
+              @if (!c.publiee) {
+                <app-tag>{{ labels.draftTag }}</app-tag>
+              }
+              <a
+                class="btn small"
+                [routerLink]="['/catalogue', c.id]"
+                [attr.aria-label]="labels.seeLabel(c.titre)"
+                >{{ labels.see }}</a
+              >
+            </app-course-card>
+          }
+        </div>
+      }
     }
+
+    <app-dialog labelledBy="course-sheet-title" [open]="!!id()" (openChange)="$event || close()">
+      @if (id(); as courseId) {
+        <app-course-sheet [id]="courseId" (closed)="close()" />
+      }
+    </app-dialog>
   `,
-  styleUrl: './catalog.scss',
 })
 export class CatalogPage {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  /** Fiche ouverte en dialogue (/catalogue/:id). */
+  readonly id = input<string>();
+
   protected readonly labels = LABELS.catalog;
-  protected readonly formatOptions: Format[] = ['distance', 'site', 'en-ligne'];
+  protected readonly formatOptions: { value: FormatFilter; label: string }[] = (
+    ['toutes', 'en-ligne', 'distance', 'site'] as const
+  ).map((value) => ({ value, label: LABELS.catalog.chips[value === 'toutes' ? 'all' : value]! }));
   protected readonly team = computed(() => this.auth.hasRole('training'));
   protected readonly query = signal('');
   protected readonly theme = signal('');
-  protected readonly format = signal('');
+  protected readonly format = signal<FormatFilter>('toutes');
 
-  protected readonly courses = httpResource<CourseCard[]>(() => {
+  private readonly params = computed(() => {
     const me = this.auth.me();
-    return me
-      ? { url: '/api/catalogue', params: { espace: me.space, compte: me.actor.id } }
-      : undefined;
+    return me ? { espace: me.space, compte: me.actor.id } : null;
+  });
+  protected readonly courses = httpResource<Course[]>(() => {
+    const params = this.params();
+    return params ? { url: '/api/catalogue', params } : undefined;
+  });
+  private readonly sessions = httpResource<SessionView[]>(() => {
+    const params = this.params();
+    return params ? { url: '/api/sessions', params } : undefined;
   });
 
+  protected readonly all = computed(() => this.courses.value() ?? []);
+  private readonly upcoming = computed(() =>
+    (this.sessions.value() ?? []).filter((s) => !s.annulee && new Date(s.debut) > new Date()),
+  );
+  protected readonly sessionCount = computed(() => this.upcoming().length);
+  protected readonly onlineCount = computed(() => this.all().filter((c) => c.formationId).length);
+
   protected readonly themes = computed(() =>
-    [...new Set((this.courses.value() ?? []).map((c) => c.theme))].sort((a, b) =>
-      a.localeCompare(b, 'fr'),
-    ),
+    [...new Set(this.all().map((c) => c.theme))].sort((a, b) => a.localeCompare(b, 'fr')),
   );
 
   protected readonly filtered = computed(() => {
     const q = normalize(this.query().trim());
     const theme = this.theme();
-    const format = this.format() as Format | '';
-    return (this.courses.value() ?? []).filter(
+    const format = this.format();
+    return this.all().filter(
       (c) =>
         (!theme || c.theme === theme) &&
-        (!format || c.formats.includes(format)) &&
+        (format === 'toutes' || c.formats.includes(format)) &&
         (!q || normalize(`${c.titre} ${c.theme} ${c.resume}`).includes(q)),
     );
   });
 
-  protected day(iso: string): string {
-    return formatDay(iso);
+  protected modes(c: Course): ('online' | 'distance' | 'site')[] {
+    return c.formats.map((f) => FORMAT_KIND[f]);
+  }
+
+  protected sessionsOf(courseId: string): number {
+    return this.upcoming().filter((s) => s.courseId === courseId).length;
+  }
+
+  protected close(): void {
+    void this.router.navigate(['/catalogue']);
   }
 }

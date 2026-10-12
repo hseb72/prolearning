@@ -57,15 +57,16 @@ test.describe('demandes', () => {
     // La collaboratrice demande son inscription depuis la fiche.
     await switchTo(page, collab);
     await page.goto(`/catalogue/${course.id}`);
-    await expect(page.getByRole('heading', { level: 1, name: course.titre })).toBeVisible();
-    await page.getByRole('button', { name: /Demander mon inscription à la session du/ }).click();
-    await page.getByLabel('Message pour votre manager (facultatif)').fill('Pour le projet Atelia.');
+    const sheet = page.getByRole('dialog', { name: course.titre }).first();
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole('button', { name: /S’inscrire à la session du/ }).click();
+    const ask = page.getByRole('dialog').filter({ hasText: 'Demande d’inscription' });
+    await ask.getByLabel('Ce que vous attendez de la formation').fill('Pour le projet Atelia.');
     await expectNoHorizontalOverflow(page);
-    await page.getByRole('button', { name: 'Envoyer la demande' }).click();
-    await expect(page.getByText('Demande envoyée à votre manager.')).toBeVisible();
-    await expect(
-      page.getByText('Votre demande : En attente de validation du manager'),
-    ).toBeVisible();
+    await ask.getByRole('button', { name: 'Envoyer la demande' }).click();
+    await expect(page.locator('.toast')).toContainText('Demande d’inscription envoyée');
+    await expect(sheet.locator('app-status')).toHaveText('Envoyée');
+    await sheet.getByRole('button', { name: 'Fermer' }).click();
     await tab(page, 'Mes demandes').click();
     const mine = page.locator('li.request').filter({ hasText: course.titre });
     await expect(mine).toContainText('En attente de validation du manager');
@@ -98,8 +99,12 @@ test.describe('demandes', () => {
     await mine.getByText('Historique').click();
     await expect(mine).toContainText('Accord, bonne formation.');
     await page.goto(`/catalogue/${course.id}`);
-    await expect(page.getByText('1 place restante sur 2')).toBeVisible();
-    await expect(page.getByText('Votre demande : Inscription confirmée')).toBeVisible();
+    await expect(page.getByRole('dialog').locator('app-status')).toHaveText('Acceptée');
+    await page.getByRole('dialog').getByRole('button', { name: 'Fermer' }).click();
+    await tab(page, 'Sessions').click();
+    const row = page.locator('app-session-row').filter({ hasText: course.titre });
+    await expect(row).toContainText('1 place sur 2');
+    await expect(row.getByRole('link', { name: 'Demande envoyée' })).toBeVisible();
   });
 
   test('session sur mesure : demandée par un manager, acceptée par l’équipe formation', async ({
