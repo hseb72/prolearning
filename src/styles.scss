@@ -580,7 +580,8 @@ summary:focus-visible,
   text-underline-offset: 3px;
 }
 
-.session {
+// Ligne de session du prototype (`article.card.session`, `app-session-row`).
+.card.session {
   display: grid;
   grid-template-columns: 72px 1fr auto;
   gap: 16px;
@@ -631,7 +632,7 @@ summary:focus-visible,
 }
 
 @media (max-width: 640px) {
-  .session {
+  .card.session {
     grid-template-columns: 60px 1fr;
 
     .act {
