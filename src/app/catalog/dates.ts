@@ -82,3 +82,17 @@ export function formatDay(iso: string): string {
 export function formatMonth(iso: string): string {
   return monthFormat.format(new Date(iso));
 }
+
+const dateTimeFormat = new Intl.DateTimeFormat('fr-FR', {
+  timeZone: TIME_ZONE,
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+/** « 12 octobre 2026 à 14:30 », pour l'historique des demandes. */
+export function formatDateTime(iso: string): string {
+  return dateTimeFormat.format(new Date(iso));
+}

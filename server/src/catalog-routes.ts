@@ -25,6 +25,7 @@ import {
   upcomingSessions,
 } from './catalog/store.js';
 import { requireAuth, requireRole, type RequestContext } from './context.js';
+import { activeRequestsBySession, closeSessionRequests, transaction } from './requests/store.js';
 import { auditLabel } from './formation-routes.js';
 
 const text = (max: number) => z.string().trim().max(max);
@@ -87,7 +88,13 @@ export function registerCatalogRoutes(app: FastifyInstance): void {
     const p = courseParam.safeParse(request.params);
     if (!p.success) return courseNotFound(reply);
     const course = await getCourse(ctx.db, p.data.id, isTeam(ctx));
-    return course ?? courseNotFound(reply);
+    if (!course) return courseNotFound(reply);
+    course.mesDemandes = await activeRequestsBySession(
+      ctx.db,
+      ctx.actor.id,
+      course.sessions.map((s) => s.id),
+    );
+    return course;
   });
 
   app.get('/api/sessions', auth, async (request): Promise<SessionView[]> =>
@@ -178,7 +185,11 @@ export function registerCatalogRoutes(app: FastifyInstance): void {
     const session = await getSession(ctx.db, p.data.id);
     if (!session) return sessionNotFound(reply);
     if (!session.annulee) {
-      await cancelSession(ctx.db, p.data.id);
+      // Les demandes en cours sont closes et les places libérées, dans la même transaction.
+      await transaction(ctx.db, async (client) => {
+        await cancelSession(client, p.data.id);
+        await closeSessionRequests(client, p.data.id, ctx.actor);
+      });
       await audit(ctx.db, { ...actor(ctx), action: 'session.cancel', details: { id: p.data.id } });
     }
     return getSession(ctx.db, p.data.id);

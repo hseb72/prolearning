@@ -142,6 +142,7 @@ export async function getCourse(
     public: row.public,
     prerequis: row.prerequis,
     sessions: manager ? all : all.filter((s) => isOpen(s)),
+    mesDemandes: {},
   };
 }
 
@@ -241,7 +242,7 @@ export async function updateSession(db: pg.Pool, id: number, input: SessionInput
   );
 }
 
-export async function cancelSession(db: pg.Pool, id: number): Promise<void> {
+export async function cancelSession(db: pg.Pool | pg.PoolClient, id: number): Promise<void> {
   await db.query('UPDATE pl_course_sessions SET annulee = true, updated_at = now() WHERE id = $1', [
     id,
   ]);

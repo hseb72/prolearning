@@ -52,6 +52,32 @@
           nav.learning
         }}</a>
       </li>
+      <li>
+        <a
+          routerLink="/demandes"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          ariaCurrentWhenActive="page"
+          >{{ nav.myRequests }}</a
+        >
+      </li>
+      @if (isManager()) {
+        <li>
+          <a routerLink="/demandes/equipe" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+            nav.team
+          }}</a>
+        </li>
+      }
+      @if (isTraining()) {
+        <li>
+          <a
+            routerLink="/demandes/a-traiter"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            >{{ nav.queue }}</a
+          >
+        </li>
+      }
       @if (isAdmin()) {
         <li>
           <a

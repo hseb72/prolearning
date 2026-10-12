@@ -1,0 +1,35 @@
+.request {
+  border-left-width: 4px;
+
+  &[data-statut='confirmee'],
+  &[data-statut='acceptee'] {
+    border-left-color: var(--color-success);
+  }
+
+  &[data-statut='refusee'] {
+    border-left-color: var(--color-danger);
+  }
+
+  &[data-statut='attente_manager'],
+  &[data-statut='attente_formation'],
+  &[data-statut='a_traiter'],
+  &[data-statut='en_cours'] {
+    border-left-color: var(--color-orange-dark);
+  }
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.decision {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+blockquote {
+  margin: 0;
+  padding-left: var(--space-2);
+  border-left: 2px solid var(--color-border);
+}

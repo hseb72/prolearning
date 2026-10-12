@@ -109,12 +109,24 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 - Dates saisies et affichées à l'**heure de Paris**, quel que soit le poste (`src/app/catalog/dates.ts`).
 - Création, modification et annulation sont journalisées (`course.*`, `session.*`).
 
+### Choix d'implémentation (étape 5)
+
+- **Inscription à une session en direct** : le collaborateur demande depuis la fiche, son **manager actuel** valide ou refuse, puis l'équipe formation confirme ou refuse.
+  - La confirmation prend une place sous verrou : pas de surréservation.
+  - Un compte sans manager rattaché ne peut pas demander ; le message l'invite à faire faire le rattachement par un administrateur.
+  - Le demandeur peut retirer sa demande, ou se désinscrire avant le début de la session.
+  - Annuler une session clôt ses demandes en cours et libère les places.
+- **Session sur mesure** : demandée par un manager (avec ou sans fiche du catalogue). L'équipe formation la prend en charge, puis l'accepte ou la refuse avec une réponse.
+- **Historique** de chaque demande (`pl_request_events`) : statut, auteur, date, commentaire. Il est visible du demandeur, de son manager et de l'équipe formation.
+- **Visibilité** : chacun voit ses propres demandes ; un manager voit celles des collaborateurs qui lui sont rattachés ; l'équipe formation voit la file à traiter.
+- **Pas de notification par e-mail** pour l'instant (pas de serveur d'envoi). Le suivi se fait dans « Mes demandes », « Mon équipe » et « Demandes à traiter ».
+
 ## Structure du dépôt
 
 | Dossier | Contenu |
 |---|---|
 | `src/` | Front Angular (composants autonomes, signaux, sans zone.js). Textes d'interface réunis dans `src/app/labels.ts`. Lecteur de formation : `src/app/learning/` (markdown, un composant par type d'activité) et `src/app/pages/learning/`. |
-| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). `src/format/` : validation, stockage et export ; `src/learning/` : lecteur (vue apprenant, correction, progression) ; `src/catalog/` et `src/catalog-routes.ts` : catalogue et sessions. |
+| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). `src/format/` : validation, stockage et export ; `src/learning/` : lecteur (vue apprenant, correction, progression) ; `src/catalog/` et `src/catalog-routes.ts` : catalogue et sessions ; `src/requests/` et `src/request-routes.ts` : demandes. |
 | `server/src/format/` | Format d'échange : `validate.ts` (schéma + contrôles métier, mêmes verdicts que le validateur de référence, vérifié par un test de parité ; messages en français, chemins au style du § 11), `store.ts` (règles de version du § 11, texte exact conservé pour un export sans perte). `src/publication.ts` est le seul module métier qui touche les deux bases (publication démo → production par export puis import). |
 | `shared/` | Code commun au front et à l'API (types, règles). Imports relatifs suffixés `.js`. |
 | `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |
