@@ -11,7 +11,7 @@ Royaume `soredi` sur `https://sso.crealcs.com`.
 
 | Réglage                         | Valeur                                                                      |
 | ------------------------------- | --------------------------------------------------------------------------- |
-| Client ID                       | `prolearning` (ou autre, à reporter dans `OIDC_CLIENT_ID`)                  |
+| Client ID                       | `pro-learning` (valeur de `OIDC_CLIENT_ID` dans `deploy/values.yaml`)       |
 | Client authentication           | activé (client confidentiel)                                                |
 | Authentication flow             | _Standard flow_ seulement (pas d'_implicit_, pas de _direct access grants_) |
 | PKCE                            | méthode `S256` (_Advanced → Proof Key for Code Exchange_)                   |
@@ -27,7 +27,7 @@ Chaque compte doit avoir une adresse e-mail : sans elle, la connexion est refus�
 | Variable                 | Valeur                                                                        |
 | ------------------------ | ----------------------------------------------------------------------------- |
 | `OIDC_ISSUER`            | `https://sso.crealcs.com/realms/soredi`                                       |
-| `OIDC_CLIENT_ID`         | l'identifiant du client                                                       |
+| `OIDC_CLIENT_ID`         | `pro-learning`                                                                |
 | `OIDC_CLIENT_SECRET`     | le secret du client — **dans le Secret Kubernetes de l'API, jamais dans Git** |
 | `APP_URL`                | `https://prolearning.crealcs.com`                                             |
 | `BOOTSTRAP_ADMIN_EMAILS` | e-mails des premiers administrateurs, séparés par des virgules                |

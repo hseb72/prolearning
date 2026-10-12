@@ -76,7 +76,9 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 
 1. **Hébergement** : cible définitive sur le cluster décrit dans [`hseb72/homelab-platform`](https://github.com/hseb72/homelab-platform), en suivant le **pattern `shared`** de [`hseb72/platform-patterns`](https://github.com/hseb72/platform-patterns) (chart `app` publié en OCI, version épinglée). L'application est un **locataire** du socle : PostgreSQL, MinIO et Kong mutualisés, ressources déclarées côté socle (issue « Nouveau locataire »), secrets créés hors Git. Le protocole à suivre est `homelab-platform/CONSUMING.md` ; le déploiement de `hseb72/treasurehunters` (`deploy/`) sert de modèle, y compris pour les écarts connus entre le chart `app` 0.4.0 et le socle (`HTTPRoute` et provisionnement du chart désactivés, Ingress `kong` et `nginx` en manifestes locaux).
    - Front : `prolearning.crealcs.com`. API : `api.prolearning.crealcs.com`, exposée via Kong ; le front relaie `/api` vers Kong (même origine, pas de CORS).
-   - SSO : Keycloak de Soredi, émetteur OIDC `https://sso.crealcs.com/realms/soredi`. Le client OIDC est déclaré par le porteur du projet, qui fournit l'identifiant et le secret (secret créé hors Git, jamais versionné).
+   - SSO : Keycloak de Soredi, émetteur OIDC `https://sso.crealcs.com/realms/soredi`, client `pro-learning`. Le secret du client est fourni par le porteur du projet et créé hors Git (`deploy/create-secrets.sh`).
+   - Premier administrateur : `sebastien.raimondi@soredi-group.com`.
+   - Locataires du socle : `prolearning` (base `prolearning`, hôte d'API) et `prolearning-demo` (base `prolearning_demo`), tous deux dans le namespace `prolearning`.
    - MinIO (fichiers déposés, images des formations) : demandé au socle dès que nécessaire, pas avant.
 2. **Pile technique** : la même que les autres applications du cluster (modèle : `treasurehunters`). TypeScript de bout en bout ; **front Angular** servi par nginx ; **API Node.js (Fastify)** accessible via Kong ; PostgreSQL (`pg`, migrations SQL versionnées appliquées au démarrage sous verrou consultatif) ; validation par `zod` ; paquet `shared/` commun au front et à l'API ; Vitest ; Playwright pour les tests de bout en bout. Images sur GHCR, déploiement Argo CD.
 3. **Isolation des espaces** : **une base PostgreSQL par espace** (`prolearning` pour la production, `prolearning_demo` pour la démonstration), donc deux locataires du socle, chacun avec son rôle. Aucune requête ne peut joindre les deux bases. La publication démo → production passe par l'export puis l'import au format d'échange.
@@ -99,6 +101,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 | `docker/` | Images `api` (Node 24, non-root) et `web` (nginx non privilégié, relais `/api` vers Kong). |
 | `fixtures/demo/` | Comptes fictifs de l'espace démonstration, chargés au démarrage si la base démo est vide. |
 | `docs/keycloak.md` | Déclaration du client Keycloak et configuration du SSO. |
+| `deploy/` | Déploiement sur homelab-platform : valeurs du chart `app`, Application Argo CD, Ingress, `create-secrets.sh`, runbook (`deploy/README.md`). |
 
 ## Développer
 
