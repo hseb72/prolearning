@@ -121,6 +121,16 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 - **Visibilité** : chacun voit ses propres demandes ; un manager voit celles des collaborateurs qui lui sont rattachés ; l'équipe formation voit la file à traiter.
 - **Pas de notification par e-mail** pour l'instant (pas de serveur d'envoi). Le suivi se fait dans « Mes demandes », « Mon équipe » et « Demandes à traiter ».
 
+### Choix d'implémentation (étape 6)
+
+- **Jeu de démonstration** : `fixtures/demo/comptes.json` (comptes fictifs), `fixtures/demo/donnees.json` (fiches, sessions, inscriptions et demandes sur mesure, avec leur historique) et toutes les formations de `fixtures/formations/`, importées comme le ferait un administrateur.
+  - Les dates des sessions sont **relatives au jour du chargement** (heure de Paris), pour que la démonstration ait toujours des sessions à venir.
+- **Chargement** : au démarrage si la base démo est vide, et à chaque **réinitialisation** (bouton du bandeau de démonstration, administrateurs seulement).
+  - La réinitialisation vide toutes les tables `pl_` de la base démo (sauf migrations et authentification), puis recharge le jeu.
+  - Elle est sérialisée par un verrou consultatif et journalisée en production (`demo.reset`).
+  - Le compte joué redevient l'administrateur fictif par défaut.
+- **Tests** : les tests de l'API ne chargent que les comptes fictifs ; les tests de bout en bout chargent le jeu complet. La réinitialisation a son propre projet Playwright (`demonstration`), exécuté après les autres.
+
 ## Structure du dépôt
 
 | Dossier | Contenu |
@@ -132,7 +142,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 | `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |
 | `e2e/` | Tests Playwright (bureau et écran de 375 px). |
 | `docker/` | Images `api` (Node 24, non-root) et `web` (nginx non privilégié, relais `/api` vers Kong). |
-| `fixtures/demo/` | Comptes fictifs de l'espace démonstration, chargés au démarrage si la base démo est vide. |
+| `fixtures/demo/` | Jeu de l'espace démonstration (comptes fictifs, catalogue, sessions, demandes), chargé par `server/src/demo.ts` au démarrage si la base démo est vide et à chaque réinitialisation, avec les formations de `fixtures/formations/`. |
 | `docs/keycloak.md` | Déclaration du client Keycloak et configuration du SSO. |
 | `deploy/` | Déploiement sur homelab-platform : valeurs du chart `app`, Application Argo CD, Ingress, `create-secrets.sh`, runbook (`deploy/README.md`). |
 

@@ -55,6 +55,12 @@ export class AuthService {
     this.me.set(me);
   }
 
+  /** Réinitialise l'espace démonstration (administrateurs) ; le compte joué redevient celui par défaut. */
+  async resetDemo(): Promise<void> {
+    const res = await firstValueFrom(this.http.post<{ me: Me }>('/api/demo/reinitialisation', {}));
+    this.me.set(res.me);
+  }
+
   personas(): Promise<AccountSummary[]> {
     return firstValueFrom(this.http.get<AccountSummary[]>('/api/space/personas'));
   }

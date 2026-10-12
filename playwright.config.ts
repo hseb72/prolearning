@@ -19,16 +19,25 @@ export default defineConfig({
     launchOptions: { executablePath },
   },
   projects: [
-    { name: 'bureau', use: { ...devices['Desktop Chrome'] } },
+    { name: 'bureau', testIgnore: /demo-reset/, use: { ...devices['Desktop Chrome'] } },
     // Exigence transverse : parcours clé utilisable sur un écran de 375 px de large.
     {
       name: 'mobile-375',
+      testIgnore: /demo-reset/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 375, height: 740 },
         isMobile: true,
         hasTouch: true,
       },
+    },
+    // La réinitialisation de la démonstration remplace toute la base démo : elle passe
+    // seule, après les autres tests, qui utilisent aussi cet espace.
+    {
+      name: 'demonstration',
+      testMatch: /demo-reset/,
+      dependencies: ['bureau', 'mobile-375'],
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
   webServer: [

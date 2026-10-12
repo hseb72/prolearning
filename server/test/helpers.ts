@@ -3,7 +3,7 @@ import pg from 'pg';
 import { buildApp } from '../src/app.js';
 import type { AuthSettings } from '../src/auth/routes.js';
 import type { Databases } from '../src/databases.js';
-import { ensureDemoAccounts } from '../src/demo.js';
+import { loadDemo } from '../src/demo.js';
 import { migrateAll } from '../src/migrate.js';
 
 export const APP_URL = 'http://localhost:4200';
@@ -44,7 +44,7 @@ export async function resetDatabases(databases: Databases): Promise<void> {
       'TRUNCATE pl_request_events, pl_custom_requests, pl_registration_requests, pl_session_registrations, pl_course_sessions, pl_courses, pl_quiz_attempts, pl_module_completions, pl_activity_results, pl_formation_versions, pl_formations, pl_audit_log, pl_sessions, pl_oidc_requests, pl_users RESTART IDENTITY CASCADE',
     );
   }
-  await ensureDemoAccounts(databases.demo);
+  await loadDemo(databases.demo, { accountsOnly: true });
 }
 
 export async function closeTestDatabases(databases: Databases): Promise<void> {

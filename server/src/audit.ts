@@ -4,6 +4,7 @@ export type AuditAction =
   | 'login'
   | 'logout'
   | 'space.switch'
+  | 'demo.reset'
   | 'user.role'
   | 'user.manager'
   | 'user.bootstrap_admin'

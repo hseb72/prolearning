@@ -35,6 +35,11 @@
   }
 }
 
+.banner-status:empty {
+  display: none;
+}
+
+.banner-status,
 .banner-error {
   flex-basis: 100%;
   margin: 0;

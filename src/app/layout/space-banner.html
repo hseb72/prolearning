@@ -27,6 +27,9 @@
           <button class="button" type="button" [disabled]="busy()" (click)="toProduction()">
             {{ labels.toProduction }}
           </button>
+          <button class="button" type="button" [disabled]="busy()" (click)="reset()">
+            {{ labels.reset }}
+          </button>
         } @else {
           <button class="button" type="button" [disabled]="busy()" (click)="toDemo()">
             {{ labels.toDemo }}
@@ -34,6 +37,7 @@
         }
       </div>
 
+      <p class="banner-status" role="status">{{ status() }}</p>
       @if (error(); as error) {
         <p class="banner-error" role="alert">{{ error }}</p>
       }

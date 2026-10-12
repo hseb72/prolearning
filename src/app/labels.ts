@@ -39,6 +39,11 @@ export const LABELS = {
     toProduction: 'Revenir en production',
     persona: 'Compte joué',
     switchFailed: 'La bascule d’espace a échoué. Réessayez.',
+    reset: 'Réinitialiser la démonstration',
+    confirmReset:
+      'Réinitialiser la démonstration ? Toutes les données de l’espace démonstration (formations importées, fiches, sessions, demandes, progression) sont remplacées par le jeu de départ. La production n’est pas touchée.',
+    resetDone: 'Démonstration réinitialisée : jeu de départ rechargé.',
+    resetFailed: 'La réinitialisation a échoué. Réessayez.',
   },
   login: {
     title: 'Connexion',

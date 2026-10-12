@@ -24,6 +24,7 @@ export class SpaceBanner {
   protected readonly personas = signal<AccountSummary[]>([]);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly status = signal('');
 
   protected async toDemo(): Promise<void> {
     await this.switch(() => this.auth.switchSpace('demo'));
@@ -38,15 +39,30 @@ export class SpaceBanner {
     await this.switch(() => this.auth.switchSpace('demo', id));
   }
 
+  protected async reset(): Promise<void> {
+    if (!confirm(this.labels.confirmReset)) return;
+    const done = await this.switch(async () => {
+      await this.auth.resetDemo();
+      this.personas.set(await this.auth.personas());
+    }, this.labels.resetFailed);
+    if (done) this.status.set(this.labels.resetDone);
+  }
+
   /** Les données affichées appartiennent à l'ancien espace : on repart de l'accueil. */
-  private async switch(action: () => Promise<void>): Promise<void> {
+  private async switch(
+    action: () => Promise<void>,
+    failure: string = this.labels.switchFailed,
+  ): Promise<boolean> {
     this.busy.set(true);
     this.error.set(null);
+    this.status.set('');
     try {
       await action();
       await this.router.navigateByUrl('/');
+      return true;
     } catch {
-      this.error.set(this.labels.switchFailed);
+      this.error.set(failure);
+      return false;
     } finally {
       this.busy.set(false);
     }
