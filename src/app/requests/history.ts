@@ -23,17 +23,25 @@ import { LABELS } from '../labels';
     </details>
   `,
   styles: `
-    .history ol {
-      margin: var(--space-1) 0 0;
-      padding-left: var(--space-3);
+    .history {
+      font-size: 14px;
     }
-    .history li {
-      margin-bottom: var(--space-1);
+    summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    ol {
+      margin: 8px 0 0;
+      padding-left: 22px;
+    }
+    li {
+      margin-bottom: 6px;
     }
     .hint {
       display: block;
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
+      font-size: 12px;
+      color: var(--muted);
     }
   `,
 })

@@ -39,14 +39,17 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   await play(page, 'David Moreau — Collaborateur');
   await tab(page, 'Mes demandes').click();
   await expect(
-    page.locator('li.request').filter({ hasText: 'TOGAF 10 : les fondamentaux' }),
-  ).toContainText('Inscription confirmée');
+    page
+      .locator('app-request-card')
+      .filter({ hasText: 'TOGAF 10 : les fondamentaux' })
+      .locator('app-status'),
+  ).toHaveText('Acceptée');
 
   // Jouer la manager : valider la demande d'Emma modifie la démonstration…
   await play(page, 'Chloé Bernard — Manager');
   await tab(page, 'Mon équipe').click();
   const toValidate = page.getByRole('region', { name: 'À valider' });
-  const emma = toValidate.locator('li.request').filter({ hasText: 'Emma Petit' });
+  const emma = toValidate.locator('app-request-card').filter({ hasText: 'Emma Petit' });
   await expect(emma).toHaveCount(1);
   await emma
     .getByRole('button', {
@@ -65,7 +68,9 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   await expect(page.locator('.me-name')).toContainText('Alice Martin');
   await play(page, 'Chloé Bernard — Manager');
   await tab(page, 'Mon équipe').click();
-  await expect(toValidate.locator('li.request').filter({ hasText: 'Emma Petit' })).toHaveCount(1);
+  await expect(
+    toValidate.locator('app-request-card').filter({ hasText: 'Emma Petit' }),
+  ).toHaveCount(1);
 
   // Le bandeau et sa bascule restent utilisables sur un écran de 375 px.
   await page.setViewportSize({ width: 375, height: 740 });

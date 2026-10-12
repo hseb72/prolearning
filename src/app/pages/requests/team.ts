@@ -1,55 +1,41 @@
 import { httpResource } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import type { RegistrationRequestView, TeamRequests } from '@shared/requests';
-import { formatRange } from '../../catalog/dates';
 import { AuthService } from '../../core/auth';
 import { apiMessage, RequestsService } from '../../core/requests';
 import { LABELS } from '../../labels';
 import { DecisionForm } from '../../requests/decision';
-import { RequestHistory } from '../../requests/history';
+import { RequestCard } from '../../requests/request-card';
+import { EmptyState } from '../../ui/empty';
+import { Stat } from '../../ui/stat';
+import { ToastService } from '../../ui/toast';
 
 /** Manager : validation des demandes d'inscription de son équipe. */
 @Component({
   selector: 'app-team-requests',
-  imports: [RouterLink, DecisionForm, RequestHistory],
+  imports: [DecisionForm, EmptyState, RequestCard, Stat],
   template: `
+    <p class="eyebrow">{{ labels.teamEyebrow }}</p>
     <h1>{{ labels.teamTitle }}</h1>
-    <p>{{ labels.teamIntro }}</p>
-    <div aria-live="polite">
-      @if (notice(); as n) {
-        <p class="message" [class.success]="n.ok" [class.error]="!n.ok" role="status">
-          {{ n.text }}
-        </p>
-      }
-    </div>
+    <p class="lead">{{ labels.teamIntro }}</p>
 
     @if (data.isLoading() && !data.hasValue()) {
       <p role="status">{{ labels.loading }}</p>
     } @else if (data.error()) {
-      <p class="message error" role="alert">{{ labels.loadFailed }}</p>
+      <p class="fb bad" role="alert">{{ labels.loadFailed }}</p>
     } @else if (data.value(); as d) {
+      <div class="stats">
+        <app-stat [value]="d.aValider.length" [label]="labels.toValidate" />
+        <app-stat [value]="d.recentes.length" [label]="labels.recent" />
+      </div>
       <section aria-labelledby="validate-heading">
         <h2 id="validate-heading">{{ labels.toValidate }}</h2>
         @if (!d.aValider.length) {
-          <p>{{ labels.nothingToValidate }}</p>
+          <app-empty class="card">{{ labels.nothingToValidate }}</app-empty>
         }
-        <ul class="session-list">
+        <div class="list">
           @for (r of d.aValider; track r.id) {
-            <li class="session request" [attr.data-statut]="r.statut">
-              <h3>{{ r.demandeur.displayName }}</h3>
-              <p>
-                <a [routerLink]="['/catalogue', r.session.courseId]">{{ r.session.courseTitre }}</a>
-              </p>
-              <p class="session-when">{{ range(r) }}</p>
-              <p>
-                {{ labels.modalites[r.session.modalite] }} ·
-                {{ labels.seats(r.session.placesRestantes, r.session.places) }}
-              </p>
-              @if (r.motif) {
-                <p>{{ labels.motif }} :</p>
-                <blockquote>{{ r.motif }}</blockquote>
-              }
+            <app-request-card [item]="{ kind: 'inscription', request: r }" [showRequester]="true">
               <app-decision
                 [acceptText]="labels.validate"
                 [acceptLabel]="labels.validateLabel(r.demandeur.displayName, r.session.courseTitre)"
@@ -57,39 +43,36 @@ import { RequestHistory } from '../../requests/history';
                 [busy]="busy()"
                 (decided)="decide(r, $event)"
               />
-            </li>
+            </app-request-card>
           }
-        </ul>
+        </div>
       </section>
 
       <section aria-labelledby="recent-heading">
         <h2 id="recent-heading">{{ labels.recent }}</h2>
         @if (!d.recentes.length) {
-          <p>{{ labels.noRecent }}</p>
+          <app-empty class="card">{{ labels.noRecent }}</app-empty>
         }
-        <ul class="session-list">
+        <div class="list">
           @for (r of d.recentes; track r.id) {
-            <li class="session request" [attr.data-statut]="r.statut">
-              <h3>{{ r.demandeur.displayName }}</h3>
-              <p>{{ r.session.courseTitre }} · {{ range(r) }}</p>
-              <p class="status-line">
-                <strong>{{ labels.status[r.statut] }}</strong>
-              </p>
-              <app-request-history [events]="r.historique" />
-            </li>
+            <app-request-card [item]="{ kind: 'inscription', request: r }" [showRequester]="true" />
           }
-        </ul>
+        </div>
       </section>
     }
   `,
-  styleUrls: ['../catalog/catalog.scss', './requests.scss'],
+  styles: `
+    section + section {
+      margin-top: 28px;
+    }
+  `,
 })
 export class TeamRequestsPage {
   private readonly auth = inject(AuthService);
   private readonly service = inject(RequestsService);
   protected readonly labels = LABELS.requests;
   protected readonly busy = signal(false);
-  protected readonly notice = signal<{ ok: boolean; text: string } | null>(null);
+  private readonly toast = inject(ToastService);
 
   protected readonly data = httpResource<TeamRequests>(() => {
     const me = this.auth.me();
@@ -97,10 +80,6 @@ export class TeamRequestsPage {
       ? { url: '/api/demandes/equipe', params: { espace: me.space, compte: me.actor.id } }
       : undefined;
   });
-
-  protected range(r: RegistrationRequestView): string {
-    return formatRange(r.session.debut, r.session.fin);
-  }
 
   protected async decide(
     r: RegistrationRequestView,
@@ -113,13 +92,10 @@ export class TeamRequestsPage {
         commentaire: d.commentaire,
       });
       const name = r.demandeur.displayName;
-      this.notice.set({
-        ok: true,
-        text: d.accept ? this.labels.validated(name) : this.labels.refused(name),
-      });
+      this.toast.show(d.accept ? this.labels.validated(name) : this.labels.refused(name));
       this.data.reload();
     } catch (error) {
-      this.notice.set({ ok: false, text: apiMessage(error, this.labels.failed) });
+      this.toast.show(apiMessage(error, this.labels.failed));
     } finally {
       this.busy.set(false);
     }

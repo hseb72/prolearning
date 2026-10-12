@@ -519,6 +519,11 @@ summary:focus-visible,
   flex-direction: column;
   gap: 6px;
 
+  // Sur-titre du thème en gris (prototype), pas en orange.
+  .eyebrow {
+    color: var(--muted);
+  }
+
   p {
     margin: 0;
   }
@@ -728,6 +733,11 @@ form.f {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+
+  // Une aide sous un seul des deux libellés ne doit pas décaler les champs.
+  > .fld {
+    align-content: end;
+  }
 }
 
 @media (max-width: 560px) {
@@ -833,6 +843,11 @@ dialog {
   padding: 24px;
   display: grid;
   gap: 14px;
+
+  h2,
+  p {
+    margin: 0;
+  }
 
   .acts {
     display: flex;
