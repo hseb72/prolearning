@@ -1,0 +1,76 @@
+# Valeurs du chart `app` de platform-patterns, pattern `shared`, pour la plateforme
+# mutualisée décrite dans hseb72/homelab-platform (modèle : hseb72/treasurehunters).
+#
+# Rendu : oci://ghcr.io/hseb72/platform-patterns/app (version épinglée dans
+# argocd/application.yaml). Argo lit ce fichier sur la branche `deploy-state`, copie
+# de deploy/ tenue à jour par la CI ; le tag d'image (global.imageTag) y est écrit
+# dans deploy/values-image.yaml.
+#
+# Ce que le chart rend, dans le namespace `prolearning` :
+#   - Deployments + Services `web` (nginx, 8080) et `api` (Node.js, 5080) ;
+#   - ConfigMap `api-config` (ci-dessous, non sensible) ;
+#   - NetworkPolicy : entrée des pods réservée à la passerelle Kong (ns `gateway`).
+# Ce qu'il ne rend pas, et qui vit dans manifests/ : l'Ingress nginx du front,
+# l'Ingress kong de l'API, l'entrée depuis ingress-nginx vers le front.
+
+mode: shared
+
+web:
+  enabled: true
+  image:
+    repository: ghcr.io/hseb72/prolearning/web
+  replicas: 2
+  port: 8080
+  healthPath: /healthz
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+api:
+  enabled: true
+  image:
+    repository: ghcr.io/hseb72/prolearning/api
+  replicas: 2
+  port: 5080
+  # Vérifie les deux bases (production et démonstration) : une API qui n'en joint
+  # qu'une n'est pas en état de servir.
+  healthPath: /api/health
+  # Configuration non sensible (ConfigMap). Les adresses des bases et le secret du
+  # client Keycloak sont dans le Secret ci-dessous : cf. deploy/README.md.
+  env:
+    NODE_ENV: production
+    HOST: 0.0.0.0
+    PORT: '5080'
+    LOG_LEVEL: info
+    # Adresse publique du front : base des redirections Keycloak (le front relaie /api).
+    APP_URL: https://prolearning.crealcs.com
+    SESSION_DAYS: '7'
+    # SSO : Keycloak de Soredi (docs/keycloak.md).
+    OIDC_ISSUER: https://sso.crealcs.com/realms/soredi
+    OIDC_CLIENT_ID: pro-learning
+    # Premiers administrateurs, promus à leur connexion ; ils attribuent ensuite
+    # les autres rôles depuis l'application.
+    BOOTSTRAP_ADMIN_EMAILS: sebastien.raimondi@soredi-group.com
+  envFrom:
+    - prolearning-api-secrets
+  pdb:
+    enabled: true
+    minAvailable: 1
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 384Mi }
+
+shared:
+  # La plateforme expose les API par des Ingress de classe `kong` (pas de Gateway
+  # API) : l'HTTPRoute du chart est désactivée, la route Kong est dans
+  # manifests/api-kong-ingress.yaml.
+  httproute:
+    enabled: false
+  # Namespace du plan de données Kong : seule source admise vers les pods.
+  gatewayDataplaneNamespace: gateway
+  networkPolicy:
+    enabled: true
+  # Les deux bases sont provisionnées par le socle (locataires `prolearning` et
+  # `prolearning-demo` déclarés dans homelab-platform/database/values.yaml).
+  provisioning:
+    enabled: false

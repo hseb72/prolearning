@@ -1,0 +1,25 @@
+# Routes Kong de l'API, dans le namespace de l'application. L'hôte public est déclaré
+# dans le socle (homelab-platform/gateway/10-ingress-api-hosts.yaml). Le front relaie
+# /api vers kong-proxy avec ce même en-tête Host : une seule route suffit.
+# Ne jamais réécrire l'en-tête Host.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api
+  namespace: prolearning
+  annotations:
+    konghq.com/strip-path: 'false'
+    konghq.com/preserve-host: 'true'
+spec:
+  ingressClassName: kong
+  rules:
+    - host: api.prolearning.crealcs.com
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: api
+                port:
+                  number: 5080

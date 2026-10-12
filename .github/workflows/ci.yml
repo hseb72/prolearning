@@ -104,6 +104,25 @@ jobs:
           path: playwright-report
           retention-days: 7
 
+  manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Valider les manifestes Kubernetes
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -summary -ignore-missing-schemas deploy/manifests/*.yaml
+      - name: Aucun Secret en clair dans deploy/
+        run: |
+          if grep -rlE '^kind:[[:space:]]*Secret[[:space:]]*$' deploy/; then
+            echo "::error::Un Secret en clair est versionné dans deploy/ — utiliser create-secrets.sh."
+            exit 1
+          fi
+      - name: Script de secrets
+        run: |
+          bash -n deploy/create-secrets.sh
+          shellcheck deploy/create-secrets.sh
+
   images:
     runs-on: ubuntu-latest
     strategy:
