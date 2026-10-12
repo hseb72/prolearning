@@ -50,6 +50,12 @@ Ce sont deux **espaces de données** dans la même application, à ne pas confon
 - Déblocage séquentiel des modules et seuil de réussite des quiz, comme décrit dans le format.
 - Ludification : points d'expérience par défaut (§ 10 du format), niveaux, badges communs. Rester sobre ; pas de classement nominatif entre collègues sans décision RH.
 - Références : afficher le type d'accès (libre, inscription, payant) à côté de chaque lien.
+- Réalisation (étape 3) :
+  - Les **réponses ne quittent jamais l'API** : la vue apprenant (`server/src/learning/view.ts`) retire bonnes réponses, solutions et arbre des cas pratiques. Les éléments à ordonner ou associer portent des clés opaques et sont mélangés de façon déterministe. La correction se fait côté API (`grading.ts`), et un cas pratique est rejoué par l'API à chaque choix.
+  - Le quiz tire ses questions côté API et enregistre la tentative (`pl_quiz_attempts`) ; une tentative ne se corrige qu'une fois.
+  - On garde le **meilleur** résultat par activité (`pl_activity_results`). Un module est terminé quand toutes ses activités obligatoires sont faites et ses quiz réussis ; il rapporte un bonus de 50 points, une seule fois (`pl_module_completions`).
+  - Niveaux et badges sont calculés, non stockés (`shared/gamification.ts`) : Découverte, Initié (100), Praticien (300), Confirmé (600), Expert (1000) ; badges Premier pas, Module accompli, Sans faute, Stratège, Parcours terminé.
+  - Markdown rendu avec `marked`, HTML brut supprimé, liens `http(s)` seulement (`src/app/learning/markdown.ts`).
 
 ## Import et export des formations
 
@@ -99,8 +105,8 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 
 | Dossier | Contenu |
 |---|---|
-| `src/` | Front Angular (composants autonomes, signaux, sans zone.js). Textes d'interface réunis dans `src/app/labels.ts`. |
-| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). |
+| `src/` | Front Angular (composants autonomes, signaux, sans zone.js). Textes d'interface réunis dans `src/app/labels.ts`. Lecteur de formation : `src/app/learning/` (markdown, un composant par type d'activité) et `src/app/pages/learning/`. |
+| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). `src/format/` : validation, stockage et export ; `src/learning/` : lecteur (vue apprenant, correction, progression). |
 | `server/src/format/` | Format d'échange : `validate.ts` (schéma + contrôles métier, mêmes verdicts que le validateur de référence, vérifié par un test de parité ; messages en français, chemins au style du § 11), `store.ts` (règles de version du § 11, texte exact conservé pour un export sans perte). `src/publication.ts` est le seul module métier qui touche les deux bases (publication démo → production par export puis import). |
 | `shared/` | Code commun au front et à l'API (types, règles). Imports relatifs suffixés `.js`. |
 | `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |

@@ -1,0 +1,82 @@
+@if (data.isLoading() && !data.hasValue()) {
+  <p role="status">{{ labels.loading }}</p>
+} @else if (data.error()) {
+  <p class="message error" role="alert">{{ labels.loadFailed }}</p>
+} @else if (data.value(); as d) {
+  <p>
+    <a routerLink="/parcours">{{ labels.title }}</a>
+  </p>
+  <h1>{{ d.formation.titre }}</h1>
+  @if (d.formation.sousTitre) {
+    <p class="subtitle">{{ d.formation.sousTitre }}</p>
+  }
+  <p class="hint">
+    {{ d.formation.theme }} · {{ labels.duration(d.formation.dureeEstimeeMinutes) }}
+    @if (d.formation.niveau) {
+      · {{ labels.levels[d.formation.niveau] }}
+    }
+    · {{ labels.modules(modulesDone(), d.formation.modules.length) }} ·
+    {{ labels.points(d.progression.points) }}
+  </p>
+  <app-md [text]="d.formation.resume" [glossary]="d.formation.glossaire" />
+
+  <section aria-labelledby="modules-heading">
+    <h2 id="modules-heading">{{ labels.modulesHeading }}</h2>
+    <ol class="modules">
+      @for (module of d.formation.modules; track module.id) {
+        @let state = d.progression.modules[module.id]!;
+        <li class="module" [class.locked]="!state.debloque">
+          <h3>{{ module.titre }}</h3>
+          <p class="module-status">
+            {{
+              state.termine
+                ? labels.moduleDone
+                : state.debloque
+                  ? labels.moduleOpen
+                  : labels.moduleLocked
+            }}
+            · {{ labels.duration(module.dureeEstimeeMinutes) }}
+          </p>
+          <app-md [text]="module.resume" [glossary]="d.formation.glossaire" />
+          @if (state.debloque) {
+            <a
+              class="button primary"
+              [routerLink]="['/parcours', d.formation.id, module.id, resumeActivity(module)]"
+            >
+              {{ state.termine ? labels.review : started(module) ? labels.resume : labels.start }}
+              <span class="visually-hidden"> : {{ module.titre }}</span>
+            </a>
+          }
+        </li>
+      }
+    </ol>
+  </section>
+
+  <app-learner-profile />
+
+  <section aria-labelledby="about-heading" class="about">
+    <h2 id="about-heading">{{ labels.objectives }}</h2>
+    <ul>
+      @for (o of d.formation.objectifs; track $index) {
+        <li>{{ o }}</li>
+      }
+    </ul>
+    <h3>{{ labels.audience }}</h3>
+    <p>{{ d.formation.public }}</p>
+    <h3>{{ labels.prerequisites }}</h3>
+    <p>{{ d.formation.prerequis }}</p>
+    @if (d.formation.glossaire.length) {
+      <h3>{{ labels.glossary }}</h3>
+      <dl class="glossary">
+        @for (g of d.formation.glossaire; track g.terme) {
+          <dt>{{ g.terme }}</dt>
+          <dd><app-md [text]="g.definition" /></dd>
+        }
+      </dl>
+    }
+    <details>
+      <summary>{{ labels.rights }}</summary>
+      <app-md [text]="d.formation.droits" />
+    </details>
+  </section>
+}
