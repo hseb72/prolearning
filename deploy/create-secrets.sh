@@ -2,12 +2,12 @@
 # Crée le Secret de l'API directement dans le cluster, comme treasurehunters. Aucun
 # secret n'est versionné dans ce dépôt.
 #
-#   [OIDC_CLIENT_SECRET=<secret Keycloak>] [DB_PASSWORD=…] [DEMO_DB_PASSWORD=…] \
+#   [OIDC_CLIENT_SECRET=<secret Keycloak>] [DB_PASSWORD=…] [DEMO_DB_PASSWORD=…] [EVAL_DB_PASSWORD=…] \
 #     ./deploy/create-secrets.sh
 #
-# Les deux mots de passe de base sont lus dans le cluster s'ils ne sont pas fournis
-# (Secret database/database-tenant-keys, clés `prolearning` et `prolearning-demo`) :
-# ce sont les valeurs que le socle donne aux deux rôles PostgreSQL, on ne peut donc
+# Les trois mots de passe de base sont lus dans le cluster s'ils ne sont pas fournis
+# (Secret database/database-tenant-keys, clés `prolearning`, `prolearning-demo` et
+# `prolearning-eval`) : ce sont les valeurs que le socle donne aux rôles PostgreSQL, on ne peut donc
 # pas se tromper. Ils sont encodés pour l'URL (caractères spéciaux admis).
 #
 # OIDC_CLIENT_SECRET : secret du client Keycloak `pro-learning` (onglet Credentials).
@@ -60,11 +60,13 @@ tenant_password() {
 
 DB_PASSWORD="$(tenant_password "${DB_PASSWORD:-}" prolearning)"
 DEMO_DB_PASSWORD="$(tenant_password "${DEMO_DB_PASSWORD:-}" prolearning-demo)"
+EVAL_DB_PASSWORD="$(tenant_password "${EVAL_DB_PASSWORD:-}" prolearning-eval)"
 
 # `sslmode=disable` : le PostgreSQL du socle n'offre pas TLS (le cloisonnement y est
 # assuré par les NetworkPolicies), et `prefer` ferait exiger TLS au pilote.
 DATABASE_URL_PRODUCTION="postgresql://prolearning:$(urlencode "$DB_PASSWORD")@$DB_HOST/prolearning?sslmode=disable"
 DATABASE_URL_DEMO="postgresql://prolearning-demo:$(urlencode "$DEMO_DB_PASSWORD")@$DB_HOST/prolearning_demo?sslmode=disable"
+DATABASE_URL_EVALUATION="postgresql://prolearning-eval:$(urlencode "$EVAL_DB_PASSWORD")@$DB_HOST/prolearning_eval?sslmode=disable"
 
 OIDC_CLIENT_SECRET="${OIDC_CLIENT_SECRET:-$(secret_value "$NS" "$NAME" OIDC_CLIENT_SECRET)}"
 [[ -n "$OIDC_CLIENT_SECRET" ]] || {
@@ -77,6 +79,7 @@ kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 manifest="$(kubectl -n "$NS" create secret generic "$NAME" \
   --from-literal=DATABASE_URL_PRODUCTION="$DATABASE_URL_PRODUCTION" \
   --from-literal=DATABASE_URL_DEMO="$DATABASE_URL_DEMO" \
+  --from-literal=DATABASE_URL_EVALUATION="$DATABASE_URL_EVALUATION" \
   --from-literal=OIDC_CLIENT_SECRET="$OIDC_CLIENT_SECRET" \
   --dry-run=client -o yaml)"
 

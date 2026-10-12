@@ -50,7 +50,7 @@ spec:
     # ici (protocole de consommation de homelab-platform).
     managedNamespaceMetadata:
       labels:
-        # Ouvre l'accès au PostgreSQL mutualisé (bases prolearning et prolearning_demo).
+        # Ouvre l'accès au PostgreSQL mutualisé (bases prolearning, prolearning_demo, prolearning_eval).
         database-client: 'true'
         # Le chart `app` 0.4.0 ne pose pas encore de securityContext : on applique
         # `baseline` et on signale les écarts à `restricted`.
