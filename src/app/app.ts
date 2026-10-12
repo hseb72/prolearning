@@ -23,6 +23,14 @@ export class App {
     return this.auth.hasRole('admin');
   }
 
+  protected isManager(): boolean {
+    return this.auth.hasRole('manager');
+  }
+
+  protected isTraining(): boolean {
+    return this.auth.hasRole('training');
+  }
+
   protected async logout(): Promise<void> {
     const redirect = await this.auth.logout().catch(() => '/connexion');
     // La déconnexion Keycloak est une autre adresse : navigation complète.

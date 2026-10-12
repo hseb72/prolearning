@@ -66,6 +66,31 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/catalog/sessions').then((m) => m.SessionsPage),
   },
   {
+    path: 'demandes',
+    title: title(LABELS.requests.mineTitle),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/requests/my-requests').then((m) => m.MyRequestsPage),
+  },
+  {
+    path: 'demandes/sur-mesure',
+    title: title(LABELS.requests.customTitle),
+    canActivate: [roleGuard('manager')],
+    loadComponent: () =>
+      import('./pages/requests/custom-form').then((m) => m.CustomRequestFormPage),
+  },
+  {
+    path: 'demandes/equipe',
+    title: title(LABELS.requests.teamTitle),
+    canActivate: [roleGuard('manager')],
+    loadComponent: () => import('./pages/requests/team').then((m) => m.TeamRequestsPage),
+  },
+  {
+    path: 'demandes/a-traiter',
+    title: title(LABELS.requests.queueTitle),
+    canActivate: [roleGuard('training')],
+    loadComponent: () => import('./pages/requests/queue').then((m) => m.RequestQueuePage),
+  },
+  {
     path: 'administration/formations',
     title: title(LABELS.formations.title),
     canActivate: [roleGuard('admin')],

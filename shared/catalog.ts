@@ -1,3 +1,5 @@
+import type { RegistrationStatus } from './requests.js';
+
 /**
  * Catalogue et sessions (étape 4) : ce que l'interface et l'API se partagent.
  * Fiches et sessions sont propres à chaque espace (une base par espace).
@@ -48,6 +50,8 @@ export interface CourseDetail extends CourseCard {
   prerequis: string;
   /** Sessions à venir ; l'équipe formation voit aussi les sessions passées et annulées. */
   sessions: SessionView[];
+  /** Demandes d'inscription en cours de la personne, par identifiant de session. */
+  mesDemandes: Record<number, { id: number; statut: RegistrationStatus }>;
 }
 
 /** Fiche saisie par l'équipe formation. */

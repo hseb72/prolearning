@@ -5,6 +5,7 @@ import type { CourseDetail, SessionView } from '@shared/catalog';
 import { formatRange } from '../../catalog/dates';
 import { AuthService } from '../../core/auth';
 import { CatalogService } from '../../core/catalog';
+import { apiMessage, RequestsService } from '../../core/requests';
 import { LABELS } from '../../labels';
 import { Md } from '../../learning/md';
 import { SessionForm } from './session-form';
@@ -82,8 +83,6 @@ import { SessionForm } from './session-form';
         </div>
         @if (!c.sessions.length) {
           <p>{{ labels.noUpcoming }}</p>
-        } @else if (!team()) {
-          <p class="hint">{{ labels.registrationSoon }}</p>
         }
         <ul class="session-list">
           @for (s of c.sessions; track s.id) {
@@ -106,6 +105,56 @@ import { SessionForm } from './session-form';
               <p [class.full]="s.placesRestantes === 0">
                 {{ labels.seats(s.placesRestantes, s.places) }}
               </p>
+              @if (isOpen(s) && c.publiee) {
+                @if (c.mesDemandes[s.id]; as mine) {
+                  <p>
+                    <strong>{{ r.yourRequest(r.status[mine.statut]) }}</strong> ·
+                    <a routerLink="/demandes">{{ r.seeMine }}</a>
+                  </p>
+                } @else if (s.placesRestantes > 0) {
+                  @if (asking() === s.id) {
+                    <form
+                      class="panel"
+                      [attr.aria-label]="r.askHeading(range(s))"
+                      (submit)="ask($event, s)"
+                    >
+                      <p class="hint">{{ r.askInfo }}</p>
+                      <div class="field">
+                        <label [for]="'motif-' + s.id">{{ r.askMotif }}</label>
+                        <textarea
+                          [id]="'motif-' + s.id"
+                          rows="3"
+                          maxlength="2000"
+                          [value]="motif()"
+                          (input)="motif.set($any($event.target).value)"
+                        ></textarea>
+                      </div>
+                      @if (askError(); as e) {
+                        <p class="message error" role="alert">{{ e }}</p>
+                      }
+                      <div class="actions">
+                        <button class="button primary" type="submit" [disabled]="busy()">
+                          {{ r.askSend }}
+                        </button>
+                        <button class="button" type="button" (click)="asking.set(null)">
+                          {{ r.askCancel }}
+                        </button>
+                      </div>
+                    </form>
+                  } @else {
+                    <div class="actions">
+                      <button
+                        class="button primary"
+                        type="button"
+                        [attr.aria-label]="r.askLabel(range(s))"
+                        (click)="openAsk(s.id)"
+                      >
+                        {{ r.ask }}
+                      </button>
+                    </div>
+                  }
+                }
+              }
               @if (team() && !s.annulee) {
                 @if (editing() === s.id) {
                   <app-session-form
@@ -160,8 +209,15 @@ import { SessionForm } from './session-form';
 export class CoursePage {
   private readonly auth = inject(AuthService);
   private readonly service = inject(CatalogService);
+  private readonly requests = inject(RequestsService);
   readonly id = input.required<string>();
   protected readonly labels = LABELS.catalog;
+  protected readonly r = LABELS.requests;
+  /** Session dont le formulaire de demande d'inscription est ouvert. */
+  protected readonly asking = signal<number | null>(null);
+  protected readonly motif = signal('');
+  protected readonly askError = signal<string | null>(null);
+  protected readonly busy = signal(false);
   protected readonly team = computed(() => this.auth.hasRole('training'));
   protected readonly adding = signal(false);
   protected readonly editing = signal<number | null>(null);
@@ -190,6 +246,28 @@ export class CoursePage {
     this.editing.set(null);
     this.notice.set(message);
     this.course.reload();
+  }
+
+  protected openAsk(sessionId: number): void {
+    this.motif.set('');
+    this.askError.set(null);
+    this.asking.set(sessionId);
+  }
+
+  protected async ask(event: SubmitEvent, s: SessionView): Promise<void> {
+    event.preventDefault();
+    this.busy.set(true);
+    this.askError.set(null);
+    try {
+      await this.requests.register(s.id, this.motif().trim());
+      this.asking.set(null);
+      this.notice.set(this.r.askSent);
+      this.course.reload();
+    } catch (error) {
+      this.askError.set(apiMessage(error, this.r.failed));
+    } finally {
+      this.busy.set(false);
+    }
   }
 
   protected async cancel(s: SessionView): Promise<void> {
