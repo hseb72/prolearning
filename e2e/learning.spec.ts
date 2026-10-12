@@ -68,11 +68,13 @@ test.describe('parcours en ligne', () => {
 
     await login(page, uniqueEmail('apprenant', info));
     await tab(page, 'Mon parcours en ligne').click();
-    await expect(page.getByRole('heading', { level: 1, name: 'Parcours en ligne' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Mon parcours en ligne' }),
+    ).toBeVisible();
     await expect(page.getByText('Pas encore de badge')).toBeVisible();
     await page.getByRole('link', { name: `Ouvrir le parcours « ${formation.titre} »` }).click();
     await expect(page.getByRole('heading', { level: 1, name: formation.titre })).toBeVisible();
-    await expect(page.getByText('0 module terminé sur 1')).toBeVisible();
+    await expect(page.locator('app-stat').first()).toContainText('0/1');
     await expectNoHorizontalOverflow(page);
     await page.getByRole('link', { name: `Commencer : ${module.titre}` }).click();
 
@@ -144,15 +146,22 @@ test.describe('parcours en ligne', () => {
 
     // Retour au parcours : module terminé, points, niveau et badges.
     await page.getByRole('link', { name: /Retour au parcours/ }).click();
-    await expect(page.getByText('1 module terminé sur 1')).toBeVisible();
+    await expect(page.locator('app-stat').first()).toContainText('1/1');
     await expect(page.getByRole('link', { name: `Revoir : ${module.titre}` })).toBeVisible();
     const profile = page.getByRole('region', { name: 'Votre progression' });
-    await expect(profile).toContainText('Niveau 2 — Initié');
-    await expect(profile).toContainText('240 points');
-    for (const badge of ['Premier pas', 'Module accompli', 'Sans faute', 'Stratège']) {
-      await expect(profile.getByText(badge, { exact: true })).toBeVisible();
+    await expect(profile.locator('.lvl')).toHaveText('Initié');
+    await expect(profile).toContainText('240 points d’expérience');
+    for (const badge of [
+      'Premier pas',
+      'Module accompli',
+      'Sans faute',
+      'Stratège',
+      'Parcours terminé',
+    ]) {
+      await expect(profile.locator('app-badge:not(.off)').filter({ hasText: badge })).toHaveCount(
+        1,
+      );
     }
-    await expect(profile.getByText('Parcours terminé', { exact: true })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });

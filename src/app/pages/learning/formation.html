@@ -1,70 +1,87 @@
 @if (data.isLoading() && !data.hasValue()) {
   <p role="status">{{ labels.loading }}</p>
 } @else if (data.error()) {
-  <p class="message error" role="alert">{{ labels.loadFailed }}</p>
+  <p class="fb bad" role="alert">{{ labels.loadFailed }}</p>
 } @else if (data.value(); as d) {
   @if (mode.preview) {
-    <p class="message" role="note">{{ formations.previewBanner }}</p>
-    <p>
-      <a routerLink="/administration/formations">{{ formations.previewBack }}</a>
-    </p>
-  } @else {
-    <p>
-      <a routerLink="/parcours">{{ labels.title }}</a>
-    </p>
+    <p class="fb" role="note">{{ formations.previewBanner }}</p>
   }
+  <p class="crumbs">
+    <a [routerLink]="mode.preview ? '/administration/formations' : '/parcours'"
+      >← {{ mode.preview ? formations.previewBack : labels.backLink }}</a
+    >
+    <span class="muted"> / {{ d.formation.titre }}</span>
+  </p>
+  <p class="eyebrow">{{ labels.versionEyebrow(d.formation.theme, d.formation.version) }}</p>
   <h1>{{ d.formation.titre }}</h1>
   @if (d.formation.sousTitre) {
-    <p class="subtitle">{{ d.formation.sousTitre }}</p>
+    <p class="lead subtitle">{{ d.formation.sousTitre }}</p>
   }
-  <p class="hint">
-    {{ d.formation.theme }} · {{ labels.duration(d.formation.dureeEstimeeMinutes) }}
-    @if (d.formation.niveau) {
-      · {{ labels.levels[d.formation.niveau] }}
-    }
-    · {{ labels.modules(modulesDone(), d.formation.modules.length) }} ·
-    {{ labels.points(d.progression.points) }}
-  </p>
-  <app-md [text]="d.formation.resume" [glossary]="d.formation.glossaire" />
+  <div class="lead">
+    <app-md [text]="d.formation.resume" [glossary]="d.formation.glossaire" />
+  </div>
+
+  <div class="stats">
+    <app-stat
+      [value]="modulesDone() + '/' + d.formation.modules.length"
+      [label]="labels.stats.modules"
+    />
+    <app-stat [value]="d.progression.points" [label]="labels.stats.points" />
+    <app-stat
+      [value]="labels.duration(d.formation.dureeEstimeeMinutes)"
+      [label]="labels.stats.duration"
+    />
+  </div>
+  <p class="visually-hidden">{{ labels.modules(modulesDone(), d.formation.modules.length) }}</p>
 
   <section aria-labelledby="modules-heading">
-    <h2 id="modules-heading">{{ labels.modulesHeading }}</h2>
-    <ol class="modules">
-      @for (module of d.formation.modules; track module.id) {
-        @let state = d.progression.modules[module.id]!;
-        <li class="module" [class.locked]="!state.debloque">
-          <h3>{{ module.titre }}</h3>
-          <p class="module-status">
-            {{
-              state.termine
-                ? labels.moduleDone
-                : state.debloque
-                  ? labels.moduleOpen
-                  : labels.moduleLocked
-            }}
-            · {{ labels.duration(module.dureeEstimeeMinutes) }}
-          </p>
-          <app-md [text]="module.resume" [glossary]="d.formation.glossaire" />
-          @if (state.debloque) {
-            <a
-              class="button primary"
-              [routerLink]="[mode.route, d.formation.id, module.id, resumeActivity(module)]"
-            >
-              {{ state.termine ? labels.review : started(module) ? labels.resume : labels.start }}
-              <span class="visually-hidden"> : {{ module.titre }}</span>
-            </a>
-          }
-        </li>
+    <h2 id="modules-heading" class="visually-hidden">{{ labels.modulesHeading }}</h2>
+    <div class="map">
+      @for (module of d.formation.modules; track module.id; let i = $index) {
+        @let state = tileState(module, i);
+        @if (state === 'locked') {
+          <button
+            appModuleTile
+            type="button"
+            tileState="locked"
+            [num]="i + 1"
+            [heading]="module.titre"
+            [sub]="labels.tileLocked(i)"
+            [attr.aria-label]="labels.tileLabel(i + 1, module.titre, labels.moduleLocked)"
+          ></button>
+        } @else {
+          <a
+            appModuleTile
+            [tileState]="state"
+            [num]="i + 1"
+            [heading]="module.titre"
+            [sub]="
+              state === 'done'
+                ? labels.tileDone
+                : labels.tileOpen(
+                    module.activites.length,
+                    labels.duration(module.dureeEstimeeMinutes)
+                  )
+            "
+            [routerLink]="[mode.route, d.formation.id, module.id, resumeActivity(module)]"
+            [attr.aria-label]="
+              (state === 'done' ? labels.review : started(module) ? labels.resume : labels.start) +
+              ' : ' +
+              module.titre
+            "
+          ></a>
+        }
       }
-    </ol>
+    </div>
   </section>
 
   @if (!mode.preview) {
-    <app-learner-profile />
+    <app-learner-profile [done]="modulesDone()" [total]="d.formation.modules.length" />
   }
 
-  <section aria-labelledby="about-heading" class="about">
-    <h2 id="about-heading">{{ labels.objectives }}</h2>
+  <details class="card about">
+    <summary>{{ labels.about }}</summary>
+    <h2>{{ labels.objectives }}</h2>
     <ul>
       @for (o of d.formation.objectifs; track $index) {
         <li>{{ o }}</li>
@@ -83,9 +100,7 @@
         }
       </dl>
     }
-    <details>
-      <summary>{{ labels.rights }}</summary>
-      <app-md [text]="d.formation.droits" />
-    </details>
-  </section>
+    <h3>{{ labels.rights }}</h3>
+    <app-md [text]="d.formation.droits" />
+  </details>
 }

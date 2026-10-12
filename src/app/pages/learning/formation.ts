@@ -6,14 +6,51 @@ import { AuthService } from '../../core/auth';
 import { LABELS } from '../../labels';
 import { READER_MODE } from '../../learning/reader-mode';
 import { Md } from '../../learning/md';
+import { ModuleTile, type TileState } from '../../ui/module-tile';
+import { Stat } from '../../ui/stat';
 import { LearnerProfileCard } from './profile';
 
 /** Présentation d'un parcours et de ses modules, avec leur état pour l'apprenant. */
 @Component({
   selector: 'app-learning-formation',
-  imports: [RouterLink, Md, LearnerProfileCard],
+  imports: [RouterLink, Md, LearnerProfileCard, ModuleTile, Stat],
   templateUrl: './formation.html',
-  styleUrl: './learning.scss',
+  styles: `
+    .crumbs {
+      font-size: 14px;
+    }
+    .subtitle {
+      font-family: var(--display);
+      font-size: 19px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .map {
+      margin-bottom: 24px;
+    }
+    .about {
+      margin-top: 24px;
+
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      h2 {
+        font-size: 19px;
+        margin-top: 16px;
+      }
+      h3 {
+        font-size: 15px;
+        margin: 14px 0 4px;
+      }
+    }
+    .glossary dt {
+      font-weight: 600;
+    }
+    .glossary dd {
+      margin: 0 0 8px;
+    }
+  `,
 })
 export class LearningFormationPage {
   private readonly auth = inject(AuthService);
@@ -36,6 +73,18 @@ export class LearningFormationPage {
     const p = this.data.value()?.progression;
     return p ? Object.values(p.modules).filter((m) => m.termine).length : 0;
   });
+
+  /** État de la tuile : terminé, prochain à suivre, ouvert, ou verrouillé. */
+  protected tileState(module: LearnerModule, index: number): TileState {
+    const d = this.data.value()!;
+    const state = d.progression.modules[module.id]!;
+    if (state.termine) return 'done';
+    if (!state.debloque) return 'locked';
+    const first = d.formation.modules.findIndex(
+      (m) => !d.progression.modules[m.id]!.termine && d.progression.modules[m.id]!.debloque,
+    );
+    return first === index ? 'next' : '';
+  }
 
   /** Activité où reprendre : la première pas encore faite, sinon la première. */
   protected resumeActivity(module: LearnerModule): string {

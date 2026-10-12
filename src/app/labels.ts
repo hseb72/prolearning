@@ -160,6 +160,30 @@ export const LABELS = {
     managerOf: (name: string) => `Manager de ${name}`,
   },
   learning: {
+    eyebrow: 'Parcours en ligne',
+    listTitle: 'Mon parcours en ligne',
+    levelEyebrow: 'Niveau',
+    levelLine: (points: number, toNext: number | null) =>
+      `${points} point${points > 1 ? 's' : ''} d’expérience · ${
+        toNext === null ? 'niveau maximal atteint' : `${toNext} avant le niveau suivant`
+      }`,
+    levelProgress: 'Vers le niveau suivant',
+    badgesCount: (n: number, total: number) => `Badges · ${n}/${total}`,
+    stats: {
+      modules: 'modules terminés',
+      points: 'points d’expérience',
+      duration: 'durée estimée',
+    },
+    tileOpen: (activities: number, duration: string) =>
+      `${activities} activité${activities > 1 ? 's' : ''} · ${duration}`,
+    tileLocked: (previous: number) => `Verrouillé · terminez le module ${previous}`,
+    tileDone: 'Terminé · à revoir quand vous voulez',
+    tileLabel: (n: number, titre: string, state: string) => `Module ${n} : ${titre} (${state})`,
+    backLink: 'Retour',
+    versionEyebrow: (theme: string, version: string) => `${theme} · version ${version}`,
+    cardInfo: (done: number, total: number, points: number) =>
+      `${done}/${total} modules · ${points} point${points > 1 ? 's' : ''}`,
+    about: 'À propos de ce parcours',
     title: 'Parcours en ligne',
     intro:
       'Des formations à suivre en autonomie, à votre rythme. Votre progression n’est visible que de vous.',

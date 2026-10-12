@@ -10,10 +10,10 @@ export type TileState = 'done' | 'next' | 'locked' | 'special' | '';
   selector: 'a[appModuleTile], button[appModuleTile]',
   host: {
     '[class]': 'classes()',
-    '[attr.aria-disabled]': 'state() === "locked" ? "true" : null',
+    '[attr.aria-disabled]': 'tileState() === "locked" ? "true" : null',
   },
   template: `
-    <span class="num" aria-hidden="true">{{ state() === 'done' ? '✓' : num() }}</span>
+    <span class="num" aria-hidden="true">{{ tileState() === 'done' ? '✓' : num() }}</span>
     <span class="t">{{ heading() }}</span>
     <span class="s">{{ sub() }}</span>
   `,
@@ -22,6 +22,6 @@ export class ModuleTile {
   readonly num = input.required<string | number>();
   readonly heading = input.required<string>();
   readonly sub = input('');
-  readonly state = input<TileState>('');
-  protected readonly classes = computed(() => `node ${this.state()}`.trim());
+  readonly tileState = input<TileState>('');
+  protected readonly classes = computed(() => `node ${this.tileState()}`.trim());
 }

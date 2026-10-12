@@ -25,8 +25,8 @@ import { RequestSteps, StatusPill, statusKey, stepIndex } from './status';
     <app-status status="confirmee" />
     <app-request-steps status="attente_formation" />
     <app-filter-chips label="Modalité" [options]="options" [(value)]="value" />
-    <button appModuleTile type="button" num="3" heading="L’ADM" state="locked"></button>
-    <button appModuleTile type="button" num="1" heading="Introduction" state="done"></button>
+    <button appModuleTile type="button" num="3" heading="L’ADM" tileState="locked"></button>
+    <button appModuleTile type="button" num="1" heading="Introduction" tileState="done"></button>
     <app-progress-ring [value]="4" [max]="9" />
     <app-badge id="sans-faute" />
     <app-import-report name="f.json" [errors]="['a', 'b']" [warnings]="['c']" />
