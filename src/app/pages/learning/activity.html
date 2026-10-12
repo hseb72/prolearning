@@ -71,6 +71,9 @@
           @case ('scenario') {
             <app-scenario [ctx]="c.ctx" (progressed)="onProgress($event)" />
           }
+          @case ('pratique') {
+            <app-practice [ctx]="c.ctx" (progressed)="onProgress($event)" />
+          }
           @case ('fiches') {
             <app-cards [ctx]="c.ctx" (progressed)="onProgress($event)" />
           }

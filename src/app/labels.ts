@@ -151,6 +151,7 @@ export const LABELS = {
       association: 'Associer',
       scenario: 'Cas pratique',
       fiches: 'Fiches de révision',
+      pratique: 'Travaux pratiques',
     } as Record<string, string>,
     markDone: 'J’ai terminé',
     marked: 'Activité terminée.',
@@ -216,6 +217,38 @@ export const LABELS = {
     yourChoice: 'Votre choix',
     feedback: 'Retour',
     stars: (n: number) => `${n} étoile${n > 1 ? 's' : ''} sur 3`,
+    // Blocs de code
+    copy: 'Copier',
+    copyCode: 'Copier le code',
+    copied: 'Copié',
+    copiedAnnounce: 'Code copié dans le presse-papiers.',
+    copyFailed: 'La copie a échoué : sélectionnez le texte à la main.',
+    // Travaux pratiques
+    practice: {
+      objective: 'Objectif',
+      environment: 'Avant de commencer',
+      files: 'Fichiers fournis',
+      downloadAll: 'Télécharger tous les fichiers (.zip)',
+      downloadAllLabel: (n: number) =>
+        `Télécharger les ${n} fichiers en une archive .zip, avec leur arborescence`,
+      copyFile: 'Copier',
+      copyFileLabel: (nom: string) => `Copier le contenu de ${nom}`,
+      downloadFile: 'Télécharger',
+      downloadFileLabel: (nom: string) => `Télécharger ${nom}`,
+      fileCopied: (nom: string) => `Contenu de ${nom} copié dans le presse-papiers.`,
+      steps: 'Étapes',
+      step: (n: number, titre: string) => `Étape ${n} : ${titre}`,
+      expected: 'Résultat attendu',
+      check: 'Vérifiez votre travail',
+      checkHint:
+        'Cochez chaque point une fois vérifié sur votre poste. La plateforme n’exécute rien.',
+      submit: 'J’ai tout vérifié',
+      incomplete: (n: number) =>
+        n === 1 ? 'Il reste 1 point à vérifier.' : `Il reste ${n} points à vérifier.`,
+      done: 'Travaux pratiques terminés.',
+      alreadyDone: 'Vous avez déjà terminé ces travaux pratiques.',
+      cleanup: 'Remettre votre environnement en état',
+    },
     // Fiches
     card: (n: number, total: number) => `Fiche ${n} sur ${total}`,
     previousCard: 'Fiche précédente',

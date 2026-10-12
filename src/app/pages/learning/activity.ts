@@ -10,6 +10,7 @@ import { Cards } from '../../learning/activities/cards';
 import { Lesson } from '../../learning/activities/lesson';
 import { Match } from '../../learning/activities/match';
 import { Order } from '../../learning/activities/order';
+import { Practice } from '../../learning/activities/practice';
 import { Quiz } from '../../learning/activities/quiz';
 import { Scenario } from '../../learning/activities/scenario';
 import { Slides } from '../../learning/activities/slides';
@@ -17,7 +18,7 @@ import { Slides } from '../../learning/activities/slides';
 /** Une activité, avec la liste des activités du module et la navigation précédente/suivante. */
 @Component({
   selector: 'app-learning-activity',
-  imports: [RouterLink, Lesson, Slides, Quiz, Order, Match, Scenario, Cards],
+  imports: [RouterLink, Lesson, Slides, Quiz, Order, Match, Scenario, Cards, Practice],
   templateUrl: './activity.html',
   styleUrl: './learning.scss',
 })

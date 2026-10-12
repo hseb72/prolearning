@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type pg from 'pg';
@@ -36,6 +36,7 @@ const step = (statuts: readonly [string, ...string[]]) =>
   z.object({ statut: z.enum(statuts), par: z.string(), commentaire: z.string().default('') });
 
 const dataFile = z.object({
+  formations: z.array(z.string().regex(/^[a-z0-9-]+\.formation\.json$/)).default([]),
   fiches: z.array(
     z.object({
       id: z.string().regex(COURSE_ID_PATTERN),
@@ -142,19 +143,13 @@ export async function loadDemo(
     JSON.parse(readFileSync(join(dir, 'demo', 'comptes.json'), 'utf8')),
   );
   const data = dataFile.parse(JSON.parse(readFileSync(join(dir, 'demo', 'donnees.json'), 'utf8')));
-  const formationsDir = join(dir, 'formations');
-  const formations = existsSync(formationsDir)
-    ? readdirSync(formationsDir)
-        .filter((f) => f.endsWith('.formation.json'))
-        .sort()
-        .map((f) => {
-          const source = readFileSync(join(formationsDir, f), 'utf8');
-          const report = validateFormation(source);
-          if (!report.ok || !report.formation) throw new Error(`Formation de démo invalide : ${f}`);
-          const doc = JSON.parse(source) as Record<string, string>;
-          return { source, report: report.formation, doc };
-        })
-    : [];
+  const formations = data.formations.map((name) => {
+    const source = readFileSync(join(dir, 'formations', name), 'utf8');
+    const report = validateFormation(source);
+    if (!report.ok || !report.formation) throw new Error(`Formation de démo invalide : ${name}`);
+    const doc = JSON.parse(source) as Record<string, string>;
+    return { source, report: report.formation, doc };
+  });
 
   const client = await demo.connect();
   try {

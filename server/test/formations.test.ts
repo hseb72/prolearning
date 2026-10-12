@@ -255,7 +255,9 @@ describe.skipIf(!databasesAvailable)('évaluation, publication et copie des form
 
     // Réinitialisation : la démonstration retrouve la formation de son jeu, pas la copie.
     await loadDemo(databases.demo);
-    const after = await databases.demo.query('SELECT origin FROM pl_formation_versions');
+    const after = await databases.demo.query(
+      `SELECT origin FROM pl_formation_versions WHERE formation_id = 'togaf10'`,
+    );
     expect(after.rows).toEqual([{ origin: 'import' }]);
     expect(await ids('evaluation')).toEqual(['togaf10']);
     expect((await exportVersion('0.1.0')).rawPayload.equals(original)).toBe(true);
@@ -272,8 +274,10 @@ describe.skipIf(!databasesAvailable)('évaluation, publication et copie des form
     );
     expect(versions.rows.map((r) => r.version)).toEqual(['0.1.0', '0.2.0']);
     // La démonstration a son jeu de départ, la production sa version publiée.
-    expect(await ids('demo')).toEqual(['togaf10']);
-    const demoOrigin = await databases.demo.query('SELECT origin FROM pl_formation_versions');
+    expect(await ids('demo')).toEqual(['kubernetes-fondamentaux', 'togaf10']);
+    const demoOrigin = await databases.demo.query(
+      `SELECT origin FROM pl_formation_versions WHERE formation_id = 'togaf10'`,
+    );
     expect(demoOrigin.rows).toEqual([{ origin: 'import' }]);
     const prod = await databases.production.query('SELECT version FROM pl_formation_versions');
     expect(prod.rows).toEqual([{ version: '0.1.0' }]);

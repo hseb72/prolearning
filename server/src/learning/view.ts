@@ -91,6 +91,20 @@ function toLearnerActivity(activity: RawActivity, seed: string): LearnerActivity
     }
     case 'scenario':
       return { ...base, type: 'scenario', contexte: activity['contexte'] };
+    case 'pratique':
+      // Rien à cacher : la solution est un bloc replié, l'apprenant l'ouvre s'il le veut.
+      return {
+        ...base,
+        type: 'pratique',
+        objectif: activity['objectif'],
+        ...(activity['environnement'] ? { environnement: activity['environnement'] } : {}),
+        fichiers: activity['fichiers'] ?? [],
+        etapes: activity['etapes'],
+        verification: activity['verification'],
+        ...(activity['solution'] ? { solution: activity['solution'] } : {}),
+        ...(activity['nettoyage'] ? { nettoyage: activity['nettoyage'] } : {}),
+        references: activity['references'] ?? [],
+      };
     default:
       throw new Error(`Type d'activité inconnu : ${activity.type}`);
   }

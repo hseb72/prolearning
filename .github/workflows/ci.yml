@@ -32,8 +32,11 @@ jobs:
       - run: npm run typecheck:e2e
       - run: npm test
       - run: npm run build
-      - name: Formation exemple valide selon le validateur de référence
-        run: npm run valider -- fixtures/formations/togaf10-m1.formation.json
+      - name: Formations exemples valides selon le validateur de référence
+        run: |
+          for f in fixtures/formations/*.formation.json; do
+            npm run --silent valider -- "$f" > /dev/null || { echo "::error::$f invalide"; exit 1; }
+          done
 
   server:
     runs-on: ubuntu-latest

@@ -3,8 +3,8 @@
  * l'interface et l'API se partagent. Le format est un contrat, on ne le change pas ici.
  */
 
-/** Versions du format que la plateforme sait lire (§ 13). */
-export const SUPPORTED_FORMAT_VERSIONS = ['1.0'] as const;
+/** Versions du format que la plateforme sait lire (§ 13) : 1.1 ajoute l'activité `pratique`. */
+export const SUPPORTED_FORMAT_VERSIONS = ['1.0', '1.1'] as const;
 
 /** Taille maximale d'un fichier `.formation.json` (§ 1 : 10 Mo par fichier). */
 export const MAX_FORMATION_BYTES = 10 * 1024 * 1024;

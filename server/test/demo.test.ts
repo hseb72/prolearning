@@ -38,11 +38,11 @@ describe.skipIf(!databasesAvailable)('jeu de démonstration et réinitialisation
 
   it('charge un jeu complet et cohérent', async () => {
     const summary = await loadDemo(databases.demo);
-    expect(summary).toEqual({ comptes: 5, formations: 1, fiches: 5, sessions: 7, demandes: 6 });
+    expect(summary).toEqual({ comptes: 5, formations: 2, fiches: 6, sessions: 7, demandes: 6 });
 
     await post('/api/space', { space: 'demo' });
     const catalogue = (await get('/api/catalogue')).json();
-    expect(catalogue).toHaveLength(5); // l'administrateur joué voit aussi le brouillon
+    expect(catalogue).toHaveLength(6); // l'administrateur joué voit aussi le brouillon
     const togaf = (await get('/api/catalogue/togaf-fondamentaux')).json();
     expect(togaf.formationId).toBe('togaf10');
     expect(togaf.formats).toEqual(['distance', 'site', 'en-ligne']);
@@ -58,7 +58,10 @@ describe.skipIf(!databasesAvailable)('jeu de démonstration et réinitialisation
       'Chloé Bernard',
     ]);
     expect(file.surMesure.map((d: Json) => d.statut).sort()).toEqual(['a_traiter', 'en_cours']);
-    expect((await get('/api/parcours')).json().map((p: Json) => p.id)).toEqual(['togaf10']);
+    expect((await get('/api/parcours')).json().map((p: Json) => p.id)).toEqual([
+      'togaf10',
+      'kubernetes-fondamentaux',
+    ]);
   });
 
   it('ne recharge pas une base déjà remplie au démarrage', async () => {
@@ -83,13 +86,13 @@ describe.skipIf(!databasesAvailable)('jeu de démonstration et réinitialisation
 
     const res = await post('/api/demo/reinitialisation');
     expect(res.statusCode).toBe(200);
-    expect(res.json().resume.fiches).toBe(5);
+    expect(res.json().resume.fiches).toBe(6);
     // Le compte joué revient à l'administrateur fictif par défaut.
     expect(res.json().me.actor.displayName).toBe('Alice Martin');
 
     const demoCourses = await databases.demo.query('SELECT id FROM pl_courses ORDER BY id');
     expect(demoCourses.rows.map((r) => r.id)).not.toContain('ajout-demo');
-    expect(demoCourses.rows).toHaveLength(5);
+    expect(demoCourses.rows).toHaveLength(6);
     const prod = await databases.production.query('SELECT id FROM pl_courses');
     expect(prod.rows).toEqual([{ id: 'prod-seule' }]);
     const log = await databases.production.query(

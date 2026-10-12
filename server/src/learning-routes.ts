@@ -369,6 +369,29 @@ export function registerReader(app: FastifyInstance, backend: ReaderBackend): vo
     },
   );
 
+  // Travaux pratiques (§ 6.8) : terminés quand l'apprenant a coché toute la vérification.
+  const practiceBody = z.object({ cochees: z.array(z.string().max(64)).max(12) });
+
+  app.post(`${base}/pratique`, auth, async (request, reply): Promise<CompletionResult | void> => {
+    const t = await target(request, reply, ['pratique']);
+    if (!t) return;
+    const body = practiceBody.safeParse(request.body);
+    if (!body.success) return invalid(reply);
+    const expected = (t.activity['verification'] as { id: string }[]).map((v) => v.id);
+    const checked = new Set(body.data.cochees);
+    if (!expected.every((id) => checked.has(id))) {
+      return reply.code(400).send({
+        error: 'incomplete',
+        message: 'Cochez toutes les vérifications pour terminer les travaux pratiques.',
+      });
+    }
+    return backend.record(request, t.formation, t.moduleId, t.activity, {
+      status: 'faite',
+      score: null,
+      points: defaultPoints(t.activity),
+    });
+  });
+
   const scenarioBody = z.object({ chemin: z.array(z.number().int().min(0).max(20)).max(200) });
 
   app.post(`${base}/scenario`, auth, async (request, reply): Promise<ScenarioStep | void> => {

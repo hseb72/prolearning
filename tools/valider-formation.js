@@ -1,4 +1,4 @@
-// Validateur de référence du format 3S 1.0 : schéma JSON + contrôles métier (§ 11 de la spécification).
+// Validateur de référence du format 3S 1.0 et 1.1 : schéma JSON + contrôles métier (§ 11 de la spécification).
 // Usage : node tools/valider-formation.js chemin/vers/ma.formation.json
 // Prérequis : npm install ajv@8
 // Sortie : rapport JSON {ok, erreurs, avertissements} ; code de sortie 1 en cas d'erreur.
@@ -23,6 +23,9 @@ f.modules.forEach((m,mi)=>{dup(m.activites.map(a=>a.id),`modules[${mi}].activite
    a.questions.forEach((q,qi)=>{const o=new Set(q.options.map(x=>x.id));dup(q.options.map(x=>x.id),`${w}.questions[${qi}].options`);
     q.bonnes.forEach(b=>{if(!o.has(b))errs.push(`${w}.questions[${qi}]: bonne réponse « ${b} » absente des options`)});cite(q.references,`${w}.questions[${qi}]`)})}
   if(a.type==='ordre')dup(a.elements.map(e=>e.id),`${w}.elements`);
+  if(a.type==='pratique'){if(f.formatVersion==='1.0')errs.push(`${w}: l'activité « pratique » exige formatVersion 1.1`);
+   dup(a.verification.map(v=>v.id),`${w}.verification`);dup((a.fichiers||[]).map(x=>x.nom),`${w}.fichiers`);
+   cite(a.references,w);if(a.solution)cite(a.solution.references,`${w}.solution`)}
   if(a.type==='association'){dup(a.paires.map(p=>p.id),`${w}.paires`);dup(a.paires.map(p=>p.droite),`${w}.paires (colonne droite)`)}
   if(a.type==='scenario'){const N=a.noeuds;if(!N[a.debut])errs.push(`${w}: nœud de début « ${a.debut} » absent`);
    const seen=new Set(),stack=new Set();const dfs=n=>{if(n==='fin')return;if(!N[n]){errs.push(`${w}: nœud « ${n} » absent`);return}

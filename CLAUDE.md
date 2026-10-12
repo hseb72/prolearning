@@ -15,9 +15,9 @@ Une plateforme interne de formation : catalogue, sessions à distance et sur sit
 | Format d'échange des formations | `docs/format/format-formation-3s.md` | **Contrat** entre l'atelier de production de contenus et la plateforme |
 | Schéma JSON du format | `docs/format/formation.schema.json` | Validation à l'import |
 | Validateur de référence | `tools/valider-formation.js` | Schéma + contrôles métier ; la plateforme doit donner les mêmes verdicts |
-| Formation exemple (TOGAF 10, module 1, format 1.0) | `fixtures/formations/togaf10-m1.formation.json` | Jeu de test et contenu de démonstration |
-| Formation exemple (parcours TOGAF 10 complet, 9 modules, format 1.0) | `fixtures/formations/togaf10.formation.json` | **À fournir** par le porteur du projet ; remplacera la précédente |
-| Formation exemple (Kubernetes, 9 modules avec travaux pratiques, format 1.1) | `fixtures/formations/kubernetes-fondamentaux.formation.json` | **À fournir**, avec la spécification, le schéma et le validateur du format 1.1 : jeu de test de l'activité `pratique` |
+| Formation exemple (parcours TOGAF 10 complet, 9 modules, format 1.0) | `fixtures/formations/togaf10.formation.json` | Jeu de test et contenu de démonstration |
+| Formation exemple (Kubernetes, 9 modules avec travaux pratiques, format 1.1) | `fixtures/formations/kubernetes-fondamentaux.formation.json` | Jeu de test de l'activité `pratique` et contenu de démonstration |
+| Formation exemple courte (TOGAF 10, module 1, format 1.0) | `fixtures/formations/togaf10-m1.formation.json` | Exemple de référence de la spécification ; jeu de test rapide (parité du validateur, parcours complet dans le navigateur) |
 
 Le format est un contrat : on ne le modifie pas pour arranger l'implémentation. Toute évolution passe par une nouvelle `formatVersion` et une mise à jour de la spécification, validée par le porteur du projet.
 
@@ -53,7 +53,7 @@ Ce sont trois **espaces de données** dans la même application, à ne pas confo
 ## Formations en ligne
 
 - Lecteur de formation qui sait afficher tous les types d'activités du format 1.1 : `lecon` (avec blocs `approfondir` repliés par défaut et références), `diaporama`, `quiz`, `ordre`, `association`, `scenario`, `fiches`, `pratique` (travaux pratiques guidés : fichiers à copier ou télécharger, étapes, auto-vérification ; la plateforme n'exécute rien). Les blocs de code ont un bouton « Copier ».
-  - **État** : le format 1.0 est lu entièrement. Le format 1.1 (`pratique`, bouton « Copier ») attend sa spécification, son schéma et son validateur de référence, à fournir par le porteur du projet : le format est un contrat, on ne l'invente pas.
+  - **Réalisation (format 1.1)** : formats 1.0 et 1.1 lus (`SUPPORTED_FORMAT_VERSIONS`), contrôles métier de `pratique` à parité avec le validateur de référence. Le TP (`src/app/learning/activities/practice.ts`) affiche objectif, prérequis, fichiers (copier, télécharger, archive `.zip` de tous les fichiers avec leur arborescence, construite dans le navigateur), étapes et résultats attendus, solution repliée, remise en état. Il est terminé quand l'apprenant a coché toute la vérification (contrôlé par l'API) ; 30 points par défaut. Chaque bloc de code rendu par le markdown reçoit un bouton « Copier » (`src/app/learning/clipboard.ts`).
 - Progression enregistrée par `formation.id` + `module.id` + `activite.id`, conservée d'une version de formation à l'autre tant que les identifiants ne changent pas.
 - Déblocage séquentiel des modules et seuil de réussite des quiz, comme décrit dans le format.
 - Ludification : points d'expérience par défaut (§ 10 du format), niveaux, badges communs. Rester sobre ; pas de classement nominatif entre collègues sans décision RH.
@@ -133,7 +133,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 
 ### Choix d'implémentation (étape 6)
 
-- **Jeu de démonstration** : `fixtures/demo/comptes.json` (comptes fictifs), `fixtures/demo/donnees.json` (fiches, sessions, inscriptions et demandes sur mesure, avec leur historique) et toutes les formations de `fixtures/formations/`, importées comme le ferait un administrateur.
+- **Jeu de démonstration** : `fixtures/demo/comptes.json` (comptes fictifs), `fixtures/demo/donnees.json` (fiches, sessions, inscriptions et demandes sur mesure, avec leur historique, et la liste des formations de `fixtures/formations/` à charger : TOGAF 10 complet et Kubernetes), importées comme le ferait un administrateur.
   - Les dates des sessions sont **relatives au jour du chargement** (heure de Paris), pour que la démonstration ait toujours des sessions à venir.
 - **Chargement** : au démarrage si la base démo est vide, et à chaque **réinitialisation** (bouton du bandeau de démonstration, administrateurs seulement).
   - La réinitialisation vide toutes les tables `pl_` de la base démo (sauf migrations et authentification), puis recharge le jeu. Elle ne touche ni l'évaluation ni la production, qui sont d'autres bases.
@@ -152,7 +152,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 | `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |
 | `e2e/` | Tests Playwright (bureau et écran de 375 px). |
 | `docker/` | Images `api` (Node 24, non-root) et `web` (nginx non privilégié, relais `/api` vers Kong). |
-| `fixtures/demo/` | Jeu de l'espace démonstration (comptes fictifs, catalogue, sessions, demandes), chargé par `server/src/demo.ts` au démarrage si la base démo est vide et à chaque réinitialisation, avec les formations de `fixtures/formations/`. |
+| `fixtures/demo/` | Jeu de l'espace démonstration (comptes fictifs, catalogue, sessions, demandes), chargé par `server/src/demo.ts` au démarrage si la base démo est vide et à chaque réinitialisation, avec les formations de `fixtures/formations/` qu'il liste. |
 | `docs/keycloak.md` | Déclaration du client Keycloak et configuration du SSO. |
 | `deploy/` | Déploiement sur homelab-platform : valeurs du chart `app`, Application Argo CD, Ingress, `create-secrets.sh`, runbook (`deploy/README.md`). |
 
@@ -174,7 +174,7 @@ Vérifications (les mêmes qu'en CI) :
 npm run format:check && npm test && npm run build && npm run typecheck:e2e
 (cd server && npm run typecheck && npm test)   # TEST_DATABASE_URL_PRODUCTION / _DEMO / _EVALUATION
 npm run e2e                   # E2E_DATABASE_URL_PRODUCTION / _DEMO / _EVALUATION ; PLAYWRIGHT_CHROMIUM_PATH facultatif
-npm run valider -- fixtures/formations/togaf10-m1.formation.json
+npm run valider -- fixtures/formations/kubernetes-fondamentaux.formation.json   # et les autres formations exemples
 ```
 
 ## Ordre de réalisation proposé pour le pilote

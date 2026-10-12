@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://3s-pro-learning.example/schemas/formation-1.0.json",
-  "title": "Formation 3S - Pro Learning, format 1.0",
+  "$id": "https://3s-pro-learning.example/schemas/formation-1.1.json",
+  "title": "Formation 3S - Pro Learning, format 1.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -28,7 +28,10 @@
       "const": "3s-formation"
     },
     "formatVersion": {
-      "const": "1.0"
+      "enum": [
+        "1.0",
+        "1.1"
+      ]
     },
     "id": {
       "$ref": "#/$defs/slug"
@@ -338,7 +341,8 @@
             "ordre",
             "association",
             "scenario",
-            "fiches"
+            "fiches",
+            "pratique"
           ]
         }
       },
@@ -363,6 +367,9 @@
         },
         {
           "$ref": "#/$defs/fiches"
+        },
+        {
+          "$ref": "#/$defs/pratique"
         }
       ]
     },
@@ -1089,6 +1096,134 @@
     "points": {
       "type": "integer",
       "minimum": 0
+    },
+    "pratique": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "titre",
+        "objectif",
+        "etapes",
+        "verification"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/slug"
+        },
+        "titre": {
+          "$ref": "#/$defs/texte"
+        },
+        "obligatoire": {
+          "$ref": "#/$defs/bool"
+        },
+        "dureeEstimeeMinutes": {
+          "$ref": "#/$defs/duree"
+        },
+        "points": {
+          "$ref": "#/$defs/points"
+        },
+        "type": {
+          "const": "pratique"
+        },
+        "objectif": {
+          "$ref": "#/$defs/markdown"
+        },
+        "environnement": {
+          "$ref": "#/$defs/markdown"
+        },
+        "fichiers": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "nom",
+              "contenu"
+            ],
+            "properties": {
+              "nom": {
+                "type": "string",
+                "pattern": "^(?!.*\\.\\.)[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+){0,3}$",
+                "maxLength": 150
+              },
+              "langage": {
+                "enum": [
+                  "yaml",
+                  "json",
+                  "bash",
+                  "dockerfile",
+                  "texte"
+                ]
+              },
+              "description": {
+                "$ref": "#/$defs/texte"
+              },
+              "contenu": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            }
+          }
+        },
+        "etapes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "titre",
+              "markdown"
+            ],
+            "properties": {
+              "titre": {
+                "$ref": "#/$defs/texte"
+              },
+              "markdown": {
+                "$ref": "#/$defs/markdown"
+              },
+              "resultat": {
+                "$ref": "#/$defs/markdown"
+              }
+            }
+          }
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "texte"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/slug"
+              },
+              "texte": {
+                "$ref": "#/$defs/texte"
+              }
+            }
+          }
+        },
+        "solution": {
+          "$ref": "#/$defs/approfondir"
+        },
+        "nettoyage": {
+          "$ref": "#/$defs/markdown"
+        },
+        "references": {
+          "$ref": "#/$defs/refIds"
+        }
+      }
     }
   }
 }

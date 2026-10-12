@@ -1,5 +1,6 @@
 {
-  "description": "Jeu de données de l'espace démonstration : catalogue, sessions et demandes fictives. Les dates sont relatives au jour du chargement (« jour » : nombre de jours à partir d'aujourd'hui), à l'heure de Paris. Les comptes sont désignés par leur clé dans comptes.json ; les formations en ligne sont celles de fixtures/formations.",
+  "description": "Jeu de données de l'espace démonstration : catalogue, sessions et demandes fictives. Les dates sont relatives au jour du chargement (« jour » : nombre de jours à partir d'aujourd'hui), à l'heure de Paris. Les comptes sont désignés par leur clé dans comptes.json ; « formations » liste les fichiers de fixtures/formations chargés en démonstration.",
+  "formations": ["togaf10.formation.json", "kubernetes-fondamentaux.formation.json"],
   "fiches": [
     {
       "id": "togaf-fondamentaux",
@@ -15,6 +16,17 @@
       "prerequis": "Aucun",
       "dureeHeures": 14,
       "formation": "togaf10",
+      "publiee": true
+    },
+    {
+      "id": "kubernetes-fondamentaux",
+      "titre": "Kubernetes : les fondamentaux",
+      "theme": "Infrastructure et cloud",
+      "resume": "Parcours en ligne avec **travaux pratiques** sur votre poste : conteneurs, architecture, déploiements, services, configuration, mise à l'échelle et sécurité.",
+      "objectifs": ["Déployer et exposer une application", "Configurer, mettre à l'échelle et dépanner"],
+      "public": "Développeurs, exploitants, architectes",
+      "prerequis": "Utiliser un terminal",
+      "formation": "kubernetes-fondamentaux",
       "publiee": true
     },
     {

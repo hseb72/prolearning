@@ -41,6 +41,13 @@ export class LearningService {
     );
   }
 
+  /** Travaux pratiques : terminés quand toute la vérification est cochée. */
+  checkPractice(f: string, m: string, a: string, cochees: string[]): Promise<CompletionResult> {
+    return firstValueFrom(
+      this.http.post<CompletionResult>(this.url(f, m, a, 'pratique'), { cochees }),
+    );
+  }
+
   checkOrder(f: string, m: string, a: string, ordre: string[]) {
     return firstValueFrom(
       this.http.post<ExerciseCorrection>(this.url(f, m, a, 'ordre'), { ordre }),

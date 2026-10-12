@@ -62,7 +62,26 @@ export type LearnerActivity =
       droites: string[];
     })
   | (ActivityBase & { type: 'scenario'; contexte: string })
-  | (ActivityBase & { type: 'fiches'; cartes: { recto: string; verso: string }[] });
+  | (ActivityBase & { type: 'fiches'; cartes: { recto: string; verso: string }[] })
+  | (ActivityBase & {
+      type: 'pratique';
+      objectif: string;
+      environnement?: string;
+      fichiers: PracticeFile[];
+      etapes: { titre: string; markdown: string; resultat?: string }[];
+      verification: { id: string; texte: string }[];
+      solution?: { titre: string; markdown: string; references?: string[] };
+      nettoyage?: string;
+      references: string[];
+    });
+
+/** Fichier fourni par des travaux pratiques : chemin relatif (au plus trois sous-dossiers). */
+export interface PracticeFile {
+  nom: string;
+  langage?: 'yaml' | 'json' | 'bash' | 'dockerfile' | 'texte';
+  description?: string;
+  contenu: string;
+}
 
 export interface LearnerModule {
   id: string;

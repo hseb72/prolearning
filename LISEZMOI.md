@@ -4,9 +4,11 @@ Ce kit contient de quoi démarrer le développement avec Claude Code.
 
 ```
 CLAUDE.md                                   contexte du projet, lu par Claude Code à chaque session
-docs/format/format-formation-3s.md          spécification du format d'échange des formations (v1.0)
+docs/format/format-formation-3s.md          spécification du format d'échange des formations (v1.1)
 docs/format/formation.schema.json           schéma JSON de validation
 fixtures/formations/togaf10-m1.formation.json   formation exemple : TOGAF 10, module 1 complet
+fixtures/formations/togaf10.formation.json      parcours TOGAF 10 complet (9 modules, format 1.0)
+fixtures/formations/kubernetes-fondamentaux.formation.json   Kubernetes avec travaux pratiques (format 1.1)
 tools/valider-formation.js                  validateur de référence (schéma + contrôles métier)
 ```
 
@@ -22,7 +24,7 @@ tools/valider-formation.js                  validateur de référence (schéma +
 
 ## Produire une formation hors plateforme
 
-Dans une conversation Claude (hors Claude Code), demandez une formation « au format 3S 1.0 » en joignant `format-formation-3s.md` et `formation.schema.json`, ou en reprenant la conversation où ce format a été défini. Vérifiez le fichier obtenu :
+Dans une conversation Claude (hors Claude Code), demandez une formation « au format 3S 1.1 » en joignant `format-formation-3s.md` et `formation.schema.json`, ou en reprenant la conversation où ce format a été défini. Vérifiez le fichier obtenu :
 
 ```
 npm install ajv@8
