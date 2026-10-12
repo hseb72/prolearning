@@ -8,7 +8,12 @@ export type AuditAction =
   | 'user.manager'
   | 'user.bootstrap_admin'
   | 'formation.import'
-  | 'formation.publish';
+  | 'formation.publish'
+  | 'course.create'
+  | 'course.update'
+  | 'session.create'
+  | 'session.update'
+  | 'session.cancel';
 
 export interface AuditEntry {
   actorId: number | null;

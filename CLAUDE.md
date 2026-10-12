@@ -101,12 +101,20 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 - **Archives `.formation.zip`** (images, PDF) : reportées jusqu'à la demande du seau MinIO au socle. Seuls les `.formation.json` s'importent pour l'instant.
 - **Export** : restitue le fichier importé à l'octet près (texte conservé en base).
 
+### Choix d'implémentation (étape 4)
+
+- **Fiche formation** (`pl_courses`) : tenue par l'équipe formation, publiée ou en brouillon. Elle peut renvoyer à un parcours en ligne de l'espace (`formation_id`) ; le catalogue affiche alors le format « en ligne ».
+- **Sessions** (`pl_course_sessions`) : à distance ou sur site. On les **annule** au lieu de les supprimer. Les collaborateurs ne voient que les sessions à venir et non annulées ; l'équipe formation voit tout.
+- **Places restantes** = capacité − inscriptions confirmées (`pl_session_registrations`, alimentée par les demandes de l'étape 5). La capacité ne descend pas sous les places prises.
+- Dates saisies et affichées à l'**heure de Paris**, quel que soit le poste (`src/app/catalog/dates.ts`).
+- Création, modification et annulation sont journalisées (`course.*`, `session.*`).
+
 ## Structure du dépôt
 
 | Dossier | Contenu |
 |---|---|
 | `src/` | Front Angular (composants autonomes, signaux, sans zone.js). Textes d'interface réunis dans `src/app/labels.ts`. Lecteur de formation : `src/app/learning/` (markdown, un composant par type d'activité) et `src/app/pages/learning/`. |
-| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). `src/format/` : validation, stockage et export ; `src/learning/` : lecteur (vue apprenant, correction, progression). |
+| `server/` | API Fastify. `src/databases.ts` ouvre une connexion par espace ; `src/migrate.ts` applique `db/migrations/` aux deux bases ; `src/context.ts` rattache chaque requête à sa session et à la base de son espace (`request.auth.db`, seul accès aux données pour le code métier, vérifié par un test). `src/format/` : validation, stockage et export ; `src/learning/` : lecteur (vue apprenant, correction, progression) ; `src/catalog/` et `src/catalog-routes.ts` : catalogue et sessions. |
 | `server/src/format/` | Format d'échange : `validate.ts` (schéma + contrôles métier, mêmes verdicts que le validateur de référence, vérifié par un test de parité ; messages en français, chemins au style du § 11), `store.ts` (règles de version du § 11, texte exact conservé pour un export sans perte). `src/publication.ts` est le seul module métier qui touche les deux bases (publication démo → production par export puis import). |
 | `shared/` | Code commun au front et à l'API (types, règles). Imports relatifs suffixés `.js`. |
 | `db/migrations/` | Scripts SQL versionnés, tables préfixées `pl_` (voir le README du dossier). |

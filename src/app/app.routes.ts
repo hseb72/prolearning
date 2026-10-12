@@ -36,6 +36,36 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/learning/activity').then((m) => m.LearningActivityPage),
   },
   {
+    path: 'catalogue',
+    title: title(LABELS.catalog.title),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/catalog/catalog').then((m) => m.CatalogPage),
+  },
+  {
+    path: 'catalogue/nouvelle',
+    title: title(LABELS.catalog.newTitle),
+    canActivate: [roleGuard('training')],
+    loadComponent: () => import('./pages/catalog/course-form').then((m) => m.CourseFormPage),
+  },
+  {
+    path: 'catalogue/:id',
+    title: title(LABELS.catalog.title),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/catalog/course').then((m) => m.CoursePage),
+  },
+  {
+    path: 'catalogue/:id/modifier',
+    title: title(LABELS.catalog.edit),
+    canActivate: [roleGuard('training')],
+    loadComponent: () => import('./pages/catalog/course-form').then((m) => m.CourseFormPage),
+  },
+  {
+    path: 'sessions',
+    title: title(LABELS.sessions.title),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/catalog/sessions').then((m) => m.SessionsPage),
+  },
+  {
     path: 'administration/formations',
     title: title(LABELS.formations.title),
     canActivate: [roleGuard('admin')],

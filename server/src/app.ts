@@ -4,6 +4,7 @@ import { MAX_FORMATION_BYTES } from '../../shared/format.js';
 import type { HealthReport } from '../../shared/health.js';
 import { SPACES } from '../../shared/spaces.js';
 import { registerAuthRoutes, type AuthSettings } from './auth/routes.js';
+import { registerCatalogRoutes } from './catalog-routes.js';
 import { resolveContext, sessionToken } from './context.js';
 import type { Databases } from './databases.js';
 import { registerFormationRoutes } from './formation-routes.js';
@@ -81,6 +82,7 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
   registerFormationRoutes(app);
   registerPublicationRoutes(app, databases);
   registerLearningRoutes(app);
+  registerCatalogRoutes(app);
 
   app.setNotFoundHandler((_request, reply) =>
     reply.code(404).send({ error: 'not_found', message: 'Ressource introuvable.' }),
