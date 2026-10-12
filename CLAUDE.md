@@ -100,7 +100,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 5. **Visibilité des résultats** des parcours en ligne : **l'apprenant seul**. Il peut choisir de publier sa réussite et ses badges à son management ou à la communauté ; rien n'est publié sans son action.
 
 6. **Une seule installation** du front et de l'API pour les trois espaces : l'API ouvre une connexion par base (`server/src/databases.ts`, seul module autorisé à le faire) et choisit la base à chaque requête. Un non-administrateur est toujours servi par la production.
-7. **Démonstration par jeu de rôle** : dans l'espace démonstration, l'administrateur choisit un compte fictif et **joue son rôle** (collaborateur, manager, équipe formation ou administrateur) pour montrer et expliquer les fonctionnalités. Pas de mot de passe ni de compte SSO pour ces comptes fictifs ; le bandeau de démonstration indique le rôle joué. Ce jeu de rôle n'existe pas en production.
+7. **Démonstration par jeu de rôle** : dans l'espace démonstration, l'administrateur choisit un compte fictif et **joue son rôle** (collaborateur, manager, équipe formation ou administrateur) pour montrer et expliquer les fonctionnalités. Pas de mot de passe ni de compte SSO pour ces comptes fictifs ; l'en-tête indique le compte et le rôle joués. Ce jeu de rôle n'existe pas en production.
 8. **Rôles gérés dans l'application (RBAC)** : Keycloak ne sert qu'à prouver l'identité (`sub`, e-mail, nom). Les rôles (collaborateur, manager, équipe formation, administrateur) et le rattachement de chaque collaborateur à son manager sont tenus dans l'application par les administrateurs. Les premiers administrateurs sont désignés par leur e-mail dans la configuration (`BOOTSTRAP_ADMIN_EMAILS`).
 
 ### Choix d'implémentation (étape 2), à confirmer par le porteur du projet
@@ -129,13 +129,22 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 - **Session sur mesure** : demandée par un manager (avec ou sans fiche du catalogue). L'équipe formation la prend en charge, puis l'accepte ou la refuse avec une réponse.
 - **Historique** de chaque demande (`pl_request_events`) : statut, auteur, date, commentaire. Il est visible du demandeur, de son manager et de l'équipe formation.
 - **Visibilité** : chacun voit ses propres demandes ; un manager voit celles des collaborateurs qui lui sont rattachés ; l'équipe formation voit la file à traiter.
-- **Pas de notification par e-mail** pour l'instant (pas de serveur d'envoi). Le suivi se fait dans « Mes demandes », « Mon équipe » et « Demandes à traiter ».
+- **Pas de notification par e-mail** pour l'instant (pas de serveur d'envoi). Le suivi se fait dans « Mes demandes », « Mon équipe » et Administration › Demandes.
+
+### Refonte de l'interface (charte du prototype validé)
+
+- Référence : `docs/ui/` (spécification, prototype, captures). Jetons, composants communs dans `src/app/ui/`, page interne `/administration/composants`.
+- Onglets : Catalogue · Sessions · Session sur mesure (managers) · Mes demandes · Mon équipe (managers) · Mon parcours en ligne · Administration (Demandes, Formations, Comptes et rôles). Pas d'accueil : `/` ouvre le catalogue.
+- La fiche formation s'ouvre en dialogue (`/catalogue/:id`) ; la gestion des sessions est à `/catalogue/:id/sessions`.
+- Statuts affichés comme dans le prototype, validation manager conservée : « Envoyée · Validation manager · Décision ». Pas de liste d'attente.
+- Ni `alert()` ni `confirm()` : dialogue natif et toast. La réinitialisation de la démo est dans Administration › Formations.
+- Pas de script en ligne (CSP `script-src 'self'`) : CSS critique non mis en ligne au build.
 
 ### Choix d'implémentation (étape 6)
 
-- **Jeu de démonstration** : `fixtures/demo/comptes.json` (comptes fictifs), `fixtures/demo/donnees.json` (fiches, sessions, inscriptions et demandes sur mesure, avec leur historique, et la liste des formations de `fixtures/formations/` à charger : TOGAF 10 complet et Kubernetes), importées comme le ferait un administrateur.
+- **Jeu de démonstration** : `fixtures/demo/comptes.json` (comptes fictifs), `fixtures/demo/donnees.json` (les 7 fiches et 10 sessions de l'exemple du prototype, inscriptions et demandes sur mesure avec leur historique, et la liste des formations de `fixtures/formations/` à charger : TOGAF 10 complet et Kubernetes), importées comme le ferait un administrateur.
   - Les dates des sessions sont **relatives au jour du chargement** (heure de Paris), pour que la démonstration ait toujours des sessions à venir.
-- **Chargement** : au démarrage si la base démo est vide, et à chaque **réinitialisation** (bouton du bandeau de démonstration, administrateurs seulement).
+- **Chargement** : au démarrage si la base démo est vide, et à chaque **réinitialisation** (Administration › Formations, administrateurs seulement).
   - La réinitialisation vide toutes les tables `pl_` de la base démo (sauf migrations et authentification), puis recharge le jeu. Elle ne touche ni l'évaluation ni la production, qui sont d'autres bases.
   - Elle est sérialisée par un verrou consultatif et journalisée en production (`demo.reset`).
   - Le compte joué redevient l'administrateur fictif par défaut.

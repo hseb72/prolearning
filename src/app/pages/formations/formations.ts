@@ -1,15 +1,16 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { FormationRow, ValidationReport } from '@shared/format';
+import type { FormationRow, ReportItem, ValidationReport } from '@shared/format';
 import { AuthService } from '../../core/auth';
 import { FormationsService } from '../../core/formations';
 import { AdminNav } from '../../layout/admin-nav';
 import { LABELS } from '../../labels';
 import { ConfirmService } from '../../ui/confirm';
-
-type Status = { kind: 'success' | 'error'; text: string };
+import { DropZone, ImportReport } from '../../ui/import';
+import { Tag } from '../../ui/tag';
+import { ToastService } from '../../ui/toast';
 
 /**
  * Formations en évaluation : import (avec rapport), liste, relecture, export, publication
@@ -17,7 +18,7 @@ type Status = { kind: 'success' | 'error'; text: string };
  */
 @Component({
   selector: 'app-formations',
-  imports: [RouterLink, AdminNav],
+  imports: [RouterLink, AdminNav, DropZone, ImportReport, Tag],
   templateUrl: './formations.html',
   styleUrl: './formations.scss',
 })
@@ -27,12 +28,17 @@ export class FormationsPage {
   private readonly confirm = inject(ConfirmService);
   private readonly date = new DatePipe('fr');
 
+  private readonly toast = inject(ToastService);
   protected readonly labels = LABELS.formations;
+  protected readonly r = LABELS.requests;
+  protected readonly spaceName = computed(() =>
+    this.auth.me()?.space === 'demo' ? LABELS.space.demoName : LABELS.space.productionName,
+  );
   protected readonly file = signal<File | null>(null);
   protected readonly replace = signal(false);
   protected readonly busy = signal(false);
   protected readonly report = signal<ValidationReport | null>(null);
-  protected readonly status = signal<Status | null>(null);
+  protected readonly error = signal<string | null>(null);
 
   // Relu à chaque changement d'espace ou de compte joué, et après chaque import.
   private readonly refresh = signal(0);
@@ -46,34 +52,52 @@ export class FormationsPage {
       : undefined;
   });
 
+  /** Versions copiées en démonstration, et publiées en production. */
+  protected readonly inDemo = computed(() => this.rows('copiedToDemoAt'));
+  protected readonly inProd = computed(() => this.rows('publishedAt'));
+
+  private rows(field: 'copiedToDemoAt' | 'publishedAt') {
+    return (this.formations.value() ?? []).flatMap((f) =>
+      f.versions
+        .filter((v) => v[field])
+        .map((v) => ({
+          key: `${f.id}@${v.version}`,
+          titre: f.titre,
+          version: v.version,
+          date: v[field]!,
+        })),
+    );
+  }
+
+  protected lines(items: ReportItem[]): string[] {
+    return items.map((i) => `${i.chemin || this.labels.root} : ${i.message}`);
+  }
+
   protected exportUrl(id: string, version: string): string {
     return this.service.exportUrl(id, version);
   }
 
-  protected chooseFile(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.file.set(input.files?.[0] ?? null);
+  /** Fichier déposé : validé tout de suite (« validation du format avant tout import »). */
+  protected async chooseFile(file: File): Promise<void> {
+    this.file.set(file);
     this.report.set(null);
-    this.status.set(null);
-  }
-
-  protected async check(): Promise<void> {
-    const file = this.requireFile();
-    if (!file) return;
+    this.replace.set(false);
     await this.run(async () => this.report.set(await this.service.validate(file)));
   }
 
   protected async importFile(): Promise<void> {
-    const file = this.requireFile();
+    const file = this.file();
     if (!file) return;
     await this.run(async () => {
       const result = await this.service.import(file, this.replace());
       this.report.set(result.rapport);
       if (result.importee) {
-        this.status.set({ kind: 'success', text: this.labels.imported[result.action!]! });
+        this.toast.show(this.labels.imported[result.action!]!);
+        this.report.set(null);
+        this.file.set(null);
         this.refresh.update((n) => n + 1);
       } else if (result.refus) {
-        this.status.set({ kind: 'error', text: this.labels.refused(result.refus) });
+        this.error.set(this.labels.refused(result.refus));
       }
     });
   }
@@ -87,11 +111,8 @@ export class FormationsPage {
     if (!ok) return;
     await this.run(async () => {
       const result = await this.service.publish(formation.id, version);
-      this.status.set(
-        result.publiee
-          ? { kind: 'success', text: this.labels.published(version) }
-          : { kind: 'error', text: this.labels.publishRefused(result.refus ?? this.labels.failed) },
-      );
+      if (result.publiee) this.toast.show(this.labels.published(version));
+      else this.error.set(this.labels.publishRefused(result.refus ?? this.labels.failed));
       this.refresh.update((n) => n + 1);
     });
   }
@@ -99,11 +120,8 @@ export class FormationsPage {
   protected async copyToDemo(formation: FormationRow, version: string): Promise<void> {
     await this.run(async () => {
       const result = await this.service.copyToDemo(formation.id, version);
-      this.status.set(
-        result.copiee
-          ? { kind: 'success', text: this.labels.copied(version) }
-          : { kind: 'error', text: this.labels.copyRefused(result.refus ?? this.labels.failed) },
-      );
+      if (result.copiee) this.toast.show(this.labels.copied(version));
+      else this.error.set(this.labels.copyRefused(result.refus ?? this.labels.failed));
       this.refresh.update((n) => n + 1);
     });
   }
@@ -112,19 +130,29 @@ export class FormationsPage {
     return this.date.transform(iso, 'short') ?? iso;
   }
 
-  private requireFile(): File | null {
-    const file = this.file();
-    if (!file) this.status.set({ kind: 'error', text: this.labels.noFile });
-    return file;
+  /** Réinitialisation de la démonstration (déplacée du bandeau vers l'administration). */
+  protected async resetDemo(): Promise<void> {
+    const ok = await this.confirm.ask({
+      eyebrow: LABELS.space.demoName,
+      title: this.labels.resetDemo,
+      text: LABELS.space.confirmReset,
+      confirm: this.labels.resetDemo,
+    });
+    if (!ok) return;
+    await this.run(async () => {
+      await this.auth.resetDemo();
+      this.toast.show(LABELS.space.resetDone);
+      this.refresh.update((n) => n + 1);
+    });
   }
 
   private async run(action: () => Promise<void>): Promise<void> {
     this.busy.set(true);
-    this.status.set(null);
+    this.error.set(null);
     try {
       await action();
     } catch {
-      this.status.set({ kind: 'error', text: this.labels.failed });
+      this.error.set(this.labels.failed);
     } finally {
       this.busy.set(false);
     }

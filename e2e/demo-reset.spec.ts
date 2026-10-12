@@ -32,21 +32,24 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   // Le jeu de départ : catalogue fictif, parcours en ligne, demandes en cours.
   await tab(page, 'Catalogue').click();
   await expect(
-    page.getByRole('heading', { level: 3, name: 'TOGAF 10 : les fondamentaux' }),
+    page.getByRole('heading', { level: 3, name: "Architecture d'entreprise avec TOGAF 10" }),
   ).toBeVisible();
-  await expect(page.getByText('Brouillon', { exact: true })).toBeVisible();
+  await expect(page.locator('app-course-card')).toHaveCount(7);
 
   await play(page, 'David Moreau — Collaborateur');
   await tab(page, 'Mes demandes').click();
   await expect(
-    page.locator('li.request').filter({ hasText: 'TOGAF 10 : les fondamentaux' }),
-  ).toContainText('Inscription confirmée');
+    page
+      .locator('app-request-card')
+      .filter({ hasText: "Architecture d'entreprise avec TOGAF 10" })
+      .locator('app-status'),
+  ).toHaveText('Acceptée');
 
   // Jouer la manager : valider la demande d'Emma modifie la démonstration…
   await play(page, 'Chloé Bernard — Manager');
   await tab(page, 'Mon équipe').click();
   const toValidate = page.getByRole('region', { name: 'À valider' });
-  const emma = toValidate.locator('li.request').filter({ hasText: 'Emma Petit' });
+  const emma = toValidate.locator('app-request-card').filter({ hasText: 'Emma Petit' });
   await expect(emma).toHaveCount(1);
   await emma
     .getByRole('button', {
@@ -56,32 +59,39 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   await expect(page.getByText(/validée : elle part à l’équipe formation/)).toBeVisible();
   await expect(page.getByText('Aucune demande en attente de votre validation.')).toBeVisible();
 
-  // … la réinitialisation rend le jeu de départ, et rejoue l'administratrice fictive.
-  await page.getByRole('button', { name: 'Réinitialiser la démonstration' }).click();
-  await confirmDialog(page, 'Réinitialiser la démonstration');
+  // … la réinitialisation (Administration › Formations) rend le jeu de départ, et rejoue
+  // l'administratrice fictive.
+  await play(page, 'Alice Martin — Administrateur');
+  await openAdmin(page, 'Formations');
+  await page.getByRole('button', { name: 'Réinitialiser l’espace démonstration' }).click();
+  await confirmDialog(page, 'Réinitialiser l’espace démonstration');
   await expect(
     page.getByText('Démonstration réinitialisée : jeu de départ rechargé.'),
   ).toBeVisible();
   await expect(page.locator('.me-name')).toContainText('Alice Martin');
   await play(page, 'Chloé Bernard — Manager');
   await tab(page, 'Mon équipe').click();
-  await expect(toValidate.locator('li.request').filter({ hasText: 'Emma Petit' })).toHaveCount(1);
+  await expect(
+    toValidate.locator('app-request-card').filter({ hasText: 'Emma Petit' }),
+  ).toHaveCount(1);
 
-  // Le bandeau et sa bascule restent utilisables sur un écran de 375 px.
-  await page.setViewportSize({ width: 375, height: 740 });
-  await expect(page.getByRole('button', { name: 'Réinitialiser la démonstration' })).toBeVisible();
-  await expectNoHorizontalOverflow(page);
-
-  // L'évaluation n'a pas été touchée.
+  // L'évaluation n'a pas été touchée ; la réinitialisation reste accessible sur 375 px.
   await play(page, 'Alice Martin — Administrateur');
+  await page.setViewportSize({ width: 375, height: 740 });
   await openAdmin(page, 'Formations');
-  await expect(page.getByRole('heading', { name: 'Formation en relecture' })).toBeVisible();
+  await expect(
+    page.locator('article.formation').filter({ hasText: 'Formation en relecture' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Réinitialiser l’espace démonstration' }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 
   // La production non plus.
   await page.getByRole('button', { name: 'Revenir en production' }).click();
   await expect(banner).toHaveAttribute('data-space', 'production');
   await tab(page, 'Catalogue').click();
   await expect(
-    page.getByRole('heading', { level: 3, name: 'TOGAF 10 : les fondamentaux' }),
+    page.getByRole('heading', { level: 3, name: "Architecture d'entreprise avec TOGAF 10" }),
   ).toHaveCount(0);
 });

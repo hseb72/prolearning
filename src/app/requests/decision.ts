@@ -7,56 +7,53 @@ let nextId = 0;
 @Component({
   selector: 'app-decision',
   template: `
-    <div class="decision">
-      <label [for]="uid">{{ commentLabel() }}</label>
+    <div class="fld">
+      <label class="l" [for]="uid">{{ commentLabel() }}</label>
       <textarea
+        class="inp"
         [id]="uid"
         rows="2"
         maxlength="2000"
         [value]="comment()"
         (input)="comment.set($any($event.target).value)"
       ></textarea>
-      <div class="actions">
+    </div>
+    <div class="bo-acts">
+      <button
+        class="btn small"
+        type="button"
+        [disabled]="busy()"
+        [attr.aria-label]="acceptLabel()"
+        (click)="decided.emit({ accept: true, commentaire: comment().trim() })"
+      >
+        {{ acceptText() }}
+      </button>
+      @if (extraText()) {
         <button
-          class="button primary"
+          class="btn ghost small"
           type="button"
           [disabled]="busy()"
-          [attr.aria-label]="acceptLabel()"
-          (click)="decided.emit({ accept: true, commentaire: comment().trim() })"
+          [attr.aria-label]="extraLabel()"
+          (click)="extra.emit(comment().trim())"
         >
-          {{ acceptText() }}
+          {{ extraText() }}
         </button>
-        <button
-          class="button"
-          type="button"
-          [disabled]="busy()"
-          [attr.aria-label]="refuseLabel()"
-          (click)="decided.emit({ accept: false, commentaire: comment().trim() })"
-        >
-          {{ labels.refuse }}
-        </button>
-      </div>
+      }
+      <button
+        class="btn ghost small"
+        type="button"
+        [disabled]="busy()"
+        [attr.aria-label]="refuseLabel()"
+        (click)="decided.emit({ accept: false, commentaire: comment().trim() })"
+      >
+        {{ labels.refuse }}
+      </button>
     </div>
   `,
   styles: `
-    .decision {
+    :host {
       display: grid;
-      gap: var(--space-1);
-      margin-top: var(--space-1);
-    }
-    textarea {
-      max-width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--color-text-muted);
-      border-radius: var(--radius);
-      background: var(--color-surface);
-      color: var(--color-text);
-      font: inherit;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-1);
+      gap: 10px;
     }
   `,
 })
@@ -67,6 +64,10 @@ export class DecisionForm {
   readonly commentLabel = input<string>(LABELS.requests.comment);
   readonly busy = input(false);
   readonly decided = output<{ accept: boolean; commentaire: string }>();
+  /** Troisième action facultative (« Prendre en charge »), avec le commentaire saisi. */
+  readonly extraText = input('');
+  readonly extraLabel = input('');
+  readonly extra = output<string>();
   protected readonly uid = `decision-${nextId++}`;
   protected readonly labels = LABELS.requests;
   protected readonly comment = signal('');

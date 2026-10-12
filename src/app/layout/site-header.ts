@@ -7,7 +7,6 @@ import type { MyRequests, TeamRequests, TrainingQueue } from '@shared/requests';
 import { filter, map } from 'rxjs';
 import { AuthService } from '../core/auth';
 import { LABELS } from '../labels';
-import { ConfirmService } from '../ui/confirm';
 import { ToastService } from '../ui/toast';
 
 /**
@@ -124,12 +123,6 @@ import { ToastService } from '../ui/toast';
     @if (me(); as me) {
       <div class="demo" [class.prod]="me.space === 'production'" [attr.data-space]="me.space">
         {{ me.space === 'demo' ? space.demoBanner : space.productionBanner }}
-        @if (me.space === 'demo') {
-          ·
-          <button class="link" type="button" [disabled]="busy()" (click)="reset()">
-            {{ space.reset }}
-          </button>
-        }
       </div>
     }
   `,
@@ -171,9 +164,6 @@ import { ToastService } from '../ui/toast';
       text-underline-offset: 3px;
       cursor: pointer;
     }
-    .demo .link {
-      color: inherit;
-    }
     @media (max-width: 640px) {
       .me {
         justify-items: start;
@@ -188,7 +178,6 @@ import { ToastService } from '../ui/toast';
 export class SiteHeader {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
 
   protected readonly app = LABELS.app;
@@ -247,15 +236,21 @@ export class SiteHeader {
   });
 
   constructor() {
-    // Liste des comptes jouables, chargée à la première entrée en démonstration.
+    // Comptes jouables, relus à chaque changement de session en démonstration (entrée en
+    // démo, autre compte joué, réinitialisation : les identifiants fictifs repartent de 1).
     effect(() => {
-      if (this.me()?.space === 'demo' && untracked(this.personas).length === 0) {
-        this.auth.personas().then(
-          (list) => this.personas.set(list),
-          () => this.toast.show(this.space.switchFailed),
-        );
+      const me = this.me();
+      if (me?.space === 'demo') {
+        untracked(() => this.loadPersonas());
       }
     });
+  }
+
+  private loadPersonas(): void {
+    this.auth.personas().then(
+      (list) => this.personas.set(list),
+      () => this.toast.show(this.space.switchFailed),
+    );
   }
 
   protected switchTo(space: 'production' | 'demo'): Promise<boolean> {
@@ -266,21 +261,6 @@ export class SiteHeader {
   protected choosePersona(event: Event): Promise<boolean> {
     const id = Number((event.target as HTMLSelectElement).value);
     return this.run(() => this.auth.switchSpace('demo', id), this.space.switchFailed);
-  }
-
-  protected async reset(): Promise<void> {
-    const ok = await this.confirm.ask({
-      eyebrow: this.space.demo,
-      title: this.space.reset,
-      text: this.space.confirmReset,
-      confirm: this.space.reset,
-    });
-    if (!ok) return;
-    const done = await this.run(async () => {
-      await this.auth.resetDemo();
-      this.personas.set(await this.auth.personas());
-    }, this.space.resetFailed);
-    if (done) this.toast.show(this.space.resetDone);
   }
 
   protected async logout(): Promise<void> {

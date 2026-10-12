@@ -68,14 +68,14 @@ test.describe('demandes', () => {
     await expect(sheet.locator('app-status')).toHaveText('Envoyée');
     await sheet.getByRole('button', { name: 'Fermer' }).click();
     await tab(page, 'Mes demandes').click();
-    const mine = page.locator('li.request').filter({ hasText: course.titre });
-    await expect(mine).toContainText('En attente de validation du manager');
+    const mine = page.locator('app-request-card').filter({ hasText: course.titre });
+    await expect(mine.locator('app-status')).toHaveText('Envoyée');
     await expectNoHorizontalOverflow(page);
 
     // Le manager valide, au clavier.
     await switchTo(page, manager);
     await tab(page, 'Mon équipe').click();
-    const toValidate = page.locator('li.request').filter({ hasText: course.titre });
+    const toValidate = page.locator('app-request-card').filter({ hasText: course.titre });
     await expect(toValidate).toContainText('Pour le projet Atelia.');
     await toValidate.getByLabel('Commentaire (facultatif)').fill('Accord, bonne formation.');
     await toValidate.getByRole('button', { name: /^Valider la demande de/ }).focus();
@@ -86,7 +86,7 @@ test.describe('demandes', () => {
     // L'équipe formation confirme : une place est prise.
     await switchTo(page, ADMIN);
     await openAdmin(page, 'Demandes');
-    const toConfirm = page.locator('li.request').filter({ hasText: course.titre });
+    const toConfirm = page.locator('tr.request').filter({ hasText: course.titre });
     await expect(toConfirm).toContainText('2 places restantes sur 2');
     await toConfirm.getByRole('button', { name: /^Confirmer l’inscription de/ }).click();
     await expect(page.getByText(/Inscription de .* confirmée\./)).toBeVisible();
@@ -95,7 +95,7 @@ test.describe('demandes', () => {
     // La collaboratrice voit sa place confirmée et l'historique.
     await switchTo(page, collab);
     await tab(page, 'Mes demandes').click();
-    await expect(mine).toContainText('Inscription confirmée');
+    await expect(mine.locator('app-status')).toHaveText('Acceptée');
     await mine.getByText('Historique').click();
     await expect(mine).toContainText('Accord, bonne formation.');
     await page.goto(`/catalogue/${course.id}`);
@@ -114,21 +114,22 @@ test.describe('demandes', () => {
     const sujet = `Atelier ArchiMate ${info.project.name} ${Date.now()}`;
 
     await switchTo(page, manager);
-    await tab(page, 'Mes demandes').click();
-    await page.getByRole('link', { name: 'Demander une session sur mesure' }).click();
+    await tab(page, 'Session sur mesure').click();
     await page.getByLabel('Sujet').fill(sujet);
-    await page.getByLabel('Modalité souhaitée').selectOption({ label: 'Sur site' });
+    await page.getByRole('radio', { name: 'Sur site' }).check();
     await page.getByLabel('Nombre de participants').fill('8');
     await page.getByLabel('Période souhaitée').fill('Novembre');
     await expectNoHorizontalOverflow(page);
     await page.getByRole('button', { name: 'Envoyer la demande' }).click();
-    await expect(page.getByText('Demande envoyée à l’équipe formation.')).toBeVisible();
-    const mine = page.locator('li.request').filter({ hasText: sujet });
-    await expect(mine).toContainText('Transmise à l’équipe formation');
+    await expect(page.locator('.toast')).toContainText(
+      'Demande de session envoyée à l’équipe formation.',
+    );
+    const mine = page.locator('app-request-card').filter({ hasText: sujet });
+    await expect(mine.locator('app-status')).toHaveText('Envoyée');
 
     await switchTo(page, ADMIN);
     await openAdmin(page, 'Demandes');
-    const item = page.locator('li.request').filter({ hasText: sujet });
+    const item = page.locator('tr.request').filter({ hasText: sujet });
     await item.getByLabel('Réponse au demandeur (facultatif)').fill('Session le 20 novembre.');
     await item.getByRole('button', { name: `Accepter la demande « ${sujet} »` }).click();
     await expect(page.getByText('Demande mise à jour.')).toBeVisible();

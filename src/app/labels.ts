@@ -103,6 +103,8 @@ export const LABELS = {
     admin: 'administrateur',
   } satisfies Record<Role, string>,
   space: {
+    productionName: 'Production',
+    demoName: 'Démonstration',
     productionBanner: 'Espace production · données réelles.',
     demoBanner:
       'Espace démonstration · données de test, visibles des seuls administrateurs. Les formations importées, elles, attendent dans l’espace d’évaluation (Administration).',
@@ -509,7 +511,28 @@ export const LABELS = {
       `Demande d’inscription envoyée pour **${titre}** : votre manager la valide, puis l’équipe formation.`,
     yourRequest: (statut: string) => `Votre demande : ${statut}`,
     seeMine: 'Voir mes demandes',
+    // Carte d'une demande (Mes demandes, Mon équipe)
+    kinds: { inscription: 'Inscription', surMesure: 'Session sur mesure' },
+    dt: {
+      session: 'Session',
+      message: 'Message',
+      formation: 'Formation',
+      sujet: 'Sujet',
+      participants: 'Participants',
+      modalite: 'Modalité',
+      periode: 'Période',
+      details: 'Précisions',
+      places: 'Places',
+    },
+    none: '—',
     // Mes demandes
+    mineEyebrow: 'Mes demandes',
+    mineHeading: 'Suivre mes demandes',
+    mineLead: 'Chaque demande a un statut, mis à jour par votre manager et l’équipe formation.',
+    emptyMine: 'Aucune demande pour l’instant.',
+    seeSessions: 'Voir les sessions',
+    keep: 'Garder',
+    withdrawInfo: 'Votre manager et l’équipe formation en seront informés.',
     mineTitle: 'Mes demandes',
     mineIntro:
       'Vos demandes d’inscription aux sessions en direct et, pour les managers, vos demandes de sessions sur mesure.',
@@ -518,14 +541,16 @@ export const LABELS = {
     customHeading: 'Sessions sur mesure',
     noCustom: 'Aucune demande de session sur mesure.',
     newCustom: 'Demander une session sur mesure',
-    withdraw: 'Retirer la demande',
+    withdraw: 'Annuler la demande',
     unregister: 'Me désinscrire',
-    withdrawLabel: (titre: string) => `Retirer la demande « ${titre} »`,
+    withdrawLabel: (titre: string) => `Annuler la demande « ${titre} »`,
     unregisterLabel: (titre: string) => `Me désinscrire de « ${titre} »`,
-    confirmWithdraw: 'Retirer cette demande ?',
+    confirmWithdraw: 'Annuler cette demande ?',
     confirmUnregister: 'Vous désinscrire de cette session ? Votre place sera libérée.',
-    withdrawn: 'Demande retirée.',
+    withdrawn: 'Demande annulée.',
+    unregistered: 'Désinscription enregistrée.',
     // Mon équipe
+    teamEyebrow: 'Mon équipe',
     teamTitle: 'Demandes de mon équipe',
     teamIntro:
       'Les demandes d’inscription des collaborateurs qui vous sont rattachés. Les parcours en ligne ne demandent pas de validation.',
@@ -542,7 +567,23 @@ export const LABELS = {
     validated: (name: string) => `Demande de ${name} validée : elle part à l’équipe formation.`,
     refused: (name: string) => `Demande de ${name} refusée.`,
     // File de l'équipe formation
-    queueTitle: 'Demandes à traiter',
+    adminEyebrow: (space: string) => `Administration · ${space}`,
+    queueStats: {
+      todo: 'À traiter',
+      doing: 'En cours',
+      accepted: 'Acceptées',
+      refused: 'Refusées',
+    },
+    queueTable: {
+      caption: 'Demandes à traiter',
+      request: 'Demande',
+      requester: 'Demandeur',
+      details: 'Détails',
+      status: 'Statut',
+      actions: 'Actions',
+    },
+    queueEmpty: 'Aucune demande à traiter.',
+    queueTitle: 'Traiter les demandes',
     queueIntro:
       'Inscriptions validées par les managers, à confirmer dans la limite des places, et demandes de sessions sur mesure.',
     toConfirm: 'Inscriptions à confirmer',
@@ -566,11 +607,14 @@ export const LABELS = {
     period: 'Période souhaitée',
     course: 'Formation du catalogue',
     // Formulaire sur mesure
-    customTitle: 'Demander une session sur mesure',
+    customEyebrow: 'Session sur mesure',
+    customTitle: 'Demander une session pour votre équipe',
     customIntro:
-      'Pour votre équipe : une session dédiée, à distance ou sur site. L’équipe formation étudie la demande et vous répond.',
+      'Décrivez votre besoin : l’équipe formation étudie la faisabilité (formateur, salle, dates) et vous propose un format.',
+    customNote:
+      'Le traitement demande en général un échange avec vous avant de proposer des dates.',
     form: {
-      course: 'Formation du catalogue (facultatif)',
+      course: 'Formation',
       noCourse: 'Hors catalogue',
       sujet: 'Sujet',
       sujetHint: 'Ce que l’équipe doit apprendre, en une phrase.',
@@ -578,10 +622,11 @@ export const LABELS = {
       participants: 'Nombre de participants',
       periode: 'Période souhaitée',
       periodeHint: 'Par exemple : « novembre », « avant la fin du trimestre ».',
-      details: 'Précisions (facultatif)',
+      details: 'Contexte et objectifs',
+      detailsHint: 'Pourquoi cette formation maintenant, ce que l’équipe doit savoir faire ensuite',
       send: 'Envoyer la demande',
       cancel: 'Annuler',
-      sent: 'Demande envoyée à l’équipe formation.',
+      sent: 'Demande de session envoyée à l’équipe formation.',
     },
   },
   sessions: {
@@ -608,7 +653,22 @@ export const LABELS = {
     courseLabel: (titre: string) => `Voir la fiche « ${titre} »`,
   },
   formations: {
-    title: 'Formations',
+    title: 'Formations en ligne',
+    lead: 'Importez une formation au format 3S (.formation.json). Elle arrive dans l’espace d’évaluation, réservé aux administrateurs, pour relecture. Vous la publiez ensuite en production, et vous pouvez aussi la copier dans l’espace démonstration.',
+    dropHint: 'Validation du format avant tout import · 10 Mo au plus',
+    importToEval: 'Importer dans l’espace d’évaluation',
+    summary: (titre: string, version: string) => `${titre} · version ${version}`,
+    evalHeading: 'Espace d’évaluation',
+    adminsTag: 'administrateurs',
+    demoHeading: 'Espace démonstration',
+    prodHeading: 'Espace production',
+    noDemo: 'Aucune formation copiée en démo.',
+    noProd: 'Aucune formation publiée en production.',
+    inDemo: 'En démo',
+    inProd: 'En production',
+    resetDemo: 'Réinitialiser l’espace démonstration',
+    resetDemoInfo:
+      'remet les sessions d’exemple et efface les demandes et formations de démo. L’espace d’évaluation et la production ne sont pas touchés.',
     intro:
       'Importez une formation au format d’échange 3S (fichier .formation.json) dans l’espace d’évaluation, relisez-la dans le lecteur, puis publiez-la en production. Vous pouvez aussi la copier en démonstration pour la montrer.',
     evaluationNote:
