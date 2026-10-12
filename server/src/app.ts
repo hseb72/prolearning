@@ -1,10 +1,13 @@
 import cookie from '@fastify/cookie';
 import Fastify, { type FastifyInstance } from 'fastify';
+import { MAX_FORMATION_BYTES } from '../../shared/format.js';
 import type { HealthReport } from '../../shared/health.js';
 import { SPACES } from '../../shared/spaces.js';
 import { registerAuthRoutes, type AuthSettings } from './auth/routes.js';
 import { resolveContext, sessionToken } from './context.js';
 import type { Databases } from './databases.js';
+import { registerFormationRoutes } from './formation-routes.js';
+import { registerPublicationRoutes } from './publication.js';
 import { registerSpaceRoutes } from './space-routes.js';
 import { registerUserRoutes } from './user-routes.js';
 
@@ -26,6 +29,14 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
     trustProxy: true,
   });
   app.register(cookie);
+  // Dépôt de fichiers (formations) : le corps brut, pour valider l'encodage et garder
+  // le texte exact (export sans perte). 10 Mo au plus (§ 1 du format), plus une marge
+  // pour que le dépassement soit signalé par la validation, avec un message clair.
+  app.addContentTypeParser(
+    'application/octet-stream',
+    { parseAs: 'buffer', bodyLimit: MAX_FORMATION_BYTES + 1024 },
+    (_request, body, done) => done(null, body),
+  );
   app.decorateRequest('auth', null);
 
   // Défense contre les requêtes intersites : le cookie est SameSite=Lax, et une requête
@@ -66,6 +77,8 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
   registerAuthRoutes(app, databases, auth);
   registerSpaceRoutes(app, databases);
   registerUserRoutes(app);
+  registerFormationRoutes(app);
+  registerPublicationRoutes(app, databases);
 
   app.setNotFoundHandler((_request, reply) =>
     reply.code(404).send({ error: 'not_found', message: 'Ressource introuvable.' }),

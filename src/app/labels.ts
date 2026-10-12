@@ -17,6 +17,7 @@ export const LABELS = {
   },
   nav: {
     home: 'Accueil',
+    formations: 'Formations',
     users: 'Comptes et rôles',
   },
   roles: {
@@ -81,6 +82,58 @@ export const LABELS = {
     saveFailed: 'La modification n’a pas été enregistrée.',
     roleOf: (name: string) => `Rôle de ${name}`,
     managerOf: (name: string) => `Manager de ${name}`,
+  },
+  formations: {
+    title: 'Formations',
+    intro:
+      'Importez une formation au format d’échange 3S (fichier .formation.json), relisez-la en démonstration, puis publiez-la en production.',
+    productionNote:
+      'L’import se fait dans l’espace démonstration, pour relire la formation avant de la publier. Passez en démonstration pour importer.',
+    importHeading: 'Importer une formation',
+    file: 'Fichier .formation.json',
+    fileHint:
+      '10 Mo au plus. Les archives .formation.zip (avec images) arriveront avec le stockage de fichiers.',
+    replace: 'Remplacer la version si elle existe déjà',
+    check: 'Vérifier le fichier',
+    import: 'Importer en démonstration',
+    noFile: 'Choisissez d’abord un fichier.',
+    working: 'Traitement en cours…',
+    reportHeading: 'Rapport de validation',
+    reportOk: (titre: string, version: string) =>
+      `Fichier valide : « ${titre} », version ${version}.`,
+    reportKo: (count: number) =>
+      count === 1
+        ? 'Fichier refusé : 1 erreur bloquante.'
+        : `Fichier refusé : ${count} erreurs bloquantes.`,
+    errors: 'Erreurs bloquantes',
+    warnings: 'Avertissements',
+    root: 'racine du fichier',
+    imported: {
+      nouvelle: 'Formation importée en démonstration.',
+      'nouvelle-version': 'Nouvelle version importée en démonstration.',
+      remplacement: 'Version remplacée en démonstration.',
+    } as Record<string, string>,
+    refused: (reason: string) => `Import refusé : ${reason}`,
+    failed: 'L’opération a échoué. Réessayez.',
+    listHeading: 'Formations de cet espace',
+    empty: 'Aucune formation dans cet espace.',
+    loading: 'Chargement des formations…',
+    loadFailed: 'Impossible de charger les formations.',
+    columnTheme: 'Thème',
+    columnVersions: 'Versions',
+    current: 'courante',
+    importedOn: (date: string, by: string | null) =>
+      by ? `Importée le ${date} par ${by}` : `Importée le ${date}`,
+    publishedOn: (date: string) => `Publiée en production le ${date}`,
+    export: 'Exporter',
+    exportLabel: (titre: string, version: string) => `Exporter « ${titre} », version ${version}`,
+    publish: 'Publier en production',
+    publishLabel: (titre: string, version: string) =>
+      `Publier « ${titre} », version ${version}, en production`,
+    publishConfirm: (titre: string, version: string) =>
+      `Publier « ${titre} », version ${version}, en production ? Les collaborateurs y auront accès.`,
+    published: (version: string) => `Version ${version} publiée en production.`,
+    publishRefused: (reason: string) => `Publication refusée : ${reason}`,
   },
   notFound: {
     title: 'Page introuvable',

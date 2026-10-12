@@ -159,3 +159,5 @@ jobs:
           fi
           cat out.txt
           grep -q 'Configuration invalide' out.txt
+          # La validation des formations à l'import lit le schéma du format.
+          docker run --rm --entrypoint test prolearning-api:ci -s /app/docs/format/formation.schema.json

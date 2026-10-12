@@ -1,0 +1,149 @@
+<h1>{{ labels.title }}</h1>
+<p>{{ labels.intro }}</p>
+
+<section class="panel" aria-labelledby="import-heading">
+  <h2 id="import-heading">{{ labels.importHeading }}</h2>
+  @if (!demo()) {
+    <p class="message">{{ labels.productionNote }}</p>
+  }
+  <div class="field">
+    <label for="formation-file">{{ labels.file }}</label>
+    <input
+      id="formation-file"
+      type="file"
+      accept=".json,application/json"
+      aria-describedby="formation-file-hint"
+      (change)="chooseFile($event)"
+    />
+    <p id="formation-file-hint" class="hint">{{ labels.fileHint }}</p>
+  </div>
+  @if (demo()) {
+    <div class="checkbox">
+      <input
+        id="formation-replace"
+        type="checkbox"
+        [checked]="replace()"
+        (change)="replace.set($any($event.target).checked)"
+      />
+      <label for="formation-replace">{{ labels.replace }}</label>
+    </div>
+  }
+  <div class="actions">
+    <button class="button" type="button" [disabled]="busy()" (click)="check()">
+      {{ labels.check }}
+    </button>
+    @if (demo()) {
+      <button class="button primary" type="button" [disabled]="busy()" (click)="importFile()">
+        {{ labels.import }}
+      </button>
+    }
+  </div>
+
+  <div aria-live="polite">
+    @if (busy()) {
+      <p>{{ labels.working }}</p>
+    }
+    @if (status(); as status) {
+      <p
+        class="message"
+        [class.success]="status.kind === 'success'"
+        [class.error]="status.kind === 'error'"
+      >
+        {{ status.text }}
+      </p>
+    }
+  </div>
+
+  @if (report(); as report) {
+    <section class="report" aria-labelledby="report-heading">
+      <h3 id="report-heading">{{ labels.reportHeading }}</h3>
+      <p class="message" [class.success]="report.ok" [class.error]="!report.ok">
+        {{
+          report.ok && report.formation
+            ? labels.reportOk(report.formation.titre, report.formation.version)
+            : labels.reportKo(report.erreurs.length)
+        }}
+      </p>
+      @if (report.erreurs.length) {
+        <h4>{{ labels.errors }} ({{ report.erreurs.length }})</h4>
+        <ul class="findings">
+          @for (item of report.erreurs; track $index) {
+            <li>
+              <code>{{ item.chemin || labels.root }}</code> {{ item.message }}
+            </li>
+          }
+        </ul>
+      }
+      @if (report.avertissements.length) {
+        <h4>{{ labels.warnings }} ({{ report.avertissements.length }})</h4>
+        <ul class="findings">
+          @for (item of report.avertissements; track $index) {
+            <li>
+              <code>{{ item.chemin || labels.root }}</code> {{ item.message }}
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</section>
+
+<section aria-labelledby="list-heading">
+  <h2 id="list-heading">{{ labels.listHeading }}</h2>
+  @if (formations.isLoading() && !formations.hasValue()) {
+    <p role="status">{{ labels.loading }}</p>
+  } @else if (formations.error()) {
+    <p class="message error" role="alert">{{ labels.loadFailed }}</p>
+  } @else if (!formations.value()?.length) {
+    <p>{{ labels.empty }}</p>
+  } @else {
+    <ul class="formations">
+      @for (formation of formations.value(); track formation.id) {
+        <li class="formation">
+          <h3>{{ formation.titre }}</h3>
+          <p class="meta">
+            <code>{{ formation.id }}</code> · {{ labels.columnTheme }} : {{ formation.theme }}
+          </p>
+          <ul class="versions" [attr.aria-label]="labels.columnVersions">
+            @for (version of formation.versions; track version.version) {
+              <li class="version">
+                <div>
+                  <strong>{{ version.version }}</strong>
+                  @if (version.version === formation.versionCourante) {
+                    <span class="badge">{{ labels.current }}</span>
+                  }
+                  <p class="hint">
+                    {{ labels.importedOn(formatDate(version.importedAt), version.importedBy) }}
+                    @if (version.publishedAt) {
+                      <br />{{ labels.publishedOn(formatDate(version.publishedAt)) }}
+                    }
+                  </p>
+                </div>
+                <div class="version-actions">
+                  <a
+                    class="button"
+                    [href]="exportUrl(formation.id, version.version)"
+                    download
+                    [attr.aria-label]="labels.exportLabel(formation.titre, version.version)"
+                    >{{ labels.export }}</a
+                  >
+                  @if (demo() && !version.publishedAt) {
+                    <button
+                      class="button primary"
+                      type="button"
+                      [disabled]="busy()"
+                      [attr.aria-label]="labels.publishLabel(formation.titre, version.version)"
+                      (click)="publish(formation, version.version)"
+                    >
+                      {{ labels.publish }}
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        </li>
+      }
+    </ul>
+  }
+</section>

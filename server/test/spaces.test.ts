@@ -158,6 +158,7 @@ describe('accès aux bases', () => {
     'migrate.ts',
     'migrate-cli.ts',
     'space-routes.ts',
+    'publication.ts',
     'auth/routes.ts',
   ]);
 

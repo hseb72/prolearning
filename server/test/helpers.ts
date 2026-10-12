@@ -41,7 +41,7 @@ export async function resetDatabases(databases: Databases): Promise<void> {
   await migrateAll(databases);
   for (const db of [databases.production, databases.demo]) {
     await db.query(
-      'TRUNCATE pl_audit_log, pl_sessions, pl_oidc_requests, pl_users RESTART IDENTITY CASCADE',
+      'TRUNCATE pl_formation_versions, pl_formations, pl_audit_log, pl_sessions, pl_oidc_requests, pl_users RESTART IDENTITY CASCADE',
     );
   }
   await ensureDemoAccounts(databases.demo);

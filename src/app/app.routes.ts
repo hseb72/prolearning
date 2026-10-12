@@ -18,6 +18,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/home/home').then((m) => m.HomePage),
   },
   {
+    path: 'administration/formations',
+    title: title(LABELS.formations.title),
+    canActivate: [roleGuard('admin')],
+    loadComponent: () => import('./pages/formations/formations').then((m) => m.FormationsPage),
+  },
+  {
     path: 'administration/comptes',
     title: title(LABELS.users.title),
     canActivate: [roleGuard('admin')],
