@@ -8,15 +8,17 @@ import type {
   ScenarioStep,
 } from '@shared/learning';
 import { firstValueFrom } from 'rxjs';
+import { READER_MODE } from './reader-mode';
 
-/** Exercices du lecteur : l'API corrige et tient la progression. */
+/** Exercices du lecteur : l'API corrige et tient la progression (sauf en aperçu). */
 @Injectable({ providedIn: 'root' })
 export class LearningService {
   private readonly http = inject(HttpClient);
+  private readonly mode = inject(READER_MODE);
 
   private url(formation: string, module: string, activite: string, action: string): string {
     const e = encodeURIComponent;
-    return `/api/parcours/${e(formation)}/modules/${e(module)}/activites/${e(activite)}/${action}`;
+    return `${this.mode.api}/${e(formation)}/modules/${e(module)}/activites/${e(activite)}/${action}`;
   }
 
   complete(f: string, m: string, a: string): Promise<CompletionResult> {

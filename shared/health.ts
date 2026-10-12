@@ -1,8 +1,8 @@
-import type { Space } from './spaces.js';
+import type { DatabaseName } from './spaces.js';
 
 /** Réponse de GET /api/health. */
 export interface HealthReport {
   status: 'ok' | 'degraded';
-  /** Joignabilité de la base de chaque espace. */
-  databases: Record<Space, 'ok' | 'unreachable'>;
+  /** Joignabilité de chaque base (production, démonstration, évaluation). */
+  databases: Record<DatabaseName, 'ok' | 'unreachable'>;
 }

@@ -12,16 +12,23 @@ function fakePool(reachable: boolean): pg.Pool {
   } as unknown as pg.Pool;
 }
 
-function databases(production: boolean, demo: boolean): Databases {
-  return { production: fakePool(production), demo: fakePool(demo) };
+function databases(production: boolean, demo: boolean, evaluation = true): Databases {
+  return {
+    production: fakePool(production),
+    demo: fakePool(demo),
+    evaluation: fakePool(evaluation),
+  };
 }
 
 describe('GET /api/health', () => {
-  it('répond 200 quand les deux bases sont joignables', async () => {
+  it('répond 200 quand les trois bases sont joignables', async () => {
     const app = buildApp({ databases: databases(true, true), logLevel: 'silent', auth: AUTH });
     const res = await app.inject({ method: 'GET', url: '/api/health' });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ status: 'ok', databases: { production: 'ok', demo: 'ok' } });
+    expect(res.json()).toEqual({
+      status: 'ok',
+      databases: { production: 'ok', demo: 'ok', evaluation: 'ok' },
+    });
   });
 
   it('répond 503 et désigne la base injoignable', async () => {
@@ -30,7 +37,7 @@ describe('GET /api/health', () => {
     expect(res.statusCode).toBe(503);
     expect(res.json()).toEqual({
       status: 'degraded',
-      databases: { production: 'ok', demo: 'unreachable' },
+      databases: { production: 'ok', demo: 'unreachable', evaluation: 'ok' },
     });
   });
 

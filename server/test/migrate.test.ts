@@ -4,21 +4,25 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { migrate, migrateAll, migrationsDir } from '../src/migrate.js';
 
-// Tests d'intégration sur deux vraies bases PostgreSQL, comme en production.
+// Tests d'intégration sur trois vraies bases PostgreSQL, comme en production.
 // En CI, leur absence est une erreur ; en local, ils sont sautés avec un avertissement.
 const urls = {
   production: process.env['TEST_DATABASE_URL_PRODUCTION'],
   demo: process.env['TEST_DATABASE_URL_DEMO'],
+  evaluation: process.env['TEST_DATABASE_URL_EVALUATION'],
 };
-const available = Boolean(urls.production && urls.demo);
+const available = Boolean(urls.production && urls.demo && urls.evaluation);
 if (!available && process.env['CI']) {
-  throw new Error('TEST_DATABASE_URL_PRODUCTION et TEST_DATABASE_URL_DEMO sont requis en CI.');
+  throw new Error(
+    'TEST_DATABASE_URL_PRODUCTION, TEST_DATABASE_URL_DEMO et TEST_DATABASE_URL_EVALUATION sont requis en CI.',
+  );
 }
 if (!available) console.warn('Tests de migration sautés : bases de test non configurées.');
 
 describe.skipIf(!available)('migrations', () => {
   let production: pg.Pool;
   let demo: pg.Pool;
+  let evaluation: pg.Pool;
   let dir: string;
 
   async function reset(pool: pg.Pool): Promise<void> {
@@ -40,16 +44,21 @@ describe.skipIf(!available)('migrations', () => {
   beforeAll(async () => {
     production = pool(urls.production);
     demo = pool(urls.demo);
-    for (const db of [production, demo]) await db.query(`CREATE SCHEMA IF NOT EXISTS ${SCHEMA}`);
+    evaluation = pool(urls.evaluation);
+    for (const db of [production, demo, evaluation]) {
+      await db.query(`CREATE SCHEMA IF NOT EXISTS ${SCHEMA}`);
+    }
   });
 
   afterAll(async () => {
-    for (const db of [production, demo]) await db.query(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`);
-    await Promise.all([production.end(), demo.end()]);
+    for (const db of [production, demo, evaluation]) {
+      await db.query(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`);
+    }
+    await Promise.all([production.end(), demo.end(), evaluation.end()]);
   });
 
   beforeEach(async () => {
-    await Promise.all([reset(production), reset(demo)]);
+    await Promise.all([reset(production), reset(demo), reset(evaluation)]);
     dir = mkdtempSync(join(tmpdir(), 'pl-migrations-'));
     writeFileSync(
       join(dir, '001_items.sql'),
@@ -69,11 +78,16 @@ describe.skipIf(!available)('migrations', () => {
     expect(await tables(production)).toEqual(['pl_test_items']);
   });
 
-  it('donne le même schéma aux deux bases', async () => {
-    const applied = await migrateAll({ production, demo }, dir);
-    expect(applied).toEqual({ production: ['001_items.sql'], demo: ['001_items.sql'] });
+  it('donne le même schéma aux trois bases', async () => {
+    const applied = await migrateAll({ production, demo, evaluation }, dir);
+    expect(applied).toEqual({
+      production: ['001_items.sql'],
+      demo: ['001_items.sql'],
+      evaluation: ['001_items.sql'],
+    });
     expect(await tables(production)).toEqual(['pl_test_items']);
     expect(await tables(demo)).toEqual(['pl_test_items']);
+    expect(await tables(evaluation)).toEqual(['pl_test_items']);
   });
 
   it('n’applique qu’une fois quand deux répliques démarrent ensemble', async () => {

@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type { FormationRow, ValidationReport } from '@shared/format';
 import { AuthService } from '../../core/auth';
 import { FormationsService } from '../../core/formations';
@@ -8,9 +9,13 @@ import { LABELS } from '../../labels';
 
 type Status = { kind: 'success' | 'error'; text: string };
 
-/** Formations : import en démonstration (avec rapport), liste, export, publication. */
+/**
+ * Formations en évaluation : import (avec rapport), liste, relecture, export, publication
+ * en production et copie en démonstration.
+ */
 @Component({
   selector: 'app-formations',
+  imports: [RouterLink],
   templateUrl: './formations.html',
   styleUrl: './formations.scss',
 })
@@ -20,7 +25,6 @@ export class FormationsPage {
   private readonly date = new DatePipe('fr');
 
   protected readonly labels = LABELS.formations;
-  protected readonly demo = computed(() => this.auth.space() === 'demo');
   protected readonly file = signal<File | null>(null);
   protected readonly replace = signal(false);
   protected readonly busy = signal(false);
@@ -79,6 +83,18 @@ export class FormationsPage {
         result.publiee
           ? { kind: 'success', text: this.labels.published(version) }
           : { kind: 'error', text: this.labels.publishRefused(result.refus ?? this.labels.failed) },
+      );
+      this.refresh.update((n) => n + 1);
+    });
+  }
+
+  protected async copyToDemo(formation: FormationRow, version: string): Promise<void> {
+    await this.run(async () => {
+      const result = await this.service.copyToDemo(formation.id, version);
+      this.status.set(
+        result.copiee
+          ? { kind: 'success', text: this.labels.copied(version) }
+          : { kind: 'error', text: this.labels.copyRefused(result.refus ?? this.labels.failed) },
       );
       this.refresh.update((n) => n + 1);
     });

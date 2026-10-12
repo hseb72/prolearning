@@ -50,6 +50,7 @@ jobs:
     env:
       TEST_DATABASE_URL_PRODUCTION: postgres://pl:pl@localhost:5432/prolearning_test
       TEST_DATABASE_URL_DEMO: postgres://pl:pl@localhost:5432/prolearning_demo_test
+      TEST_DATABASE_URL_EVALUATION: postgres://pl:pl@localhost:5432/prolearning_eval_test
     defaults:
       run:
         working-directory: server
@@ -60,8 +61,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: server/package-lock.json
-      - name: Créer la base de l'espace démonstration
-        run: psql postgres://pl:pl@localhost:5432/prolearning_test -c 'CREATE DATABASE prolearning_demo_test'
+      - name: Créer les bases de la démonstration et de l'évaluation
+        run: |
+          psql postgres://pl:pl@localhost:5432/prolearning_test -c 'CREATE DATABASE prolearning_demo_test'
+          psql postgres://pl:pl@localhost:5432/prolearning_test -c 'CREATE DATABASE prolearning_eval_test'
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
@@ -82,6 +85,7 @@ jobs:
     env:
       E2E_DATABASE_URL_PRODUCTION: postgres://pl:pl@localhost:5432/prolearning_e2e
       E2E_DATABASE_URL_DEMO: postgres://pl:pl@localhost:5432/prolearning_demo_e2e
+      E2E_DATABASE_URL_EVALUATION: postgres://pl:pl@localhost:5432/prolearning_eval_e2e
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -91,8 +95,10 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             server/package-lock.json
-      - name: Créer la base de l'espace démonstration
-        run: psql postgres://pl:pl@localhost:5432/prolearning_e2e -c 'CREATE DATABASE prolearning_demo_e2e'
+      - name: Créer les bases de la démonstration et de l'évaluation
+        run: |
+          psql postgres://pl:pl@localhost:5432/prolearning_e2e -c 'CREATE DATABASE prolearning_demo_e2e'
+          psql postgres://pl:pl@localhost:5432/prolearning_e2e -c 'CREATE DATABASE prolearning_eval_e2e'
       - run: npm ci
       - run: npm ci --prefix server
       - run: npx playwright install --with-deps chromium

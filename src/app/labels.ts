@@ -456,16 +456,16 @@ export const LABELS = {
   formations: {
     title: 'Formations',
     intro:
-      'Importez une formation au format d’échange 3S (fichier .formation.json), relisez-la en démonstration, puis publiez-la en production.',
-    productionNote:
-      'L’import se fait dans l’espace démonstration, pour relire la formation avant de la publier. Passez en démonstration pour importer.',
+      'Importez une formation au format d’échange 3S (fichier .formation.json) dans l’espace d’évaluation, relisez-la dans le lecteur, puis publiez-la en production. Vous pouvez aussi la copier en démonstration pour la montrer.',
+    evaluationNote:
+      'L’évaluation est indépendante des espaces production et démonstration : une réinitialisation de la démo n’efface jamais une formation en évaluation.',
     importHeading: 'Importer une formation',
     file: 'Fichier .formation.json',
     fileHint:
       '10 Mo au plus. Les archives .formation.zip (avec images) arriveront avec le stockage de fichiers.',
     replace: 'Remplacer la version si elle existe déjà',
     check: 'Vérifier le fichier',
-    import: 'Importer en démonstration',
+    import: 'Importer en évaluation',
     noFile: 'Choisissez d’abord un fichier.',
     working: 'Traitement en cours…',
     reportHeading: 'Rapport de validation',
@@ -479,14 +479,14 @@ export const LABELS = {
     warnings: 'Avertissements',
     root: 'racine du fichier',
     imported: {
-      nouvelle: 'Formation importée en démonstration.',
-      'nouvelle-version': 'Nouvelle version importée en démonstration.',
-      remplacement: 'Version remplacée en démonstration.',
+      nouvelle: 'Formation importée en évaluation.',
+      'nouvelle-version': 'Nouvelle version importée en évaluation.',
+      remplacement: 'Version remplacée en évaluation.',
     } as Record<string, string>,
     refused: (reason: string) => `Import refusé : ${reason}`,
     failed: 'L’opération a échoué. Réessayez.',
-    listHeading: 'Formations de cet espace',
-    empty: 'Aucune formation dans cet espace.',
+    listHeading: 'Formations en évaluation',
+    empty: 'Aucune formation en évaluation.',
     loading: 'Chargement des formations…',
     loadFailed: 'Impossible de charger les formations.',
     columnTheme: 'Thème',
@@ -495,6 +495,18 @@ export const LABELS = {
     importedOn: (date: string, by: string | null) =>
       by ? `Importée le ${date} par ${by}` : `Importée le ${date}`,
     publishedOn: (date: string) => `Publiée en production le ${date}`,
+    copiedOn: (date: string) => `Copiée en démonstration le ${date}`,
+    review: 'Relire',
+    reviewLabel: (titre: string) => `Relire « ${titre} » dans le lecteur`,
+    copy: 'Copier en démonstration',
+    copyLabel: (titre: string, version: string) =>
+      `Copier « ${titre} », version ${version}, en démonstration`,
+    copied: (version: string) =>
+      `Version ${version} copiée en démonstration. Elle disparaîtra à la prochaine réinitialisation de la démo ; l’original reste en évaluation.`,
+    copyRefused: (reason: string) => `Copie refusée : ${reason}`,
+    previewBanner:
+      'Relecture d’une formation en évaluation : tout est ouvert, les exercices sont corrigés, rien n’est enregistré.',
+    previewBack: 'Retour aux formations en évaluation',
     export: 'Exporter',
     exportLabel: (titre: string, version: string) => `Exporter « ${titre} », version ${version}`,
     publish: 'Publier en production',

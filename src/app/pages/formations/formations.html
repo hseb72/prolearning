@@ -3,9 +3,7 @@
 
 <section class="panel" aria-labelledby="import-heading">
   <h2 id="import-heading">{{ labels.importHeading }}</h2>
-  @if (!demo()) {
-    <p class="message">{{ labels.productionNote }}</p>
-  }
+  <p class="hint">{{ labels.evaluationNote }}</p>
   <div class="field">
     <label for="formation-file">{{ labels.file }}</label>
     <input
@@ -17,26 +15,22 @@
     />
     <p id="formation-file-hint" class="hint">{{ labels.fileHint }}</p>
   </div>
-  @if (demo()) {
-    <div class="checkbox">
-      <input
-        id="formation-replace"
-        type="checkbox"
-        [checked]="replace()"
-        (change)="replace.set($any($event.target).checked)"
-      />
-      <label for="formation-replace">{{ labels.replace }}</label>
-    </div>
-  }
+  <div class="checkbox">
+    <input
+      id="formation-replace"
+      type="checkbox"
+      [checked]="replace()"
+      (change)="replace.set($any($event.target).checked)"
+    />
+    <label for="formation-replace">{{ labels.replace }}</label>
+  </div>
   <div class="actions">
     <button class="button" type="button" [disabled]="busy()" (click)="check()">
       {{ labels.check }}
     </button>
-    @if (demo()) {
-      <button class="button primary" type="button" [disabled]="busy()" (click)="importFile()">
-        {{ labels.import }}
-      </button>
-    }
+    <button class="button primary" type="button" [disabled]="busy()" (click)="importFile()">
+      {{ labels.import }}
+    </button>
   </div>
 
   <div aria-live="polite">
@@ -117,9 +111,20 @@
                     @if (version.publishedAt) {
                       <br />{{ labels.publishedOn(formatDate(version.publishedAt)) }}
                     }
+                    @if (version.copiedToDemoAt) {
+                      <br />{{ labels.copiedOn(formatDate(version.copiedToDemoAt)) }}
+                    }
                   </p>
                 </div>
                 <div class="version-actions">
+                  @if (version.version === formation.versionCourante) {
+                    <a
+                      class="button"
+                      [routerLink]="['/administration/evaluation', formation.id]"
+                      [attr.aria-label]="labels.reviewLabel(formation.titre)"
+                      >{{ labels.review }}</a
+                    >
+                  }
                   <a
                     class="button"
                     [href]="exportUrl(formation.id, version.version)"
@@ -127,7 +132,16 @@
                     [attr.aria-label]="labels.exportLabel(formation.titre, version.version)"
                     >{{ labels.export }}</a
                   >
-                  @if (demo() && !version.publishedAt) {
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="busy()"
+                    [attr.aria-label]="labels.copyLabel(formation.titre, version.version)"
+                    (click)="copyToDemo(formation, version.version)"
+                  >
+                    {{ labels.copy }}
+                  </button>
+                  @if (!version.publishedAt) {
                     <button
                       class="button primary"
                       type="button"

@@ -10,6 +10,7 @@ export type AuditAction =
   | 'user.bootstrap_admin'
   | 'formation.import'
   | 'formation.publish'
+  | 'formation.copy_demo'
   | 'course.create'
   | 'course.update'
   | 'session.create'

@@ -3,8 +3,11 @@
 } @else if (data.error() || !current()) {
   <p class="message error" role="alert">{{ labels.loadFailed }}</p>
 } @else if (current(); as c) {
+  @if (mode.preview) {
+    <p class="message" role="note">{{ formations.previewBanner }}</p>
+  }
   <p>
-    <a [routerLink]="['/parcours', c.formation.id]"
+    <a [routerLink]="[mode.route, c.formation.id]"
       >{{ labels.backToFormation }} : {{ c.formation.titre }}</a
     >
   </p>
@@ -16,7 +19,7 @@
           @let s = c.states[a.id]?.statut ?? 'a-faire';
           <li>
             <a
-              [routerLink]="['/parcours', c.formation.id, c.module.id, a.id]"
+              [routerLink]="[mode.route, c.formation.id, c.module.id, a.id]"
               [attr.aria-current]="a.id === c.ctx.activity.id ? 'page' : null"
               [class.active]="a.id === c.ctx.activity.id"
             >
@@ -76,12 +79,12 @@
 
       <div class="pager">
         @if (c.previous) {
-          <a class="button" [routerLink]="['/parcours', c.formation.id, c.module.id, c.previous]">{{
+          <a class="button" [routerLink]="[mode.route, c.formation.id, c.module.id, c.previous]">{{
             labels.previous
           }}</a>
         }
         @if (c.next) {
-          <a class="button" [routerLink]="['/parcours', c.formation.id, c.module.id, c.next]">{{
+          <a class="button" [routerLink]="[mode.route, c.formation.id, c.module.id, c.next]">{{
             labels.next
           }}</a>
         }

@@ -3,6 +3,7 @@ import { loadConfig } from '../src/config.js';
 const base = {
   DATABASE_URL_PRODUCTION: 'postgres://prolearning:x@localhost:5432/prolearning',
   DATABASE_URL_DEMO: 'postgres://prolearning-demo:x@localhost:5432/prolearning_demo',
+  DATABASE_URL_EVALUATION: 'postgres://prolearning-eval:x@localhost:5432/prolearning_eval',
   AUTH_DEV_LOGIN: 'true',
 };
 
@@ -15,6 +16,7 @@ const sso = {
 const production = {
   DATABASE_URL_PRODUCTION: base.DATABASE_URL_PRODUCTION,
   DATABASE_URL_DEMO: base.DATABASE_URL_DEMO,
+  DATABASE_URL_EVALUATION: base.DATABASE_URL_EVALUATION,
   NODE_ENV: 'production',
   APP_URL: 'https://prolearning.crealcs.com',
   ...sso,
@@ -29,16 +31,21 @@ describe('configuration', () => {
     expect(config.oidc).toBeNull();
   });
 
-  it('exige l’adresse de la base de chaque espace', () => {
+  it('exige l’adresse de chaque base', () => {
     const { DATABASE_URL_DEMO: _demo, ...withoutDemo } = base;
     const { DATABASE_URL_PRODUCTION: _prod, ...withoutProduction } = base;
+    const { DATABASE_URL_EVALUATION: _eval, ...withoutEvaluation } = base;
     expect(() => loadConfig(withoutDemo)).toThrow(/DATABASE_URL_DEMO/);
     expect(() => loadConfig(withoutProduction)).toThrow(/DATABASE_URL_PRODUCTION/);
+    expect(() => loadConfig(withoutEvaluation)).toThrow(/DATABASE_URL_EVALUATION/);
   });
 
-  it('refuse que les deux espaces désignent la même base', () => {
+  it('refuse que deux bases soient la même', () => {
     expect(() => loadConfig({ ...base, DATABASE_URL_DEMO: base.DATABASE_URL_PRODUCTION })).toThrow(
-      /même base/,
+      /trois bases distinctes/,
+    );
+    expect(() => loadConfig({ ...base, DATABASE_URL_EVALUATION: base.DATABASE_URL_DEMO })).toThrow(
+      /trois bases distinctes/,
     );
   });
 

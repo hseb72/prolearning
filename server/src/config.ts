@@ -20,9 +20,10 @@ const schema = z.object({
   HOST: z.string().default('127.0.0.1'),
   PORT: z.coerce.number().int().min(1).max(65535).default(5080),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
-  // Une base par espace (cf. CLAUDE.md, « Décisions de démarrage », point 3).
+  // Une base par espace, plus l'évaluation (cf. CLAUDE.md, « Décisions de démarrage », point 3).
   DATABASE_URL_PRODUCTION: z.string().url(),
   DATABASE_URL_DEMO: z.string().url(),
+  DATABASE_URL_EVALUATION: z.string().url(),
   // Adresse publique du front : base des redirections OIDC (le front relaie /api).
   APP_URL: z.string().url().default('http://localhost:4200'),
   SESSION_DAYS: z.coerce.number().int().min(1).max(90).default(7),
@@ -58,8 +59,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error(`Configuration invalide : ${message}`);
   };
 
-  if (data.DATABASE_URL_PRODUCTION === data.DATABASE_URL_DEMO) {
-    fail('DATABASE_URL_PRODUCTION et DATABASE_URL_DEMO désignent la même base.');
+  const urls = [data.DATABASE_URL_PRODUCTION, data.DATABASE_URL_DEMO, data.DATABASE_URL_EVALUATION];
+  if (new Set(urls).size !== urls.length) {
+    fail(
+      'DATABASE_URL_PRODUCTION, DATABASE_URL_DEMO et DATABASE_URL_EVALUATION doivent désigner trois bases distinctes.',
+    );
   }
 
   const oidcValues = [data.OIDC_ISSUER, data.OIDC_CLIENT_ID, data.OIDC_CLIENT_SECRET];

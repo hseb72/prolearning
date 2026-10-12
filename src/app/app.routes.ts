@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { anonymousGuard, authGuard, roleGuard } from './core/guards';
 import { LABELS } from './labels';
+import { LearningService } from './learning/learning.service';
+import { PREVIEW_MODE, READER_MODE } from './learning/reader-mode';
 
 const title = (page: string) => `${page} — ${LABELS.app.name}`;
 
@@ -89,6 +91,26 @@ export const routes: Routes = [
     title: title(LABELS.requests.queueTitle),
     canActivate: [roleGuard('training')],
     loadComponent: () => import('./pages/requests/queue').then((m) => m.RequestQueuePage),
+  },
+  // Relecture d'une formation en évaluation : le lecteur, en aperçu (rien n'est enregistré).
+  {
+    path: 'administration/evaluation',
+    canActivate: [roleGuard('admin')],
+    providers: [LearningService, { provide: READER_MODE, useValue: PREVIEW_MODE }],
+    children: [
+      {
+        path: ':formation',
+        title: title(LABELS.formations.review),
+        loadComponent: () =>
+          import('./pages/learning/formation').then((m) => m.LearningFormationPage),
+      },
+      {
+        path: ':formation/:module/:activite',
+        title: title(LABELS.formations.review),
+        loadComponent: () =>
+          import('./pages/learning/activity').then((m) => m.LearningActivityPage),
+      },
+    ],
   },
   {
     path: 'administration/formations',

@@ -114,6 +114,8 @@ export class Quiz {
       this.answers = {};
       this.correction.set(null);
       const attempt = await this.service.startQuiz(c.formationId, c.moduleId, c.activity.id);
+      // Chaque question tirée figure dans les réponses, même laissée sans réponse.
+      this.answers = Object.fromEntries(attempt.questions.map((q) => [q.id, []]));
       this.lastQuestions = attempt.questions;
       this.attempt.set(attempt);
     });

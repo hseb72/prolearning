@@ -29,4 +29,4 @@ npm install ajv@8
 node tools/valider-formation.js ma-formation.formation.json
 ```
 
-Puis importez-le dans la plateforme, rubrique Administration (il arrive dans l'espace démonstration).
+Puis importez-le dans la plateforme, rubrique Administration > Formations (il arrive dans l'espace d'évaluation, d'où on le publie en production ou on le copie en démonstration).

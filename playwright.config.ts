@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // Tests de bout en bout : le front (ng serve, qui relaie /api) et l'API, sur deux
-// vraies bases (E2E_DATABASE_URL_PRODUCTION / E2E_DATABASE_URL_DEMO).
+// vraies bases (E2E_DATABASE_URL_PRODUCTION / E2E_DATABASE_URL_DEMO / E2E_DATABASE_URL_EVALUATION).
 // PLAYWRIGHT_CHROMIUM_PATH permet d'utiliser un Chromium déjà installé.
 const executablePath = process.env['PLAYWRIGHT_CHROMIUM_PATH'] || undefined;
 
@@ -48,6 +48,7 @@ export default defineConfig({
       env: {
         DATABASE_URL_PRODUCTION: process.env['E2E_DATABASE_URL_PRODUCTION'] ?? '',
         DATABASE_URL_DEMO: process.env['E2E_DATABASE_URL_DEMO'] ?? '',
+        DATABASE_URL_EVALUATION: process.env['E2E_DATABASE_URL_EVALUATION'] ?? '',
         LOG_LEVEL: 'warn',
         AUTH_DEV_LOGIN: 'true',
         BOOTSTRAP_ADMIN_EMAILS: 'admin@soredi.example',

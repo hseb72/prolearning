@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import type { LearnerFormationResponse } from '@shared/learning';
 import { AuthService } from '../../core/auth';
 import { LABELS } from '../../labels';
+import { READER_MODE } from '../../learning/reader-mode';
 import type { ActivityContext, ActivityProgress } from '../../learning/activities/activity-context';
 import { Cards } from '../../learning/activities/cards';
 import { Lesson } from '../../learning/activities/lesson';
@@ -22,17 +23,19 @@ import { Slides } from '../../learning/activities/slides';
 })
 export class LearningActivityPage {
   private readonly auth = inject(AuthService);
+  protected readonly mode = inject(READER_MODE);
   readonly formation = input.required<string>();
   readonly module = input.required<string>();
   readonly activite = input.required<string>();
   protected readonly labels = LABELS.learning;
+  protected readonly formations = LABELS.formations;
   protected readonly notice = signal<string | null>(null);
 
   protected readonly data = httpResource<LearnerFormationResponse>(() => {
     const me = this.auth.me();
     return me
       ? {
-          url: `/api/parcours/${encodeURIComponent(this.formation())}`,
+          url: `${this.mode.api}/${encodeURIComponent(this.formation())}`,
           params: { espace: me.space, compte: me.actor.id },
         }
       : undefined;

@@ -23,23 +23,27 @@ export const AUTH: AuthSettings = {
 const urls = {
   production: process.env['TEST_DATABASE_URL_PRODUCTION'],
   demo: process.env['TEST_DATABASE_URL_DEMO'],
+  evaluation: process.env['TEST_DATABASE_URL_EVALUATION'],
 };
-export const databasesAvailable = Boolean(urls.production && urls.demo);
+export const databasesAvailable = Boolean(urls.production && urls.demo && urls.evaluation);
 if (!databasesAvailable && process.env['CI']) {
-  throw new Error('TEST_DATABASE_URL_PRODUCTION et TEST_DATABASE_URL_DEMO sont requis en CI.');
+  throw new Error(
+    'TEST_DATABASE_URL_PRODUCTION, TEST_DATABASE_URL_DEMO et TEST_DATABASE_URL_EVALUATION sont requis en CI.',
+  );
 }
 
 export function openTestDatabases(): Databases {
   return {
     production: new pg.Pool({ connectionString: urls.production }),
     demo: new pg.Pool({ connectionString: urls.demo }),
+    evaluation: new pg.Pool({ connectionString: urls.evaluation }),
   };
 }
 
-/** Schéma à jour, tables vidées, comptes fictifs rechargés en démonstration. */
+/** Schéma à jour, tables des trois bases vidées, comptes fictifs rechargés en démonstration. */
 export async function resetDatabases(databases: Databases): Promise<void> {
   await migrateAll(databases);
-  for (const db of [databases.production, databases.demo]) {
+  for (const db of [databases.production, databases.demo, databases.evaluation]) {
     await db.query(
       'TRUNCATE pl_request_events, pl_custom_requests, pl_registration_requests, pl_session_registrations, pl_course_sessions, pl_courses, pl_quiz_attempts, pl_module_completions, pl_activity_results, pl_formation_versions, pl_formations, pl_audit_log, pl_sessions, pl_oidc_requests, pl_users RESTART IDENTITY CASCADE',
     );
@@ -48,7 +52,7 @@ export async function resetDatabases(databases: Databases): Promise<void> {
 }
 
 export async function closeTestDatabases(databases: Databases): Promise<void> {
-  await Promise.all([databases.production.end(), databases.demo.end()]);
+  await Promise.all([databases.production.end(), databases.demo.end(), databases.evaluation.end()]);
 }
 
 export function testApp(databases: Databases, auth: Partial<AuthSettings> = {}): FastifyInstance {

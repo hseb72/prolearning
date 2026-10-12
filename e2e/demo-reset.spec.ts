@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { ADMIN, expectNoHorizontalOverflow, login } from './support';
 
@@ -9,6 +11,20 @@ async function play(page: Page, persona: string): Promise<void> {
 test('l’administrateur présente la démonstration, puis la réinitialise', async ({ page }) => {
   test.slow();
   await login(page, ADMIN);
+  // Une formation en cours de relecture dans l'évaluation : la réinitialisation n'y touche pas.
+  const fixture = JSON.parse(
+    readFileSync(
+      join(process.cwd(), 'fixtures', 'formations', 'togaf10-m1.formation.json'),
+      'utf8',
+    ),
+  );
+  fixture.id = `e2e-en-relecture-${Date.now()}`;
+  fixture.titre = 'Formation en relecture';
+  const imported = await page.request.post('/api/formations/import', {
+    headers: { 'content-type': 'application/octet-stream' },
+    data: Buffer.from(JSON.stringify(fixture), 'utf8'),
+  });
+  expect(imported.status()).toBe(201);
   await page.getByRole('button', { name: 'Passer en démonstration' }).click();
   const banner = page.locator('app-space-banner section');
   await expect(banner).toHaveAttribute('data-space', 'demo');
@@ -56,7 +72,12 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   await expect(page.getByRole('button', { name: 'Réinitialiser la démonstration' })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
-  // La production n'a pas été touchée.
+  // L'évaluation n'a pas été touchée.
+  await play(page, 'Alice Martin — Administrateur');
+  await page.getByRole('link', { name: 'Formations', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Formation en relecture' })).toBeVisible();
+
+  // La production non plus.
   await page.getByRole('button', { name: 'Revenir en production' }).click();
   await expect(banner).toHaveAttribute('data-space', 'production');
   await page.getByRole('link', { name: 'Catalogue' }).click();

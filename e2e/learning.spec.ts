@@ -36,7 +36,6 @@ async function publishExample(page: Page, info: TestInfo): Promise<Formation> {
 
   await login(page, ADMIN);
   const api = page.request;
-  expect((await api.post('/api/space', { data: { space: 'demo' } })).status()).toBe(200);
   const imported = await api.post('/api/formations/import', {
     headers: { 'content-type': 'application/octet-stream' },
     data: Buffer.from(JSON.stringify(formation, null, 2), 'utf8'),

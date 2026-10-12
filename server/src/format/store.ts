@@ -70,7 +70,7 @@ export async function storeFormation(
   formation: StoredFormation,
   options: {
     allowReplace: boolean;
-    origin: 'import' | 'publication';
+    origin: 'import' | 'publication' | 'copie';
     importedBy: number | null;
     importedByLabel: string;
   },
@@ -158,11 +158,12 @@ export async function listFormations(db: pg.Pool): Promise<FormationRow[]> {
     theme: string;
     imported_at: Date;
     imported_by_label: string | null;
-    origin: 'import' | 'publication';
+    origin: 'import' | 'publication' | 'copie';
     published_at: Date | null;
+    copied_to_demo_at: Date | null;
   }>(
     `SELECT f.id, f.current_version, v.version, v.format_version, v.titre, v.theme,
-            v.imported_at, v.imported_by_label, v.origin, v.published_at
+            v.imported_at, v.imported_by_label, v.origin, v.published_at, v.copied_to_demo_at
      FROM pl_formations f JOIN pl_formation_versions v ON v.formation_id = f.id
      ORDER BY f.id, v.version_major DESC, v.version_minor DESC, v.version_patch DESC`,
   );
@@ -184,6 +185,7 @@ export async function listFormations(db: pg.Pool): Promise<FormationRow[]> {
       importedBy: r.imported_by_label,
       origine: r.origin,
       publishedAt: r.published_at ? r.published_at.toISOString() : null,
+      copiedToDemoAt: r.copied_to_demo_at ? r.copied_to_demo_at.toISOString() : null,
     };
     row.versions.push(version);
   }
@@ -206,6 +208,14 @@ export async function formationSource(
 export async function markPublished(db: pg.Pool, id: string, version: string): Promise<void> {
   await db.query(
     'UPDATE pl_formation_versions SET published_at = now() WHERE formation_id = $1 AND version = $2',
+    [id, version],
+  );
+}
+
+export async function markCopiedToDemo(db: pg.Pool, id: string, version: string): Promise<void> {
+  await db.query(
+    `UPDATE pl_formation_versions SET copied_to_demo_at = now()
+     WHERE formation_id = $1 AND version = $2`,
     [id, version],
   );
 }

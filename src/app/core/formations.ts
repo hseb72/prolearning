@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { ImportResult, PublishResult, ValidationReport } from '@shared/format';
+import type { DemoCopyResult, ImportResult, PublishResult, ValidationReport } from '@shared/format';
 import { firstValueFrom } from 'rxjs';
 
 const RAW = { headers: { 'content-type': 'application/octet-stream' } };
@@ -24,6 +24,18 @@ export class FormationsService {
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.error?.rapport)
         return error.error as ImportResult;
+      throw error;
+    }
+  }
+
+  async copyToDemo(id: string, version: string): Promise<DemoCopyResult> {
+    const url = `/api/formations/${encodeURIComponent(id)}/versions/${encodeURIComponent(version)}/copie-demo`;
+    try {
+      return await firstValueFrom(this.http.post<DemoCopyResult>(url, {}));
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && typeof error.error?.refus === 'string') {
+        return error.error as DemoCopyResult;
+      }
       throw error;
     }
   }
