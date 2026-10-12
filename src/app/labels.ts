@@ -322,8 +322,50 @@ export const LABELS = {
   },
   catalog: {
     title: 'Catalogue',
+    eyebrow: 'Catalogue',
+    heading: 'Se former, à son rythme ou en groupe',
     intro:
-      'Les formations proposées : en direct, à distance ou sur site, et en ligne à votre rythme.',
+      'Consultez l’offre interne, inscrivez-vous à une session à distance ou sur site, demandez une session pour votre équipe, ou suivez un parcours en ligne.',
+    stats: {
+      courses: (n: number) => (n > 1 ? 'formations' : 'formation'),
+      sessions: (n: number) => (n > 1 ? 'sessions à venir' : 'session à venir'),
+      online: 'parcours en ligne',
+    },
+    chips: {
+      all: 'Toutes',
+      'en-ligne': 'En ligne',
+      distance: 'À distance',
+      site: 'Sur site',
+    } as Record<string, string>,
+    searchPlaceholder: 'Rechercher une formation',
+    emptyFilter: 'Aucune formation ne correspond à ces critères.',
+    draftTag: 'Brouillon',
+    cardInfo: (online: boolean, sessions: number) =>
+      [
+        online ? 'Parcours en ligne disponible' : '',
+        sessions ? `${sessions} session${sessions > 1 ? 's' : ''}` : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    sheet: {
+      label: 'Fiche formation',
+      audience: 'Public :',
+      prerequisites: 'Prérequis :',
+      duration: 'Durée :',
+      none: 'Aucun',
+      online: 'parcours en ligne',
+      nextSessions: 'Prochaines sessions',
+      noUpcoming: 'Aucune session programmée pour l’instant.',
+      register: 'S’inscrire',
+      registerLabel: (date: string) => `S’inscrire à la session du ${date}`,
+      full: 'Complet',
+      startOnline: 'Commencer en ligne',
+      askTeam: 'Demander une session pour mon équipe',
+      manage: 'Gérer les sessions',
+      close: 'Fermer',
+    },
+    manageTitle: (titre: string) => `Sessions de « ${titre} »`,
+    manageIntro: 'Programmez, modifiez ou annulez les sessions de cette fiche.',
     loading: 'Chargement…',
     loadFailed: 'Impossible de charger le catalogue.',
     empty: 'Aucune formation ne correspond.',
@@ -455,12 +497,16 @@ export const LABELS = {
     ask: 'Demander mon inscription',
     askLabel: (date: string) => `Demander mon inscription à la session du ${date}`,
     askHeading: (date: string) => `Demande d’inscription — ${date}`,
-    askMotif: 'Message pour votre manager (facultatif)',
+    askEyebrow: 'Demande d’inscription',
+    askMotif: 'Ce que vous attendez de la formation',
+    askMotifHint: 'Facultatif, aide le formateur à adapter la session',
     askSend: 'Envoyer la demande',
     askCancel: 'Annuler',
     askSent: 'Demande envoyée à votre manager.',
     askInfo:
       'Votre manager valide la demande, puis l’équipe formation confirme votre place. Vous suivez l’avancement dans « Mes demandes ».',
+    askSentToast: (titre: string) =>
+      `Demande d’inscription envoyée pour **${titre}** : votre manager la valide, puis l’équipe formation.`,
     yourRequest: (statut: string) => `Votre demande : ${statut}`,
     seeMine: 'Voir mes demandes',
     // Mes demandes
@@ -539,8 +585,20 @@ export const LABELS = {
     },
   },
   sessions: {
-    title: 'Sessions',
-    intro: 'Les prochaines sessions en direct, à distance ou sur site.',
+    title: 'Sessions planifiées',
+    eyebrow: 'Sessions',
+    intro:
+      'Les sessions à distance se déroulent en classe virtuelle ; les sessions sur site ont lieu dans nos locaux. Votre manager valide votre demande, puis l’équipe formation la confirme.',
+    allCourses: 'Toutes les formations',
+    courseFilter: 'Formation',
+    ask: 'Demander l’inscription',
+    askLabel: (titre: string, date: string) =>
+      `Demander l’inscription à « ${titre} », session du ${date}`,
+    sent: 'Demande envoyée',
+    full: 'Complet',
+    askCustom: 'Demander une session sur mesure',
+    halfDay: 'Une demi-journée',
+    days: (n: number) => `${n} jour${n > 1 ? 's' : ''}`,
     loading: 'Chargement…',
     loadFailed: 'Impossible de charger les sessions.',
     empty: 'Aucune session à venir.',
