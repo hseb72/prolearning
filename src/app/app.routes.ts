@@ -18,6 +18,24 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/home/home').then((m) => m.HomePage),
   },
   {
+    path: 'parcours',
+    title: title(LABELS.learning.title),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/learning/learning-list').then((m) => m.LearningListPage),
+  },
+  {
+    path: 'parcours/:formation',
+    title: title(LABELS.learning.title),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/learning/formation').then((m) => m.LearningFormationPage),
+  },
+  {
+    path: 'parcours/:formation/:module/:activite',
+    title: title(LABELS.learning.title),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/learning/activity').then((m) => m.LearningActivityPage),
+  },
+  {
     path: 'administration/formations',
     title: title(LABELS.formations.title),
     canActivate: [roleGuard('admin')],

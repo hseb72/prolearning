@@ -37,6 +37,11 @@
           >{{ nav.home }}</a
         >
       </li>
+      <li>
+        <a routerLink="/parcours" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+          nav.learning
+        }}</a>
+      </li>
       @if (isAdmin()) {
         <li>
           <a
