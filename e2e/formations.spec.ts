@@ -112,6 +112,9 @@ test.describe('formations', () => {
     await expect(page.getByRole('heading', { level: 3, name: file.titre })).toBeVisible();
     // Et la démonstration a sa copie.
     await page.getByRole('button', { name: 'Passer en démonstration' }).click();
+    // La bascule ramène au catalogue : on attend d'y être avant de changer d'onglet.
+    await expect(page.locator('.demo[data-space]')).toHaveAttribute('data-space', 'demo');
+    await expect(page).toHaveURL(/\/catalogue$/);
     await tab(page, 'Mon parcours en ligne').click();
     await expect(page.getByRole('heading', { level: 3, name: file.titre })).toBeVisible();
   });

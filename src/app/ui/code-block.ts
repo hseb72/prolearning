@@ -10,7 +10,12 @@ import { copyText } from '../learning/clipboard';
       <button type="button" class="cpy" [attr.aria-label]="labels.copyCode" (click)="copy()">
         {{ copied() ? labels.copied : labels.copy }}
       </button>
-      <pre class="code"><code>{{ code() }}</code></pre>
+      <pre
+        class="code"
+        tabindex="0"
+        role="region"
+        [attr.aria-label]="labels.codeRegion"
+      ><code>{{ code() }}</code></pre>
       <span class="visually-hidden" role="status">{{ announce() }}</span>
     </div>
   `,

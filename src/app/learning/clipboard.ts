@@ -44,6 +44,10 @@ export function addCopyButtons(root: HTMLElement): void {
     const block = document.createElement('div');
     block.className = 'code-block';
     pre.replaceWith(block);
+    // Un bloc qui défile horizontalement doit pouvoir recevoir le focus (clavier).
+    pre.tabIndex = 0;
+    pre.setAttribute('role', 'region');
+    pre.setAttribute('aria-label', labels.codeRegion);
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'cpy';
