@@ -9,33 +9,32 @@ import { CompleteButton } from './complete-button';
   selector: 'app-cards',
   imports: [Md, CompleteButton],
   template: `
-    @if (card(); as c) {
-      <div class="flashcard" aria-live="polite">
-        <p class="hint">
-          {{ labels.card(index() + 1, count()) }} · {{ flipped() ? labels.back : labels.front }}
-        </p>
-        <app-md [text]="flipped() ? c.verso : c.recto" [glossary]="ctx().glossary" />
-      </div>
-      <div class="pager">
-        <button class="button" type="button" [disabled]="index() === 0" (click)="go(-1)">
-          {{ labels.previousCard }}
-        </button>
+    <p class="muted">{{ labels.cardsHint }}</p>
+    <div class="cards">
+      @for (c of activity().cartes; track $index; let i = $index) {
         <button
-          class="button primary"
           type="button"
-          [attr.aria-pressed]="flipped()"
-          (click)="flipped.set(!flipped())"
+          class="flip"
+          [class.back]="flipped().has(i)"
+          [attr.aria-pressed]="flipped().has(i)"
+          [attr.aria-label]="
+            labels.cardLabel(i + 1, flipped().has(i) ? labels.answer_ : labels.question_)
+          "
+          (click)="flip(i)"
         >
-          {{ labels.flip }}
+          <span class="side" aria-hidden="true">{{
+            flipped().has(i) ? labels.answer_ : labels.question_
+          }}</span>
+          <app-md
+            [text]="flipped().has(i) ? c.verso : c.recto"
+            [inline]="true"
+            [glossary]="ctx().glossary"
+          />
         </button>
-        <button class="button" type="button" [disabled]="index() === count() - 1" (click)="go(1)">
-          {{ labels.nextCard }}
-        </button>
-      </div>
-    }
-    @if (index() === count() - 1) {
-      <app-complete-button [ctx]="ctx()" (progressed)="progressed.emit($event)" />
-    }
+      }
+    </div>
+    <p class="visually-hidden" aria-live="polite">{{ announce() }}</p>
+    <app-complete-button [ctx]="ctx()" (progressed)="progressed.emit($event)" />
   `,
   styleUrl: './activities.scss',
 })
@@ -43,14 +42,17 @@ export class Cards {
   readonly ctx = input.required<ActivityContext>();
   readonly progressed = output<ActivityProgress>();
   protected readonly labels = LABELS.learning;
-  protected readonly index = signal(0);
-  protected readonly flipped = signal(false);
-  private readonly activity = computed(() => this.ctx().activity as ActivityOf<'fiches'>);
-  protected readonly count = computed(() => this.activity().cartes.length);
-  protected readonly card = computed(() => this.activity().cartes[this.index()]);
+  /** Cartes retournées (face réponse). */
+  protected readonly flipped = signal(new Set<number>());
+  protected readonly announce = signal('');
+  protected readonly activity = computed(() => this.ctx().activity as ActivityOf<'fiches'>);
 
-  protected go(delta: number): void {
-    this.index.update((i) => i + delta);
-    this.flipped.set(false);
+  protected flip(i: number): void {
+    const next = new Set(this.flipped());
+    if (next.has(i)) next.delete(i);
+    else next.add(i);
+    this.flipped.set(next);
+    const card = this.activity().cartes[i]!;
+    this.announce.set(next.has(i) ? card.verso : card.recto);
   }
 }

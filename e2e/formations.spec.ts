@@ -77,7 +77,7 @@ test.describe('formations', () => {
       .getByRole('link', { name: /^Commencer/ })
       .first()
       .click();
-    await page.getByRole('button', { name: 'J’ai terminé' }).click();
+    await page.getByRole('button', { name: 'J’ai lu, continuer' }).click();
     await expect(
       page.getByRole('navigation', { name: 'Activités du module' }).getByRole('link').first(),
     ).toContainText('(À faire)');

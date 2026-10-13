@@ -12,52 +12,49 @@ import type { ActivityContext, ActivityOf, ActivityProgress } from './activity-c
   template: `
     <app-md [text]="activity().consigne" [glossary]="ctx().glossary" />
     <form (submit)="check($event)">
-      @for (g of activity().gauches; track g.cle) {
-        <div class="match-row">
-          <label [for]="'m-' + g.cle"
-            ><app-md [text]="g.texte" [inline]="true" [glossary]="ctx().glossary"
-          /></label>
-          <select
-            [id]="'m-' + g.cle"
-            [attr.aria-label]="labels.matchFor(g.texte)"
-            (change)="choose(g.cle, $any($event.target).value)"
-          >
-            <option value="">{{ labels.choose }}</option>
-            @for (d of activity().droites; track $index) {
-              <option [value]="d">{{ d }}</option>
+      <div class="assoc">
+        @for (g of activity().gauches; track g.cle) {
+          <div class="r" [class.ok]="verdict(g.cle) === true" [class.ko]="verdict(g.cle) === false">
+            <label [for]="'m-' + g.cle"
+              ><app-md [text]="g.texte" [inline]="true" [glossary]="ctx().glossary"
+            /></label>
+            <select
+              class="inp"
+              [id]="'m-' + g.cle"
+              [attr.aria-label]="labels.matchFor(g.texte)"
+              (change)="choose(g.cle, $any($event.target).value)"
+            >
+              <option value="">{{ labels.choose }}</option>
+              @for (d of activity().droites; track $index) {
+                <option [value]="d" [selected]="answers()[g.cle] === d">{{ d }}</option>
+              }
+            </select>
+            @if (verdict(g.cle) === false) {
+              <span class="small expected">{{ labels.expected }} {{ solution()[g.cle] }}</span>
             }
-          </select>
-          @if (correction(); as c) {
-            <span class="match-result" [class.ok]="answers[g.cle] === solution()[g.cle]">
-              {{
-                answers[g.cle] === solution()[g.cle]
-                  ? labels.correct
-                  : labels.expected + ' ' + solution()[g.cle]
-              }}
-            </span>
-          }
-        </div>
-      }
-      <button class="button primary" type="submit" [disabled]="busy()">
-        {{ correction() ? labels.retry : labels.check }}
-      </button>
-    </form>
-    <div aria-live="polite">
-      @if (error()) {
-        <p class="message error" role="alert">{{ labels.failed }}</p>
-      }
-      @if (correction(); as c) {
-        <div class="message" [class.success]="c.juste" [class.error]="!c.juste">
-          <p>
-            <strong>{{ c.juste ? labels.matchRight : labels.matchWrong }}</strong>
+          </div>
+        }
+      </div>
+      <div aria-live="polite">
+        @if (error()) {
+          <p class="fb bad" role="alert">{{ labels.failed }}</p>
+        }
+        @if (correction(); as c) {
+          <div class="fb" [class.good]="c.juste" [class.bad]="!c.juste">
+            <strong>{{ c.juste ? labels.matchRight : labels.matchScore(score(), total()) }}</strong>
             @if (c.juste && c.etat.points) {
-              {{ labels.earned(c.etat.points) }}
+              <span>{{ labels.earned(c.etat.points) }}</span>
+            } @else if (!c.juste) {
+              <span>{{ labels.matchFix }}</span>
             }
-          </p>
-          <app-md [text]="c.explication" [glossary]="ctx().glossary" />
-        </div>
-      }
-    </div>
+            <app-md [text]="c.explication" [glossary]="ctx().glossary" />
+          </div>
+        }
+      </div>
+      <div class="acts end">
+        <button class="btn" type="submit" [disabled]="busy()">{{ labels.check }}</button>
+      </div>
+    </form>
   `,
   styleUrl: './activities.scss',
 })
@@ -73,10 +70,22 @@ export class Match {
   );
   protected readonly busy = signal(false);
   protected readonly error = signal(false);
-  protected answers: Record<string, string> = {};
+  protected readonly answers = signal<Record<string, string>>({});
+  /** Réponses au moment de la dernière vérification (les lignes ne changent de couleur qu'à la vérification). */
+  private readonly checked = signal<Record<string, string>>({});
+  protected readonly total = computed(() => this.activity().gauches.length);
+  protected readonly score = computed(
+    () => this.activity().gauches.filter((g) => this.verdict(g.cle) === true).length,
+  );
 
   protected choose(cle: string, value: string): void {
-    this.answers = { ...this.answers, [cle]: value };
+    this.answers.update((a) => ({ ...a, [cle]: value }));
+  }
+
+  /** Juste, faux, ou pas encore vérifié. */
+  protected verdict(cle: string): boolean | null {
+    if (!this.correction()) return null;
+    return this.checked()[cle] === this.solution()[cle];
   }
 
   protected async check(event: SubmitEvent): Promise<void> {
@@ -89,8 +98,9 @@ export class Match {
         c.formationId,
         c.moduleId,
         c.activity.id,
-        this.answers,
+        this.answers(),
       );
+      this.checked.set({ ...this.answers() });
       this.correction.set(correction);
       this.progressed.emit({ etat: correction.etat, moduleTermine: correction.moduleTermine });
     } catch {
