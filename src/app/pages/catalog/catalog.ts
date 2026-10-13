@@ -73,23 +73,33 @@ type FormatFilter = 'toutes' | Format;
         <app-empty>{{ all().length ? labels.emptyFilter : labels.emptyCatalog }}</app-empty>
       } @else {
         <div class="grid">
-          @for (c of filtered(); track c.id) {
+          @for (c of filtered(); track (c.parcoursSeul ? 'parcours:' : 'fiche:') + c.id) {
             <app-course-card
               [theme]="c.theme"
               [heading]="c.titre"
               [modes]="modes(c)"
               [duration]="c.dureeHeures ? labels.duration(c.dureeHeures) : ''"
-              [info]="labels.cardInfo(!!c.formationId, sessionsOf(c.id))"
+              [info]="labels.cardInfo(!!c.formationId, c.parcoursSeul ? 0 : sessionsOf(c.id))"
             >
               @if (!c.publiee) {
                 <app-tag>{{ labels.draftTag }}</app-tag>
               }
-              <a
-                class="btn small"
-                [routerLink]="['/catalogue', c.id]"
-                [attr.aria-label]="labels.seeLabel(c.titre)"
-                >{{ labels.see }}</a
-              >
+              @if (c.parcoursSeul) {
+                <!-- Parcours en ligne sans fiche : pas de sessions, on l'ouvre directement. -->
+                <a
+                  class="btn small"
+                  [routerLink]="['/parcours', c.formationId]"
+                  [attr.aria-label]="labels.openOnlineLabel(c.titre)"
+                  >{{ labels.openOnline }}</a
+                >
+              } @else {
+                <a
+                  class="btn small"
+                  [routerLink]="['/catalogue', c.id]"
+                  [attr.aria-label]="labels.seeLabel(c.titre)"
+                  >{{ labels.see }}</a
+                >
+              }
             </app-course-card>
           }
         </div>

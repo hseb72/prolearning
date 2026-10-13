@@ -75,15 +75,9 @@
               @if (version.copiedToDemoAt) {
                 <app-tag kind="distance">{{ labels.inDemo }}</app-tag>
               }
-              @if (version.publishedAt) {
-                <app-tag kind="online">{{ labels.inProd }}</app-tag>
-              }
               <br />
               <span class="small muted">
                 {{ labels.importedOn(formatDate(version.importedAt), version.importedBy) }}
-                @if (version.publishedAt) {
-                  · {{ labels.publishedOn(formatDate(version.publishedAt)) }}
-                }
                 @if (version.copiedToDemoAt) {
                   · {{ labels.copiedOn(formatDate(version.copiedToDemoAt)) }}
                 }
@@ -114,17 +108,15 @@
               >
                 {{ labels.copy }}
               </button>
-              @if (!version.publishedAt) {
-                <button
-                  class="btn small"
-                  type="button"
-                  [disabled]="busy()"
-                  [attr.aria-label]="labels.publishLabel(formation.titre, version.version)"
-                  (click)="publish(formation, version.version)"
-                >
-                  {{ labels.publish }}
-                </button>
-              }
+              <button
+                class="btn small"
+                type="button"
+                [disabled]="busy()"
+                [attr.aria-label]="labels.publishLabel(formation.titre, version.version)"
+                (click)="publish(formation, version.version)"
+              >
+                {{ labels.publish }}
+              </button>
             </span>
           </article>
         }
@@ -142,7 +134,7 @@
           <span
             ><b>{{ row.titre }}</b> · v{{ row.version }}</span
           >
-          <span class="small muted">{{ labels.copiedOn(formatDate(row.date)) }}</span>
+          <span class="small muted">{{ row.note }}</span>
         </div>
       }
     </div>
@@ -166,7 +158,7 @@
           <span
             ><b>{{ row.titre }}</b> · v{{ row.version }}</span
           >
-          <span class="small muted">{{ labels.publishedOn(formatDate(row.date)) }}</span>
+          <span class="small muted">{{ row.note }}</span>
         </div>
       }
     </div>

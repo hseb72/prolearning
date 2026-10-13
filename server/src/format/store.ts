@@ -205,11 +205,40 @@ export async function formationSource(
   return res.rows[0]?.source ?? null;
 }
 
-export async function markPublished(db: pg.Pool, id: string, version: string): Promise<void> {
-  await db.query(
-    'UPDATE pl_formation_versions SET published_at = now() WHERE formation_id = $1 AND version = $2',
-    [id, version],
-  );
+/**
+ * Retire une version de cette base (l'évaluation, après publication en production) : la
+ * formation disparaît avec sa dernière version ; sinon, la version courante redevient la
+ * plus haute qui reste.
+ */
+export async function removeVersion(db: pg.Pool, id: string, version: string): Promise<void> {
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`formation:${id}`]);
+    await client.query(
+      'DELETE FROM pl_formation_versions WHERE formation_id = $1 AND version = $2',
+      [id, version],
+    );
+    const highest = await client.query<{ version: string }>(
+      `SELECT version FROM pl_formation_versions WHERE formation_id = $1
+       ORDER BY version_major DESC, version_minor DESC, version_patch DESC LIMIT 1`,
+      [id],
+    );
+    if (highest.rows[0]) {
+      await client.query(
+        'UPDATE pl_formations SET current_version = $2, updated_at = now() WHERE id = $1',
+        [id, highest.rows[0].version],
+      );
+    } else {
+      await client.query('DELETE FROM pl_formations WHERE id = $1', [id]);
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function markCopiedToDemo(db: pg.Pool, id: string, version: string): Promise<void> {

@@ -42,6 +42,11 @@ export interface CourseCard {
   /** Début de la prochaine session ouverte, s'il y en a une. */
   prochaineSession: string | null;
   publiee: boolean;
+  /**
+   * Parcours en ligne publié sans fiche du catalogue : la carte mène directement au
+   * parcours (`/parcours/:formationId`), il n'y a ni fiche ni session.
+   */
+  parcoursSeul: boolean;
 }
 
 export interface CourseDetail extends CourseCard {

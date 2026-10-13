@@ -178,10 +178,27 @@ describe.skipIf(!databasesAvailable)('catalogue et sessions', () => {
     const missing = await send('POST', '/api/catalogue', { ...COURSE, formationId: 'inconnue' });
     expect(missing.statusCode).toBe(409);
 
+    // Sans fiche, le parcours publié figure quand même au catalogue, comme parcours seul.
+    const alone = (await get('/api/catalogue')).json();
+    expect(alone).toEqual([
+      expect.objectContaining({
+        id: 'togaf10',
+        titre: 'TOGAF 10',
+        theme: 'Architecture',
+        formationId: 'togaf10',
+        formats: ['en-ligne'],
+        parcoursSeul: true,
+        publiee: true,
+      }),
+    ]);
+
     const options = (await get('/api/catalogue-parcours', equipe)).json();
     expect(options.map((o: Json) => o.id)).toEqual(['togaf10']);
     const course = await createCourse({ ...COURSE, formationId: 'togaf10' });
     expect(course).toMatchObject({ formationId: 'togaf10', formats: ['en-ligne'] });
+    // Présenté par une fiche publiée, il n'apparaît plus qu'une fois : par sa fiche.
+    const cards = (await get('/api/catalogue')).json();
+    expect(cards.map((c: Json) => [c.id, c.parcoursSeul])).toEqual([[COURSE.id, false]]);
   });
 
   it('modifie une fiche et journalise la gestion', async () => {

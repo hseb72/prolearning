@@ -209,7 +209,7 @@ export const SCENARIOS: Scenario[] = [
     space: 'demo',
     persona: 'Alice Martin',
     ecarts: [
-      'Pas d’action « Retirer » : une formation importée reste en évaluation (règles du § 11).',
+      'Pas d’action « Retirer » : une version reste en évaluation jusqu’à sa publication, puis la quitte.',
       'La démonstration liste aussi les formations du jeu de démonstration.',
     ],
     async run(page) {

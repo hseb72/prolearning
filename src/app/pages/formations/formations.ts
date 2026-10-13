@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { FormationRow, ReportItem, ValidationReport } from '@shared/format';
+import type { FormationRow, ReportItem, SpaceFormations, ValidationReport } from '@shared/format';
 import { AuthService } from '../../core/auth';
 import { FormationsService } from '../../core/formations';
 import { AdminNav } from '../../layout/admin-nav';
@@ -52,21 +52,36 @@ export class FormationsPage {
       : undefined;
   });
 
-  /** Versions copiées en démonstration, et publiées en production. */
-  protected readonly inDemo = computed(() => this.rows('copiedToDemoAt'));
-  protected readonly inProd = computed(() => this.rows('publishedAt'));
+  /** Ce qui est en démonstration et en production, lu dans chacune de ces bases. */
+  protected readonly spaces = httpResource<SpaceFormations>(() => {
+    const me = this.auth.me();
+    return me
+      ? {
+          url: '/api/formations/espaces',
+          params: { espace: me.space, compte: me.actor.id, n: this.refresh() },
+        }
+      : undefined;
+  });
+  protected readonly inDemo = computed(() => this.rows(this.spaces.value()?.demonstration));
+  protected readonly inProd = computed(() => this.rows(this.spaces.value()?.production));
 
-  private rows(field: 'copiedToDemoAt' | 'publishedAt') {
-    return (this.formations.value() ?? []).flatMap((f) =>
-      f.versions
-        .filter((v) => v[field])
-        .map((v) => ({
-          key: `${f.id}@${v.version}`,
-          titre: f.titre,
-          version: v.version,
-          date: v[field]!,
-        })),
-    );
+  /** Version courante de chaque formation, et comment elle est arrivée dans l'espace. */
+  private rows(list: FormationRow[] | undefined) {
+    return (list ?? []).map((f) => {
+      const current = f.versions.find((v) => v.version === f.versionCourante) ?? f.versions[0]!;
+      const date = this.formatDate(current.importedAt);
+      return {
+        key: f.id,
+        titre: f.titre,
+        version: current.version,
+        note:
+          current.origine === 'publication'
+            ? this.labels.publishedOn(date)
+            : current.origine === 'copie'
+              ? this.labels.copiedOn(date)
+              : this.labels.loadedOn(date),
+      };
+    });
   }
 
   protected lines(items: ReportItem[]): string[] {

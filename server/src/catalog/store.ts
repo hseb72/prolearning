@@ -89,6 +89,7 @@ function toCard(row: CourseRow, sessions: SessionView[]): CourseCard {
     formats,
     prochaineSession: open[0]?.debut ?? null,
     publiee: row.publiee,
+    parcoursSeul: false,
   };
 }
 
@@ -112,11 +113,44 @@ export async function listCourses(db: pg.Pool, includeDrafts: boolean): Promise<
     db,
     res.rows.map((r) => r.id),
   );
-  return res.rows.map((row) =>
+  const cards = res.rows.map((row) =>
     toCard(
       row,
       sessions.filter((s) => s.courseId === row.id),
     ),
+  );
+  // Le catalogue montre toutes les formations : les parcours en ligne de l'espace qu'aucune
+  // fiche visible ne présente y figurent aussi, avec leur titre, thème et durée.
+  const linked = new Set(cards.map((c) => c.formationId).filter(Boolean));
+  const online = await db.query<{
+    id: string;
+    titre: string;
+    theme: string;
+    resume: string | null;
+    minutes: string | null;
+  }>(
+    `SELECT f.id, v.titre, v.theme, v.content->>'resume' AS resume,
+            v.content->>'dureeEstimeeMinutes' AS minutes
+       FROM pl_formations f
+       JOIN pl_formation_versions v ON v.formation_id = f.id AND v.version = f.current_version`,
+  );
+  for (const f of online.rows) {
+    if (linked.has(f.id)) continue;
+    cards.push({
+      id: f.id,
+      titre: f.titre,
+      theme: f.theme,
+      resume: f.resume ?? '',
+      dureeHeures: f.minutes ? Math.round(Number(f.minutes) / 30) / 2 : null,
+      formationId: f.id,
+      formats: ['en-ligne'],
+      prochaineSession: null,
+      publiee: true,
+      parcoursSeul: true,
+    });
+  }
+  return cards.sort(
+    (a, b) => a.theme.localeCompare(b.theme, 'fr') || a.titre.localeCompare(b.titre, 'fr'),
   );
 }
 

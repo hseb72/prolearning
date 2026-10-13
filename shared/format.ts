@@ -66,3 +66,9 @@ export interface DemoCopyResult {
   copiee: boolean;
   refus?: string;
 }
+
+/** Formations présentes en démonstration et en production (GET /api/formations/espaces). */
+export interface SpaceFormations {
+  demonstration: FormationRow[];
+  production: FormationRow[];
+}
