@@ -151,6 +151,16 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
   - Le compte joué redevient l'administrateur fictif par défaut.
 - **Tests** : les tests de l'API ne chargent que les comptes fictifs ; les tests de bout en bout chargent le jeu complet. La réinitialisation a son propre projet Playwright (`demonstration`), exécuté après les autres.
 
+### Choix d'implémentation (étape 7, finitions)
+
+Décidés avec le porteur du projet le 13 octobre 2026.
+
+- **Journal** : Administration › Journal (administrateurs) lit `pl_audit_log` de l'espace actif, du plus récent au plus ancien, par pages de 50, filtrable par famille d'actions (`GET /api/journal`). Lecture seule.
+- **Thème** : clair, sombre ou celui du système, au choix dans le pied de page (« Apparence ») ; posé en `data-theme` sur la racine et mémorisé sur le poste (`localStorage`), sans compte.
+- **Accessibilité** : `e2e/accessibility.spec.ts` passe axe (WCAG 2.1 A et AA) sur les écrans clés, en clair et en sombre, au bureau et à 375 px. Pour atteindre 4,5:1, `--accent` passe de #B5561A à #AA5118 et `--good` de #2F7D5B à #2E7958 (écart invisible) ; les blocs de code défilants reçoivent le focus.
+- **Données personnelles** (lot 7b) : conservation par défaut, modifiable par un administrateur : demandes et historique 3 ans après clôture, journal 1 an ; comptes sans connexion depuis 1 an signalés aux administrateurs, jamais supprimés automatiquement ; progression conservée tant que le compte existe. Export et suppression des données d'un utilisateur.
+- **Publication des réussites** (lot 7c, décision 5) : par parcours, l'apprenant choisit privé (défaut), visible de son manager (dans « Mon équipe ») ou visible de tous (page « Réussites » : nom, parcours terminé, badges). Il peut retirer la publication à tout moment.
+
 ## Structure du dépôt
 
 | Dossier | Contenu |

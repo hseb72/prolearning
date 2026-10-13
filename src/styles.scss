@@ -11,13 +11,14 @@
   --ink: #14213d;
   --muted: #4a5568;
   --line: #ddd8ce;
-  --accent: #b5561a;
+  // #B5561A du prototype assombri juste assez pour 4,5:1 sur le fond et les pastilles (RGAA AA).
+  --accent: #aa5118;
   --accent-fill: #e07a2e;
   --on-accent: #14213d;
   --navy: #14213d;
   --on-navy: #f7f5f0;
   --navy-accent: #f0a060;
-  --good: #2f7d5b;
+  --good: #2e7958; // #2F7D5B du prototype, 4,5:1 sur --good-bg
   --good-bg: #e4f2ea;
   --bad: #a8392c;
   --bad-bg: #f7e3df;
@@ -377,6 +378,13 @@ summary:focus-visible,
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+
+  .footer-right {
+    display: inline-flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
 }
 
 // ── Composants (SPEC-UI § 4) ─────────────────────────────────────────────────
@@ -443,7 +451,9 @@ summary:focus-visible,
   cursor: pointer;
   font-size: 14px;
 
-  &[aria-pressed='true'] {
+  // Bouton de filtre (aria-pressed) ou lien de rubrique (aria-current).
+  &[aria-pressed='true'],
+  &[aria-current='page'] {
     background: var(--navy);
     color: var(--on-navy);
     border-color: var(--navy);
@@ -1032,9 +1042,14 @@ table.bo {
     height: 36px;
   }
 
+  // Badge pas encore obtenu : pictogramme estompé, texte lisible (contraste AA).
   &.off {
-    opacity: 0.38;
-    filter: grayscale(1);
+    color: var(--muted);
+
+    svg {
+      opacity: 0.38;
+      filter: grayscale(1);
+    }
   }
 }
 

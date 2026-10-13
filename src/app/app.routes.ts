@@ -135,6 +135,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/users/users').then((m) => m.UsersPage),
   },
   {
+    path: 'administration/journal',
+    title: title(LABELS.journal.title),
+    canActivate: [roleGuard('admin')],
+    loadComponent: () => import('./pages/journal/journal').then((m) => m.JournalPage),
+  },
+  {
     // Bibliothèque de composants (SPEC-UI § 4), page interne non listée dans les onglets.
     path: 'administration/composants',
     title: title('Composants'),

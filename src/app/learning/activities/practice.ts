@@ -52,7 +52,11 @@ import type { ActivityContext, ActivityOf, ActivityProgress } from './activity-c
                   <span>{{ file.description }}</span>
                 }
               </summary>
-              <pre><code>{{ file.contenu }}</code></pre>
+              <pre
+                tabindex="0"
+                role="region"
+                [attr.aria-label]="file.nom"
+              ><code>{{ file.contenu }}</code></pre>
             </details>
             <div class="bo-acts">
               <button

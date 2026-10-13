@@ -8,6 +8,7 @@ import { registerCatalogRoutes } from './catalog-routes.js';
 import { resolveContext, sessionToken } from './context.js';
 import type { Databases } from './databases.js';
 import { registerFormationRoutes } from './formation-routes.js';
+import { registerJournalRoutes } from './journal-routes.js';
 import { registerLearningRoutes } from './learning-routes.js';
 import { registerRequestRoutes } from './request-routes.js';
 import { registerPublicationRoutes } from './publication.js';
@@ -85,6 +86,7 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
   registerLearningRoutes(app);
   registerCatalogRoutes(app);
   registerRequestRoutes(app);
+  registerJournalRoutes(app);
 
   app.setNotFoundHandler((_request, reply) =>
     reply.code(404).send({ error: 'not_found', message: 'Ressource introuvable.' }),

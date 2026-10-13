@@ -16,6 +16,7 @@ démonstration, avec le jeu de `fixtures/` (voir « Refaire la comparaison » en
 | Dates des sessions décalées de quelques jours | Dates relatives au jour du chargement de la démonstration, pour qu'il y ait toujours des sessions à venir. |
 | Ordre des fiches du catalogue : par thème | Ordre fourni par l'API (logique métier inchangée). |
 | Places restantes : réelles (inscriptions confirmées), pas les taux de remplissage fictifs du prototype | Données. |
+| Orange des textes #AA5118 et vert « En ligne » #2E7958 au lieu de #B5561A et #2F7D5B | RGAA AA : les couleurs du prototype donnaient 4,47:1 et 4,32:1, sous le minimum de 4,5:1 (audit axe, étape 7). |
 | Navigation « Activité précédente / Activité suivante » en bas de chaque activité | Ajout de la plateforme : navigation au clavier et sur mobile sans revenir à la liste. |
 
 ## Écran par écran
