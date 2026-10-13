@@ -1,4 +1,13 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
 import type { PracticeFile } from '@shared/learning';
 import { LABELS } from '../../labels';
 import { copyText, download } from '../clipboard';
@@ -159,12 +168,15 @@ export class Practice {
   protected readonly message = signal<{ ok: boolean; text: string } | null>(null);
 
   constructor() {
-    // Déjà terminé : la liste revient cochée.
+    // Déjà terminé : la liste revient cochée. Après une validation, la progression relue
+    // arrive avec le statut « faite » : le message de réussite (et ses points) reste affiché.
     effect(() => {
       const c = this.ctx();
       if (c.state.statut === 'faite') {
         this.checked.set(new Set(this.activity().verification.map((v) => v.id)));
-        this.message.set({ ok: true, text: this.labels.alreadyDone });
+        untracked(() => {
+          if (!this.message()?.ok) this.message.set({ ok: true, text: this.labels.alreadyDone });
+        });
       }
     });
   }
