@@ -1,6 +1,7 @@
 /**
  * Ludification (CLAUDE.md, « Formations en ligne » ; § 10 du format). Sobre : des points,
- * des niveaux et quelques badges communs, visibles de l'apprenant seul (décision 5).
+ * des niveaux et quelques badges communs, visibles de l'apprenant seul sauf s'il publie
+ * sa réussite (décision 5).
  */
 
 /** Points par défaut du § 10. Le champ `points` d'une activité les remplace. */

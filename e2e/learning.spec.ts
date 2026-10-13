@@ -173,5 +173,25 @@ test.describe('parcours en ligne', () => {
       );
     }
     await expectNoHorizontalOverflow(page);
+
+    // Décision 5 : privé par défaut ; l'apprenant choisit de publier sa réussite pour tous.
+    const share = page.getByRole('group', { name: 'Qui voit votre progression ?' });
+    await expect(share.getByRole('radio', { name: /Moi seulement/ })).toBeChecked();
+    await share.getByRole('radio', { name: /Tout le monde/ }).check();
+    await expect(page.locator('.toast')).toContainText('Choix enregistré : tout le monde.');
+    await page.goto('/reussites');
+    const card = page.locator('app-achievement-card').filter({ hasText: formation.titre });
+    await expect(card).toContainText('Parcours terminé');
+    await expect(card).toContainText('Niveau Initié');
+    // Et la retire : elle disparaît des réussites.
+    await page.goBack();
+    await expect(share.getByRole('radio', { name: /Tout le monde/ })).toBeChecked();
+    await share.getByRole('radio', { name: /Moi seulement/ }).check();
+    await expect(page.locator('.toast')).toContainText('Choix enregistré : moi seulement.');
+    await page.goto('/reussites');
+    await expect(
+      page.locator('app-achievement-card').filter({ hasText: formation.titre }),
+    ).toHaveCount(0);
+    await expectNoHorizontalOverflow(page);
   });
 });

@@ -219,3 +219,23 @@ export interface CompletionResult {
   etat: ActivityState;
   moduleTermine: boolean;
 }
+
+// ── Publication des réussites (décision 5) ───────────────────────────────────
+
+/** Qui voit la réussite d'un parcours : l'apprenant seul (défaut), son manager, ou tous. */
+export const SHARE_VISIBILITIES = ['prive', 'manager', 'communaute'] as const;
+export type ShareVisibility = (typeof SHARE_VISIBILITIES)[number];
+
+/** Réussite publiée : un parcours, la progression de l'apprenant, son niveau et ses badges. */
+export interface SharedAchievement {
+  personne: string;
+  formationId: string;
+  formationTitre: string;
+  modulesTermines: number;
+  modulesTotal: number;
+  termine: boolean;
+  niveau: string;
+  badges: BadgeId[];
+  visibilite: Exclude<ShareVisibility, 'prive'>;
+  publieLe: string;
+}

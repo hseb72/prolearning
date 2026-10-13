@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import type { LearnerFormationResponse, LearnerModule } from '@shared/learning';
 import { AuthService } from '../../core/auth';
 import { LABELS } from '../../labels';
+import { ShareChoice } from '../../learning/share-choice';
 import { READER_MODE } from '../../learning/reader-mode';
 import { Md } from '../../learning/md';
 import { ModuleTile, type TileState } from '../../ui/module-tile';
@@ -13,7 +14,7 @@ import { LearnerProfileCard } from './profile';
 /** Présentation d'un parcours et de ses modules, avec leur état pour l'apprenant. */
 @Component({
   selector: 'app-learning-formation',
-  imports: [RouterLink, Md, LearnerProfileCard, ModuleTile, Stat],
+  imports: [RouterLink, Md, LearnerProfileCard, ModuleTile, Stat, ShareChoice],
   templateUrl: './formation.html',
   styles: `
     .crumbs {

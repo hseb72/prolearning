@@ -34,6 +34,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/learning/learning-list').then((m) => m.LearningListPage),
   },
   {
+    path: 'reussites',
+    title: title(LABELS.shares.pageTitle),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/learning/achievements').then((m) => m.AchievementsPage),
+  },
+  {
     path: 'parcours/:formation',
     title: title(LABELS.learning.title),
     canActivate: [authGuard],

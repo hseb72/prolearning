@@ -163,7 +163,9 @@ Décidés avec le porteur du projet le 13 octobre 2026.
   - Clôture d'une demande : refusée ou annulée → dernière mise à jour ; inscription confirmée → fin de la session (la place part avec elle) ; sur mesure acceptée → dernière mise à jour.
   - Export JSON : chacun le sien (« Mes données personnelles », lien du pied de page, `GET /api/moi/donnees`), l'administrateur celui d'un compte (`GET /api/users/:id/donnees`).
   - Suppression d'un compte par un administrateur (`DELETE /api/users/:id`, jamais le sien) : compte, connexions, progression, demandes, historique et places partent ; son nom devient « Compte supprimé » dans l'historique des demandes des autres. Le journal garde ses actions jusqu'à sa propre purge (traçabilité) ; la suppression y est notée sans nom ni e-mail.
-- **Publication des réussites** (lot 7c, décision 5) : par parcours, l'apprenant choisit privé (défaut), visible de son manager (dans « Mon équipe ») ou visible de tous (page « Réussites » : nom, parcours terminé, badges). Il peut retirer la publication à tout moment.
+- **Publication des réussites** (lot 7c, décision 5) : par parcours, l'apprenant choisit privé (défaut), visible de son manager (dans « Mon équipe ») ou visible de tous (page « Réussites », lien depuis « Mon parcours en ligne »). Il peut retirer la publication à tout moment.
+  - Choix sur la vue d'ensemble du parcours, possible dès qu'un module est terminé (`PUT /api/parcours/:formation/partage`) ; une ligne de `pl_achievement_shares` par parcours publié, aucune pour privé.
+  - Une réussite montre le nom, le parcours, les modules terminés, le niveau et les badges ; jamais les scores ni les réponses. Le manager voit ses collaborateurs rattachés (`GET /api/equipe/reussites`), tous voient ce qui est publié pour tous (`GET /api/reussites`). Pas de classement.
 
 ## Structure du dépôt
 

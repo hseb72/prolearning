@@ -45,6 +45,7 @@
         </a>
       }
     </app-learner-profile>
+    <app-share-choice [formationId]="d.formation.id" [canShare]="modulesDone() > 0" />
   }
 
   <section aria-labelledby="modules-heading">

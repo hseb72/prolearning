@@ -182,6 +182,10 @@ export async function exportUserData(
          FROM pl_custom_requests r LEFT JOIN pl_courses c ON c.id = r.course_id
         WHERE r.requester_id = $1 ORDER BY r.created_at`,
     ),
+    reussitesPubliees: await q(
+      `SELECT formation_id AS "formation", visibility AS "visibilite", updated_at AS "publieeLe"
+         FROM pl_achievement_shares WHERE user_id = $1 ORDER BY formation_id`,
+    ),
     actionsSurLesDemandesDesAutres: await q(
       `SELECT kind AS "type", statut, commentaire, created_at AS "le"
          FROM pl_request_events WHERE actor_id = $1 ORDER BY id`,

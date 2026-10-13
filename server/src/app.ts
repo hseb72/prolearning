@@ -13,6 +13,7 @@ import { registerLearningRoutes } from './learning-routes.js';
 import { registerPrivacyRoutes } from './privacy-routes.js';
 import { registerRequestRoutes } from './request-routes.js';
 import { registerPublicationRoutes } from './publication.js';
+import { registerShareRoutes } from './shares-routes.js';
 import { registerSpaceRoutes } from './space-routes.js';
 import { registerUserRoutes } from './user-routes.js';
 
@@ -89,6 +90,7 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
   registerRequestRoutes(app);
   registerJournalRoutes(app);
   registerPrivacyRoutes(app);
+  registerShareRoutes(app);
 
   app.setNotFoundHandler((_request, reply) =>
     reply.code(404).send({ error: 'not_found', message: 'Ressource introuvable.' }),

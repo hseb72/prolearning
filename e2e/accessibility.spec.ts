@@ -65,8 +65,11 @@ test.describe('accessibilité (axe, WCAG 2.1 AA)', () => {
   });
 
   test('parcours en ligne et lecteur', async ({ page }) => {
+    // Neuf écrans, chacun en clair et en sombre.
+    test.slow();
     await demoAs(page, 'Emma Petit');
     await audit(page, '/parcours', h1);
+    await audit(page, '/reussites', h1);
     await audit(page, '/parcours/togaf10', h1);
     for (const activity of [
       'probleme',
@@ -85,6 +88,7 @@ test.describe('accessibilité (axe, WCAG 2.1 AA)', () => {
   });
 
   test('administration', async ({ page }) => {
+    test.slow();
     await demoAs(page, 'Alice Martin');
     for (const section of ['demandes', 'formations', 'comptes', 'donnees', 'journal']) {
       await audit(page, `/administration/${section}`, h1);
