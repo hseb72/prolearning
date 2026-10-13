@@ -346,7 +346,8 @@ export async function loadDemo(
 export async function findDefaultPersona(demo: pg.Pool): Promise<UserRecord | null> {
   const res = await demo.query<UserRecord>(
     `SELECT id::int AS id, oidc_subject AS "oidcSubject", email, display_name AS "displayName",
-            role, manager_id::int AS "managerId", active, last_login_at AS "lastLoginAt"
+            role, manager_id::int AS "managerId", active, last_login_at AS "lastLoginAt",
+            created_at AS "createdAt"
      FROM pl_users WHERE active AND role = 'admin' ORDER BY id LIMIT 1`,
   );
   return res.rows[0] ?? null;

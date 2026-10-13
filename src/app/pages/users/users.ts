@@ -7,6 +7,9 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth';
 import { AdminNav } from '../../layout/admin-nav';
 import { LABELS } from '../../labels';
+import { ConfirmService } from '../../ui/confirm';
+import { ToastService } from '../../ui/toast';
+import type { RetentionSettings } from '@shared/privacy';
 
 /** Comptes et rôles de l'espace actif (RBAC tenu dans l'application). */
 @Component({
@@ -18,6 +21,8 @@ import { LABELS } from '../../labels';
 export class UsersPage {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly confirm = inject(ConfirmService);
+  private readonly toast = inject(ToastService);
 
   protected readonly labels = LABELS.users;
   protected readonly roleLabels = LABELS.roles;
@@ -34,6 +39,41 @@ export class UsersPage {
       ? { url: '/api/users', params: { espace: me.space, compte: me.actor.id } }
       : undefined;
   });
+
+  private readonly retention = httpResource<RetentionSettings>(() => {
+    const me = this.auth.me();
+    return me
+      ? { url: '/api/parametres/conservation', params: { espace: me.space, compte: me.actor.id } }
+      : undefined;
+  });
+  protected readonly dormantHint = computed(() =>
+    this.labels.dormantHint(this.retention.value()?.inactiveMonths ?? 12),
+  );
+
+  protected isSelf(user: UserRow): boolean {
+    const me = this.auth.me();
+    return !!me && (me.actor.id === user.id || me.user.id === user.id);
+  }
+
+  protected async remove(user: UserRow): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: this.labels.deleteTitle(user.displayName),
+      text: this.labels.deleteText,
+      confirm: this.labels.deleteConfirm,
+    });
+    if (!ok) return;
+    try {
+      await firstValueFrom(this.http.delete(`/api/users/${user.id}`));
+      this.users.update((list) => list?.filter((row) => row.id !== user.id));
+      this.toast.show(this.labels.deleted(user.displayName));
+    } catch (error) {
+      const message =
+        error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
+          ? error.error.message
+          : this.labels.deleteFailed;
+      this.toast.show(message);
+    }
+  }
 
   protected readonly managers = computed(() =>
     (this.users.value() ?? []).filter((user) => user.active && hasRole(user.role, 'manager')),

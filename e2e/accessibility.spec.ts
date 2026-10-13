@@ -52,6 +52,7 @@ test.describe('accessibilité (axe, WCAG 2.1 AA)', () => {
     await audit(page, '/sessions', (p) =>
       expect(p.locator('app-session-row').first()).toBeVisible(),
     );
+    await audit(page, '/mes-donnees', h1);
     await audit(page, '/demandes', (p) =>
       expect(p.locator('app-request-card').first()).toBeVisible(),
     );
@@ -85,7 +86,7 @@ test.describe('accessibilité (axe, WCAG 2.1 AA)', () => {
 
   test('administration', async ({ page }) => {
     await demoAs(page, 'Alice Martin');
-    for (const section of ['demandes', 'formations', 'comptes', 'journal']) {
+    for (const section of ['demandes', 'formations', 'comptes', 'donnees', 'journal']) {
       await audit(page, `/administration/${section}`, h1);
     }
   });

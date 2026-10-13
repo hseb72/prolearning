@@ -4,6 +4,7 @@ import type { UserRow } from '../../shared/auth.js';
 import { hasRole, ROLES } from '../../shared/roles.js';
 import { audit } from './audit.js';
 import { requireRole } from './context.js';
+import { getRetention } from './privacy.js';
 import { findUser, listUsers, setManager, setRole, toRow } from './users.js';
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
@@ -23,7 +24,9 @@ export function registerUserRoutes(app: FastifyInstance): void {
     '/api/users',
     { preHandler: requireRole('admin') },
     async (request): Promise<UserRow[]> => {
-      return (await listUsers(request.auth!.db)).map(toRow);
+      const db = request.auth!.db;
+      const { inactiveMonths } = await getRetention(db);
+      return (await listUsers(db)).map((user) => toRow(user, inactiveMonths));
     },
   );
 
@@ -78,6 +81,7 @@ export function registerUserRoutes(app: FastifyInstance): void {
         details: { userId: target.id, from: target.managerId, to: managerId },
       });
     }
-    return toRow((await findUser(ctx.db, target.id))!);
+    const { inactiveMonths } = await getRetention(ctx.db);
+    return toRow((await findUser(ctx.db, target.id))!, inactiveMonths);
   });
 }

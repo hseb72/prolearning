@@ -135,6 +135,18 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/users/users').then((m) => m.UsersPage),
   },
   {
+    path: 'administration/donnees',
+    title: title(LABELS.privacy.settingsTitle),
+    canActivate: [roleGuard('admin')],
+    loadComponent: () => import('./pages/privacy/retention').then((m) => m.RetentionPage),
+  },
+  {
+    path: 'mes-donnees',
+    title: title(LABELS.privacy.title),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/privacy/my-data').then((m) => m.MyDataPage),
+  },
+  {
     path: 'administration/journal',
     title: title(LABELS.journal.title),
     canActivate: [roleGuard('admin')],

@@ -4,6 +4,12 @@ import type { Role } from '@shared/roles';
  * Textes de l'interface. Tous en français (cf. CLAUDE.md, « Langue ») et réunis ici :
  * un texte d'interface écrit ailleurs est une anomalie.
  */
+/** « 1 mois », « 36 mois (3 ans) ». */
+function months(n: number): string {
+  const years = n % 12 === 0 ? ` (${n / 12} an${n > 12 ? 's' : ''})` : '';
+  return `${n} mois${years}`;
+}
+
 export const LABELS = {
   app: {
     name: '3S - Pro Learning',
@@ -25,6 +31,7 @@ export const LABELS = {
     requests: 'Demandes',
     formations: 'Formations',
     users: 'Comptes et rôles',
+    privacy: 'Données personnelles',
     journal: 'Journal',
   },
   /** Administration › Journal : actions journalisées de l'espace actif. */
@@ -41,6 +48,8 @@ export const LABELS = {
       user: 'Comptes',
       space: 'Espaces',
       demo: 'Démonstration',
+      settings: 'Paramétrage',
+      privacy: 'Purges',
       login: 'Connexions',
       logout: 'Déconnexions',
     } as Record<string, string>,
@@ -61,6 +70,9 @@ export const LABELS = {
       'user.role': 'Changement de rôle',
       'user.manager': 'Rattachement à un manager',
       'user.bootstrap_admin': 'Administrateur d’amorçage',
+      'user.delete': 'Suppression d’un compte et de ses données',
+      'settings.retention': 'Durées de conservation',
+      'privacy.purge': 'Purge des données arrivées à échéance',
       'formation.import': 'Import d’une formation',
       'formation.publish': 'Publication en production',
       'formation.copy_demo': 'Copie en démonstration',
@@ -82,6 +94,9 @@ export const LABELS = {
       version: 'version',
       action: 'décision',
       method: 'méthode',
+      inscriptions: 'inscriptions',
+      surMesure: 'sur mesure',
+      journal: 'journal',
     } as Record<string, string>,
   },
   /** Composants communs de l'interface (SPEC-UI § 4), libellés du prototype. */
@@ -220,6 +235,59 @@ export const LABELS = {
     saveFailed: 'La modification n’a pas été enregistrée.',
     roleOf: (name: string) => `Rôle de ${name}`,
     managerOf: (name: string) => `Manager de ${name}`,
+    actions: 'Données',
+    dormant: 'Inactif',
+    dormantHint: (months: number) => `Aucune connexion depuis plus de ${months} mois.`,
+    exportData: 'Exporter',
+    exportLabel: (name: string) => `Exporter les données de ${name}`,
+    delete: 'Supprimer',
+    deleteLabel: (name: string) => `Supprimer le compte de ${name} et ses données`,
+    deleteTitle: (name: string) => `Supprimer le compte de ${name} ?`,
+    deleteText:
+      'Le compte, la progression, les demandes et les places occupées sont effacés de cet espace ; son nom disparaît de l’historique des demandes des autres. Le journal garde la trace de la suppression. C’est définitif.',
+    deleteConfirm: 'Supprimer définitivement',
+    deleted: (name: string) => `Compte de ${name} supprimé avec ses données.`,
+    deleteFailed: 'La suppression n’a pas abouti.',
+  },
+  /** Données personnelles : page « Mes données » et réglages de conservation. */
+  privacy: {
+    footerLink: 'Mes données personnelles',
+    title: 'Mes données personnelles',
+    intro:
+      'Ce que le portail garde sur vous, combien de temps, et comment l’obtenir ou le faire effacer.',
+    kept: 'Ce qui est conservé',
+    keptItems: [
+      'Votre compte : nom, adresse e-mail, rôle, manager, date de dernière connexion.',
+      'Votre progression dans les parcours en ligne : activités faites, scores, points, modules terminés.',
+      'Vos demandes d’inscription et de session sur mesure, avec leur historique.',
+    ],
+    visibility:
+      'Vos résultats des parcours en ligne ne sont visibles que de vous, sauf si vous choisissez de publier une réussite.',
+    durations: 'Combien de temps',
+    requests: (m: number) =>
+      `Demandes clôturées (refusées, annulées, ou session terminée) : ${months(m)} après leur clôture.`,
+    audit: (m: number) => `Journal des actions sensibles : ${months(m)}.`,
+    progress: 'Progression : tant que votre compte existe.',
+    dormant: (m: number) =>
+      `Un compte sans connexion depuis ${months(m)} est signalé aux administrateurs ; il n’est pas supprimé d’office.`,
+    exportTitle: 'Obtenir vos données',
+    exportText: 'Un fichier JSON avec tout ce que le portail garde sur vous dans cet espace.',
+    exportButton: 'Télécharger mes données',
+    deleteTitle: 'Faire effacer vos données',
+    deleteText:
+      'Demandez-le à un administrateur du portail : il supprime votre compte et vos données de cet espace. Si vous vous reconnectez ensuite, un compte neuf est créé.',
+    settingsTitle: 'Données personnelles',
+    settingsIntro:
+      'Durées de conservation de cet espace. Au-delà, une purge quotidienne efface les demandes clôturées et les lignes du journal ; les comptes inactifs sont seulement signalés dans « Comptes et rôles ».',
+    requestsMonths: 'Demandes clôturées (mois)',
+    auditMonths: 'Journal (mois)',
+    inactiveMonths: 'Compte signalé inactif après (mois)',
+    between: (min: number, max: number) => `Entre ${min} et ${max}.`,
+    save: 'Enregistrer',
+    saved: 'Durées de conservation enregistrées.',
+    saveFailed: 'Les durées n’ont pas été enregistrées.',
+    loading: 'Chargement…',
+    loadFailed: 'Les durées de conservation n’ont pas pu être chargées.',
   },
   learning: {
     eyebrow: 'Parcours en ligne',

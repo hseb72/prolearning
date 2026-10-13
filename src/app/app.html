@@ -10,6 +10,9 @@
   <span>{{ labels.footer }}</span>
   <span class="footer-right">
     <span>{{ labels.footerRight }}</span>
+    @if (auth.me()) {
+      <a routerLink="/mes-donnees">{{ privacy.footerLink }}</a>
+    }
     <app-theme-switch />
   </span>
 </footer>
