@@ -249,6 +249,40 @@ export const LABELS = {
     deleted: (name: string) => `Compte de ${name} supprimé avec ses données.`,
     deleteFailed: 'La suppression n’a pas abouti.',
   },
+  /** Publication des réussites (décision 5) : choix de l'apprenant, équipe, communauté. */
+  shares: {
+    title: 'Qui voit votre progression ?',
+    intro:
+      'Vos résultats ne sont visibles que de vous. Vous pouvez choisir de montrer votre progression dans ce parcours, vos badges et votre niveau.',
+    options: {
+      prive: 'Moi seulement',
+      manager: 'Mon manager',
+      communaute: 'Tout le monde',
+    } as Record<string, string>,
+    hints: {
+      prive: 'Personne d’autre ne voit vos résultats.',
+      manager: 'Votre manager les voit dans « Mon équipe ».',
+      communaute: 'Tous les collaborateurs les voient dans « Réussites ».',
+    } as Record<string, string>,
+    notYet: 'Terminez un module de ce parcours pour pouvoir le publier.',
+    saved: (option: string) => `Choix enregistré : ${option.toLowerCase()}.`,
+    failed: 'Le choix n’a pas été enregistré.',
+    teamTitle: 'Réussites partagées par votre équipe',
+    teamEmpty: 'Personne de votre équipe n’a encore partagé de réussite.',
+    pageEyebrow: 'Parcours en ligne',
+    pageTitle: 'Réussites',
+    pageIntro:
+      'Les réussites que des collègues ont choisi de publier. Rien n’apparaît ici sans l’accord de chacun.',
+    pageEmpty: 'Aucune réussite publiée pour l’instant.',
+    pageLink: 'Voir les réussites publiées',
+    modules: (done: number, total: number) => `${done} module${done > 1 ? 's' : ''} sur ${total}`,
+    finished: 'Parcours terminé',
+    level: (name: string) => `Niveau ${name}`,
+    badges: 'Badges',
+    noBadge: 'Pas encore de badge',
+    loading: 'Chargement…',
+    loadFailed: 'Les réussites n’ont pas pu être chargées.',
+  },
   /** Données personnelles : page « Mes données » et réglages de conservation. */
   privacy: {
     footerLink: 'Mes données personnelles',
@@ -260,6 +294,7 @@ export const LABELS = {
       'Votre compte : nom, adresse e-mail, rôle, manager, date de dernière connexion.',
       'Votre progression dans les parcours en ligne : activités faites, scores, points, modules terminés.',
       'Vos demandes d’inscription et de session sur mesure, avec leur historique.',
+      'Vos choix de publication des réussites, parcours par parcours.',
     ],
     visibility:
       'Vos résultats des parcours en ligne ne sont visibles que de vous, sauf si vous choisissez de publier une réussite.',

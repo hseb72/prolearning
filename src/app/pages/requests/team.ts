@@ -4,6 +4,8 @@ import type { RegistrationRequestView, TeamRequests } from '@shared/requests';
 import { AuthService } from '../../core/auth';
 import { apiMessage, RequestsService } from '../../core/requests';
 import { LABELS } from '../../labels';
+import { AchievementCard } from '../../learning/achievement-card';
+import type { SharedAchievement } from '@shared/learning';
 import { DecisionForm } from '../../requests/decision';
 import { RequestCard } from '../../requests/request-card';
 import { EmptyState } from '../../ui/empty';
@@ -13,7 +15,7 @@ import { ToastService } from '../../ui/toast';
 /** Manager : validation des demandes d'inscription de son équipe. */
 @Component({
   selector: 'app-team-requests',
-  imports: [DecisionForm, EmptyState, RequestCard, Stat],
+  imports: [AchievementCard, DecisionForm, EmptyState, RequestCard, Stat],
   template: `
     <p class="eyebrow">{{ labels.teamEyebrow }}</p>
     <h1>{{ labels.teamTitle }}</h1>
@@ -60,6 +62,21 @@ import { ToastService } from '../../ui/toast';
         </div>
       </section>
     }
+
+    <section aria-labelledby="shares-heading">
+      <h2 id="shares-heading">{{ shares.teamTitle }}</h2>
+      @if (achievements.error()) {
+        <p class="fb bad" role="alert">{{ shares.loadFailed }}</p>
+      } @else if (achievements.hasValue() && !achievements.value().length) {
+        <app-empty class="card">{{ shares.teamEmpty }}</app-empty>
+      } @else {
+        <div class="grid">
+          @for (a of achievements.value() ?? []; track a.personne + a.formationId) {
+            <app-achievement-card [item]="a" />
+          }
+        </div>
+      }
+    </section>
   `,
   styles: `
     section + section {
@@ -71,6 +88,7 @@ export class TeamRequestsPage {
   private readonly auth = inject(AuthService);
   private readonly service = inject(RequestsService);
   protected readonly labels = LABELS.requests;
+  protected readonly shares = LABELS.shares;
   protected readonly busy = signal(false);
   private readonly toast = inject(ToastService);
 
@@ -78,6 +96,14 @@ export class TeamRequestsPage {
     const me = this.auth.me();
     return me
       ? { url: '/api/demandes/equipe', params: { espace: me.space, compte: me.actor.id } }
+      : undefined;
+  });
+
+  /** Réussites que les collaborateurs ont choisi de montrer (décision 5). */
+  protected readonly achievements = httpResource<SharedAchievement[]>(() => {
+    const me = this.auth.me();
+    return me
+      ? { url: '/api/equipe/reussites', params: { espace: me.space, compte: me.actor.id } }
       : undefined;
   });
 

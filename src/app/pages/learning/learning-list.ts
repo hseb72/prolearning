@@ -20,6 +20,9 @@ import { LearnerProfileCard } from './profile';
     <p class="eyebrow">{{ labels.eyebrow }}</p>
     <h1>{{ labels.listTitle }}</h1>
     <p class="lead">{{ labels.intro }}</p>
+    <p>
+      <a class="link" routerLink="/reussites">{{ shares.pageLink }}</a>
+    </p>
     @if (cards.isLoading() && !cards.hasValue()) {
       <p role="status">{{ labels.loading }}</p>
     } @else if (cards.error()) {
@@ -63,6 +66,7 @@ import { LearnerProfileCard } from './profile';
 export class LearningListPage {
   private readonly auth = inject(AuthService);
   protected readonly labels = LABELS.learning;
+  protected readonly shares = LABELS.shares;
   protected readonly cards = httpResource<FormationCard[]>(() => {
     const me = this.auth.me();
     return me
