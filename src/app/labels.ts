@@ -616,6 +616,8 @@ export const LABELS = {
     noSession: 'Pas de session programmée',
     see: 'Voir la fiche',
     seeLabel: (titre: string) => `Voir la fiche « ${titre} »`,
+    openOnline: 'Ouvrir le parcours',
+    openOnlineLabel: (titre: string) => `Ouvrir le parcours en ligne « ${titre} »`,
     newCourse: 'Nouvelle fiche',
     back: 'Retour au catalogue',
     objectives: 'Objectifs',
@@ -883,7 +885,7 @@ export const LABELS = {
     adminsTag: 'administrateurs',
     demoHeading: 'Espace démonstration',
     prodHeading: 'Espace production',
-    noDemo: 'Aucune formation copiée en démo.',
+    noDemo: 'Aucune formation dans l’espace démonstration.',
     noProd: 'Aucune formation publiée en production.',
     inDemo: 'En démo',
     inProd: 'En production',
@@ -893,7 +895,7 @@ export const LABELS = {
     intro:
       'Importez une formation au format d’échange 3S (fichier .formation.json) dans l’espace d’évaluation, relisez-la dans le lecteur, puis publiez-la en production. Vous pouvez aussi la copier en démonstration pour la montrer.',
     evaluationNote:
-      'L’évaluation est indépendante des espaces production et démonstration : une réinitialisation de la démo n’efface jamais une formation en évaluation.',
+      'L’évaluation est indépendante des espaces production et démonstration : une réinitialisation de la démo n’efface jamais une formation en évaluation. Une version publiée quitte l’évaluation.',
     importHeading: 'Importer une formation',
     file: 'Fichier .formation.json',
     fileHint:
@@ -931,6 +933,7 @@ export const LABELS = {
       by ? `Importée le ${date} par ${by}` : `Importée le ${date}`,
     publishedOn: (date: string) => `Publiée en production le ${date}`,
     copiedOn: (date: string) => `Copiée en démonstration le ${date}`,
+    loadedOn: (date: string) => `Chargée avec le jeu de démonstration le ${date}`,
     review: 'Relire',
     reviewLabel: (titre: string) => `Relire « ${titre} » dans le lecteur`,
     copy: 'Copier en démonstration',
@@ -948,7 +951,7 @@ export const LABELS = {
     publishLabel: (titre: string, version: string) =>
       `Publier « ${titre} », version ${version}, en production`,
     publishConfirm: (titre: string, version: string) =>
-      `Publier « ${titre} », version ${version}, en production ? Les collaborateurs y auront accès.`,
+      `Publier « ${titre} », version ${version}, en production ? Les collaborateurs y auront accès, et la version quittera l’espace d’évaluation.`,
     published: (version: string) => `Version ${version} publiée en production.`,
     publishRefused: (reason: string) => `Publication refusée : ${reason}`,
   },

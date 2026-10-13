@@ -105,7 +105,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 
 ### Choix d'implémentation (étape 2), à confirmer par le porteur du projet
 
-- **Évaluation** (12 octobre 2026) : import, liste, relecture, export, publication et copie en démonstration se font dans « Formations », depuis n'importe quel espace, par un administrateur (compte joué ET personne réelle). Import, publication et copie sont journalisés en **production** (`formation.import`, `formation.publish`, `formation.copy_demo`), journal permanent. La relecture utilise le lecteur en **aperçu** (`/api/evaluation/parcours`) : tout est ouvert et corrigé, rien n'est enregistré. La copie en démo peut remplacer une version déjà copiée ; la publication en production, jamais (§ 11).
+- **Évaluation** (12 octobre 2026) : import, liste, relecture, export, publication et copie en démonstration se font dans « Formations », depuis n'importe quel espace, par un administrateur (compte joué ET personne réelle). Import, publication et copie sont journalisés en **production** (`formation.import`, `formation.publish`, `formation.copy_demo`), journal permanent. La relecture utilise le lecteur en **aperçu** (`/api/evaluation/parcours`) : tout est ouvert et corrigé, rien n'est enregistré. La copie en démo peut remplacer une version déjà copiée ; la publication en production, jamais (§ 11). Une version publiée **quitte l'évaluation** (décidé le 13 octobre 2026, migration `009` pour les publications antérieures) ; les listes « Espace démonstration » et « Espace production » de la page Formations sont lues dans ces bases (`GET /api/formations/espaces`).
 
 - **HTML brut et liens non http(s)** dans le markdown (§ 9) : signalés en **avertissement** à l'import, sans bloquer ni modifier le fichier ; le lecteur les neutralise à l'affichage. Les supprimer à l'import casserait l'aller-retour sans perte et la parité avec le validateur de référence, qui ne les refuse pas.
 - **Archives `.formation.zip`** (images, PDF) : reportées jusqu'à la demande du seau MinIO au socle. Seuls les `.formation.json` s'importent pour l'instant.
@@ -114,6 +114,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 ### Choix d'implémentation (étape 4)
 
 - **Fiche formation** (`pl_courses`) : tenue par l'équipe formation, publiée ou en brouillon. Elle peut renvoyer à un parcours en ligne de l'espace (`formation_id`) ; le catalogue affiche alors le format « en ligne ».
+- Le catalogue montre **toutes les formations** (13 octobre 2026) : un parcours en ligne de l'espace qu'aucune fiche visible ne présente y figure aussi (`parcoursSeul`), avec titre, thème et durée du parcours, et mène directement au parcours. Il compte dans « formations » et « parcours en ligne » ; il n'a ni fiche ni session, et ne se choisit pas dans une demande de session sur mesure.
 - **Sessions** (`pl_course_sessions`) : à distance ou sur site. On les **annule** au lieu de les supprimer. Les collaborateurs ne voient que les sessions à venir et non annulées ; l'équipe formation voit tout.
 - **Places restantes** = capacité − inscriptions confirmées (`pl_session_registrations`, alimentée par les demandes de l'étape 5). La capacité ne descend pas sous les places prises.
 - Dates saisies et affichées à l'**heure de Paris**, quel que soit le poste (`src/app/catalog/dates.ts`).

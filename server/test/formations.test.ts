@@ -201,10 +201,24 @@ describe.skipIf(!databasesAvailable)('évaluation, publication et copie des form
     const published = await publish('0.1.0');
     expect(published.statusCode).toBe(201);
     expect(published.json()).toEqual({ publiee: true, action: 'nouvelle' });
-    expect((await list()).json()[0].versions[0].publishedAt).not.toBeNull();
+    // Publiée, elle quitte l'évaluation et figure dans la liste de la production.
+    expect((await list()).json()).toEqual([]);
+    const spaces = (
+      await app.inject({
+        method: 'GET',
+        url: '/api/formations/espaces',
+        headers: { cookie: admin },
+      })
+    ).json();
+    expect(spaces.production.map((f: { id: string }) => f.id)).toEqual(['togaf10']);
+    expect(spaces.demonstration).toEqual([]);
+    expect((await publish('0.1.0')).statusCode).toBe(404);
+    // Réimportée en évaluation, la même version n'entre pas deux fois en production.
+    await upload(original);
     const again = await publish('0.1.0');
     expect(again.statusCode).toBe(409);
     expect(again.json().refus).toMatch(/existe déjà/);
+    expect((await list()).json()).toHaveLength(1);
 
     const production = await databases.production.query(
       'SELECT origin, imported_by_label, source FROM pl_formation_versions',
@@ -222,6 +236,34 @@ describe.skipIf(!databasesAvailable)('évaluation, publication et copie des form
         details: { id: 'togaf10', version: '0.1.0', action: 'nouvelle' },
       },
     ]);
+  });
+
+  it('retire de l’évaluation les versions publiées avant ce changement (migration 009)', async () => {
+    await upload(original);
+    await upload(withVersion('0.2.0'));
+    await upload(withVersion('0.3.0'));
+    // Avant la migration, une version publiée restait en évaluation, marquée.
+    await databases.evaluation.query(
+      "UPDATE pl_formation_versions SET published_at = now() WHERE version IN ('0.1.0', '0.3.0')",
+    );
+    const sql = readFileSync(
+      join(
+        import.meta.dirname,
+        '..',
+        '..',
+        'db',
+        'migrations',
+        '009_published_leave_evaluation.sql',
+      ),
+      'utf8',
+    );
+    await databases.evaluation.query(sql);
+    const [row] = (await list()).json();
+    expect(row.versionCourante).toBe('0.2.0');
+    expect(row.versions.map((v: { version: string }) => v.version)).toEqual(['0.2.0']);
+    await databases.evaluation.query('UPDATE pl_formation_versions SET published_at = now()');
+    await databases.evaluation.query(sql);
+    expect((await list()).json()).toEqual([]);
   });
 
   it('refuse la publication à un compte joué qui n’est pas administrateur', async () => {
@@ -272,7 +314,8 @@ describe.skipIf(!databasesAvailable)('évaluation, publication et copie des form
     const versions = await databases.evaluation.query(
       'SELECT version FROM pl_formation_versions ORDER BY version',
     );
-    expect(versions.rows.map((r) => r.version)).toEqual(['0.1.0', '0.2.0']);
+    // La 0.1.0, publiée, a quitté l'évaluation ; la 0.2.0 y est arrivée entière.
+    expect(versions.rows.map((r) => r.version)).toEqual(['0.2.0']);
     // La démonstration a son jeu de départ, la production sa version publiée.
     expect(await ids('demo')).toEqual(['kubernetes-fondamentaux', 'togaf10']);
     const demoOrigin = await databases.demo.query(

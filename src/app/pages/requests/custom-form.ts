@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { Component, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import type { CourseCard } from '@shared/catalog';
 import type { CustomModalite } from '@shared/requests';
@@ -20,7 +20,7 @@ import { ToastService } from '../../ui/toast';
         <label class="l" for="custom-course">{{ f.course }}</label>
         <select class="inp" id="custom-course" (change)="pickCourse($any($event.target).value)">
           <option value="">{{ f.noCourse }}</option>
-          @for (c of courses.value() ?? []; track c.id) {
+          @for (c of choices(); track c.id) {
             <option [value]="c.id" [selected]="c.id === courseId()">{{ c.titre }}</option>
           }
         </select>
@@ -135,18 +135,23 @@ export class CustomRequestFormPage {
       : undefined;
   });
 
+  /** Fiches du catalogue : un parcours en ligne sans fiche ne se demande pas en session. */
+  protected readonly choices = computed(() =>
+    (this.courses.value() ?? []).filter((c) => !c.parcoursSeul),
+  );
+
   constructor() {
     // Fiche passée en paramètre : formation présélectionnée, sujet proposé.
     effect(() => {
       const id = this.fiche();
-      const course = this.courses.value()?.find((c) => c.id === id);
+      const course = this.choices().find((c) => c.id === id);
       if (course) untracked(() => this.pickCourse(course.id));
     });
   }
 
   protected pickCourse(id: string): void {
     this.courseId.set(id);
-    const course = this.courses.value()?.find((c) => c.id === id);
+    const course = this.choices().find((c) => c.id === id);
     if (course && !this.sujet().trim()) this.sujet.set(course.titre);
   }
 

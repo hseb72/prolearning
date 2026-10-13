@@ -32,9 +32,18 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   // Le jeu de départ : catalogue fictif, parcours en ligne, demandes en cours.
   await tab(page, 'Catalogue').click();
   await expect(
-    page.getByRole('heading', { level: 3, name: "Architecture d'entreprise avec TOGAF 10" }),
+    page.getByRole('heading', {
+      level: 3,
+      name: "Architecture d'entreprise avec TOGAF 10",
+      exact: true,
+    }),
   ).toBeVisible();
-  await expect(page.locator('app-course-card')).toHaveCount(7);
+  // Les 7 fiches du jeu ; les copies faites par les autres tests s'y ajoutent en parcours seuls.
+  await expect(
+    page
+      .locator('app-course-card')
+      .filter({ has: page.getByRole('link', { name: /^Voir la fiche/ }) }),
+  ).toHaveCount(7);
 
   await play(page, 'David Moreau — Collaborateur');
   await tab(page, 'Mes demandes').click();
@@ -92,6 +101,10 @@ test('l’administrateur présente la démonstration, puis la réinitialise', as
   await expect(banner).toHaveAttribute('data-space', 'production');
   await tab(page, 'Catalogue').click();
   await expect(
-    page.getByRole('heading', { level: 3, name: "Architecture d'entreprise avec TOGAF 10" }),
+    page.getByRole('heading', {
+      level: 3,
+      name: "Architecture d'entreprise avec TOGAF 10",
+      exact: true,
+    }),
   ).toHaveCount(0);
 });

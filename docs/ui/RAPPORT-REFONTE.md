@@ -115,7 +115,7 @@ le stockage MinIO) ; liste « Espace production » en plus.
 | ![](captures/09b-admin-formations-evaluation.png) | ![](rapport/bureau-clair/09b-admin-formations-evaluation.png) |
 
 Restant : actions de la plateforme (Relire, Exporter, Copier en démonstration, Publier en
-production) ; pas de « Retirer » : une version importée reste en évaluation (§ 11 du format).
+production) ; pas de « Retirer » : une version reste en évaluation jusqu’à sa publication, puis la quitte.
 
 ### 10 · Vue d'ensemble d'un parcours (TOGAF 10)
 

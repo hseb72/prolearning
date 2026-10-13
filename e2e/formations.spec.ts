@@ -105,7 +105,18 @@ test.describe('formations', () => {
       .click();
     await confirmDialog(page, 'Publier en production');
     await expect(page.locator('.toast')).toContainText('Version 0.1.0 publiée en production.');
-    await expect(card).toContainText('Publiée en production le');
+    // Publiée, elle quitte l'évaluation et figure dans la liste de la production.
+    await expect(card).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Espace production' })).toContainText(file.titre);
+
+    // Le catalogue de la production la montre, et mène au parcours.
+    await tab(page, 'Catalogue').click();
+    const online = page.locator('app-course-card').filter({ hasText: file.titre });
+    await expect(online).toContainText('En ligne');
+    await online
+      .getByRole('link', { name: `Ouvrir le parcours en ligne « ${file.titre} »` })
+      .click();
+    await expect(page.getByRole('heading', { level: 1, name: file.titre })).toBeVisible();
 
     // Les collaborateurs la trouvent dans les parcours en ligne de la production.
     await tab(page, 'Mon parcours en ligne').click();

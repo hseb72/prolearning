@@ -1,13 +1,14 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import type pg from 'pg';
-import type { DemoCopyResult, PublishResult } from '../../shared/format.js';
+import type { DemoCopyResult, PublishResult, SpaceFormations } from '../../shared/format.js';
 import { audit } from './audit.js';
 import type { Databases } from './databases.js';
 import { requireFormationAdmin, versionParams } from './formation-routes.js';
 import {
   formationSource,
+  listFormations,
   markCopiedToDemo,
-  markPublished,
+  removeVersion,
   storeFormation,
   type StoreDecision,
 } from './format/store.js';
@@ -21,6 +22,7 @@ import { validateFormation } from './format/validate.js';
  * - Publication → production : jamais de remplacement d'une version déjà publiée.
  * - Copie → démonstration : pour montrer la formation ; la copie disparaît à la
  *   réinitialisation de la démo, l'original reste en évaluation.
+ * - Une version publiée quitte l'évaluation.
  */
 export function registerPublicationRoutes(app: FastifyInstance, databases: Databases): void {
   const admin = { preHandler: requireFormationAdmin };
@@ -69,6 +71,12 @@ export function registerPublicationRoutes(app: FastifyInstance, databases: Datab
     return { id: p.data.id, version: p.data.version, decision };
   }
 
+  // Ce que contiennent la démonstration et la production, lu dans leurs propres bases.
+  app.get('/api/formations/espaces', admin, async (): Promise<SpaceFormations> => ({
+    demonstration: await listFormations(databases.demo),
+    production: await listFormations(databases.production),
+  }));
+
   app.post('/api/formations/:id/versions/:version/publication', admin, async (request, reply) => {
     const ctx = request.auth!;
     const done = await transfer(reply, request.params, databases.production, {
@@ -81,7 +89,8 @@ export function registerPublicationRoutes(app: FastifyInstance, databases: Datab
       const result: PublishResult = { publiee: false, refus: done.decision.refus };
       return reply.code(409).send(result);
     }
-    await markPublished(databases.evaluation, done.id, done.version);
+    // Publiée, la version n'a plus rien à faire en évaluation : elle vit en production.
+    await removeVersion(databases.evaluation, done.id, done.version);
     await audit(databases.production, {
       actorId: ctx.user.id,
       actorLabel: ctx.user.email,
