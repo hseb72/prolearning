@@ -62,7 +62,7 @@ test.describe('travaux pratiques (format 1.1)', () => {
     for (const f of tp.fichiers) expect(bytes.includes(Buffer.from(f.nom))).toBe(true);
 
     // La solution est repliée par défaut.
-    await expect(page.locator('details.approfondir').last()).not.toHaveAttribute('open');
+    await expect(page.locator('app-deepen.approfondir details').last()).not.toHaveAttribute('open');
 
     // Vérification : incomplète, puis complète (au clavier).
     await page.getByRole('button', { name: 'J’ai tout vérifié' }).click();

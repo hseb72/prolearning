@@ -1,4 +1,13 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
 import type { PracticeFile } from '@shared/learning';
 import { LABELS } from '../../labels';
 import { copyText, download } from '../clipboard';
@@ -6,6 +15,9 @@ import { LearningService } from '../learning.service';
 import { Md } from '../md';
 import { References } from '../references';
 import { createZip } from '../zip';
+import { Callout } from '../../ui/callout';
+import { Deepen } from '../../ui/deepen';
+import { TpStep } from '../../ui/tp-step';
 import type { ActivityContext, ActivityOf, ActivityProgress } from './activity-context';
 
 /**
@@ -15,65 +27,61 @@ import type { ActivityContext, ActivityOf, ActivityProgress } from './activity-c
  */
 @Component({
   selector: 'app-practice',
-  imports: [Md, References],
+  imports: [Md, References, Callout, Deepen, TpStep],
   template: `
-    <section aria-labelledby="tp-objectif">
-      <h2 id="tp-objectif">{{ labels.objective }}</h2>
+    <app-callout variant="a_retenir" [label]="labels.objective">
       <app-md [text]="activity().objectif" [glossary]="ctx().glossary" />
-    </section>
+    </app-callout>
 
     @if (activity().environnement; as env) {
-      <section aria-labelledby="tp-env">
-        <h2 id="tp-env">{{ labels.environment }}</h2>
+      <app-callout variant="cas" [label]="labels.environment">
         <app-md [text]="env" [glossary]="ctx().glossary" />
-      </section>
+      </app-callout>
     }
 
     @if (activity().fichiers.length) {
       <section aria-labelledby="tp-fichiers">
         <h2 id="tp-fichiers">{{ labels.files }}</h2>
+        <p class="small muted">{{ labels.filesHint }}</p>
+        @for (file of activity().fichiers; track file.nom) {
+          <div class="tp-file">
+            <details class="codef">
+              <summary>
+                {{ file.nom }}
+                @if (file.description) {
+                  <span>{{ file.description }}</span>
+                }
+              </summary>
+              <pre><code>{{ file.contenu }}</code></pre>
+            </details>
+            <div class="bo-acts">
+              <button
+                class="btn ghost small"
+                type="button"
+                [attr.aria-label]="labels.copyFileLabel(file.nom)"
+                (click)="copy(file)"
+              >
+                {{ labels.copyFile }}
+              </button>
+              <button
+                class="btn ghost small"
+                type="button"
+                [attr.aria-label]="labels.downloadFileLabel(file.nom)"
+                (click)="downloadOne(file)"
+              >
+                {{ labels.downloadFile }}
+              </button>
+            </div>
+          </div>
+        }
         <button
-          class="button"
+          class="btn ghost small"
           type="button"
           [attr.aria-label]="labels.downloadAllLabel(activity().fichiers.length)"
           (click)="downloadAll()"
         >
           {{ labels.downloadAll }}
         </button>
-        <ul class="tp-files">
-          @for (file of activity().fichiers; track file.nom) {
-            <li class="tp-file">
-              <h3>
-                <code>{{ file.nom }}</code>
-                @if (file.langage) {
-                  <span class="hint"> · {{ file.langage }}</span>
-                }
-              </h3>
-              @if (file.description) {
-                <p class="hint">{{ file.description }}</p>
-              }
-              <div class="actions">
-                <button
-                  class="button"
-                  type="button"
-                  [attr.aria-label]="labels.copyFileLabel(file.nom)"
-                  (click)="copy(file)"
-                >
-                  {{ labels.copyFile }}
-                </button>
-                <button
-                  class="button"
-                  type="button"
-                  [attr.aria-label]="labels.downloadFileLabel(file.nom)"
-                  (click)="downloadOne(file)"
-                >
-                  {{ labels.downloadFile }}
-                </button>
-              </div>
-              <pre><code>{{ file.contenu }}</code></pre>
-            </li>
-          }
-        </ul>
         <p class="visually-hidden" role="status">{{ announce() }}</p>
       </section>
     }
@@ -82,64 +90,66 @@ import type { ActivityContext, ActivityOf, ActivityProgress } from './activity-c
       <h2 id="tp-etapes">{{ labels.steps }}</h2>
       <ol class="tp-steps">
         @for (step of activity().etapes; track $index) {
-          <li>
-            <h3>{{ labels.step($index + 1, step.titre) }}</h3>
-            <app-md [text]="step.markdown" [glossary]="ctx().glossary" />
-            @if (step.resultat) {
-              <div class="encadre">
-                <p class="encadre-titre">{{ labels.expected }}</p>
-                <app-md [text]="step.resultat" [glossary]="ctx().glossary" />
-              </div>
-            }
-          </li>
+          <li
+            appTpStep
+            [heading]="step.titre"
+            [markdown]="step.markdown"
+            [result]="step.resultat ?? ''"
+            [glossary]="ctx().glossary"
+          ></li>
         }
       </ol>
     </section>
 
+    <form class="tp-check" (submit)="submit($event)">
+      <fieldset>
+        <legend>
+          <h2>{{ labels.check }}</h2>
+        </legend>
+        <p class="small muted">{{ labels.checkHint }}</p>
+        <div class="verif">
+          @for (v of activity().verification; track v.id) {
+            <label [class.on]="checked().has(v.id)">
+              <input
+                type="checkbox"
+                [checked]="checked().has(v.id)"
+                (change)="toggle(v.id, $any($event.target).checked)"
+              />
+              <app-md [text]="v.texte" [inline]="true" [glossary]="ctx().glossary" />
+            </label>
+          }
+        </div>
+      </fieldset>
+      <div aria-live="polite">
+        @if (message(); as m) {
+          <p class="fb" [class.good]="m.ok" [class.bad]="!m.ok">{{ m.text }}</p>
+        }
+      </div>
+      <div class="acts">
+        <span class="small muted">{{
+          labels.checkedCount(checked().size, activity().verification.length)
+        }}</span>
+        <button class="btn" type="submit" [disabled]="busy()">{{ labels.submit }}</button>
+      </div>
+    </form>
+
     @if (activity().solution; as solution) {
-      <details class="approfondir">
-        <summary>{{ solution.titre }}</summary>
+      <app-deepen class="approfondir" [heading]="solution.titre" [tag]="labels.troubleshooting">
         <app-md [text]="solution.markdown" [glossary]="ctx().glossary" />
         @if (solution.references?.length) {
           <app-references [ids]="solution.references!" [all]="ctx().references" />
         }
-      </details>
+      </app-deepen>
     }
 
-    <form class="tp-check" (submit)="submit($event)">
-      <fieldset>
-        <legend>{{ labels.check }}</legend>
-        <p class="hint">{{ labels.checkHint }}</p>
-        @for (v of activity().verification; track v.id) {
-          <div class="option">
-            <input
-              type="checkbox"
-              [id]="'verif-' + v.id"
-              [checked]="checked().has(v.id)"
-              (change)="toggle(v.id, $any($event.target).checked)"
-            />
-            <label [for]="'verif-' + v.id"
-              ><app-md [text]="v.texte" [inline]="true" [glossary]="ctx().glossary"
-            /></label>
-          </div>
-        }
-      </fieldset>
-      <button class="button primary" type="submit" [disabled]="busy()">{{ labels.submit }}</button>
-    </form>
-    <div aria-live="polite">
-      @if (message(); as m) {
-        <p class="message" [class.success]="m.ok" [class.error]="!m.ok">{{ m.text }}</p>
-      }
-    </div>
-
     @if (activity().nettoyage; as cleanup) {
-      <section aria-labelledby="tp-nettoyage">
-        <h2 id="tp-nettoyage">{{ labels.cleanup }}</h2>
+      <app-deepen [heading]="labels.cleanup" [tag]="labels.afterTp">
         <app-md [text]="cleanup" [glossary]="ctx().glossary" />
-      </section>
+      </app-deepen>
     }
 
     @if (activity().references.length) {
+      <p class="eyebrow refs-title">{{ labels.documentation }}</p>
       <app-references [ids]="activity().references" [all]="ctx().references" />
     }
   `,
@@ -158,12 +168,15 @@ export class Practice {
   protected readonly message = signal<{ ok: boolean; text: string } | null>(null);
 
   constructor() {
-    // Déjà terminé : la liste revient cochée.
+    // Déjà terminé : la liste revient cochée. Après une validation, la progression relue
+    // arrive avec le statut « faite » : le message de réussite (et ses points) reste affiché.
     effect(() => {
       const c = this.ctx();
       if (c.state.statut === 'faite') {
         this.checked.set(new Set(this.activity().verification.map((v) => v.id)));
-        this.message.set({ ok: true, text: this.labels.alreadyDone });
+        untracked(() => {
+          if (!this.message()?.ok) this.message.set({ ok: true, text: this.labels.alreadyDone });
+        });
       }
     });
   }

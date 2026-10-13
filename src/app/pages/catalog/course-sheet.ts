@@ -17,6 +17,11 @@ export const FORMAT_KIND: Record<Format, 'online' | 'distance' | 'site'> = {
   site: 'site',
 };
 
+/** Formats dans l'ordre du prototype : en ligne, à distance, sur site. */
+export function orderedFormats(formats: readonly Format[]): Format[] {
+  return (['en-ligne', 'distance', 'site'] as const).filter((f) => formats.includes(f));
+}
+
 /**
  * Contenu de la fiche formation (SPEC-UI, capture 02), affiché dans le dialogue du
  * catalogue : thème, titre, pastilles, objectifs, public, prérequis, durée, prochaines
@@ -40,7 +45,7 @@ export const FORMAT_KIND: Record<Format, 'online' | 'distance' | 'site'> = {
         <p class="eyebrow">{{ c.theme }}</p>
         <h2 id="course-sheet-title">{{ c.titre }}</h2>
         <div class="tags">
-          @for (f of c.formats; track f) {
+          @for (f of formatsOf(c.formats); track f) {
             <app-tag [kind]="kinds[f]">{{ labels.chips[f] }}</app-tag>
           }
           @if (!c.publiee) {
@@ -120,7 +125,7 @@ export const FORMAT_KIND: Record<Format, 'online' | 'distance' | 'site'> = {
       gap: 14px;
     }
     h2 {
-      margin: 0;
+      margin: 12px 0 14px;
     }
     h3 {
       margin: 0 0 8px;
@@ -163,6 +168,7 @@ export class CourseSheet {
   protected readonly labels = LABELS.catalog;
   protected readonly s = LABELS.catalog.sheet;
   protected readonly kinds = FORMAT_KIND;
+  protected readonly formatsOf = orderedFormats;
   protected readonly team = computed(() => this.auth.hasRole('training'));
   protected readonly manager = computed(() => this.auth.hasRole('manager'));
   protected readonly registering = signal(false);

@@ -17,7 +17,8 @@
     "server:dev": "npm --prefix server run dev",
     "server:test": "npm --prefix server test",
     "valider": "node tools/valider-formation.js",
-    "typecheck:e2e": "tsc -p e2e"
+    "typecheck:e2e": "tsc -p e2e",
+    "visual": "playwright test -c playwright.visual.config.ts"
   },
   "dependencies": {
     "@angular/common": "^22.2.0",

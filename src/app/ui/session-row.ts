@@ -53,9 +53,7 @@ export class SessionRow {
 
   protected readonly modes = LABELS.ui.modalities;
   protected readonly day = computed(() => dayFormat.format(new Date(this.start())));
-  protected readonly month = computed(() =>
-    monthFormat.format(new Date(this.start())).replace('.', ''),
-  );
+  protected readonly month = computed(() => monthFormat.format(new Date(this.start())));
   protected readonly fullDate = computed(() => fullFormat.format(new Date(this.start())));
   protected readonly seats = computed(() => LABELS.ui.seats(this.remaining(), this.capacity()));
   protected readonly filled = computed(() => {

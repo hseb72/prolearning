@@ -3,22 +3,24 @@ import { LABELS } from '../../labels';
 import { LearningService } from '../learning.service';
 import type { ActivityContext, ActivityProgress } from './activity-context';
 
-/** « J'ai terminé » : pour les leçons, diaporamas et fiches. */
+/** « J'ai lu, continuer » : pour les leçons, diaporamas et fiches. */
 @Component({
   selector: 'app-complete-button',
   template: `
-    <div class="complete">
-      <button class="button primary" type="button" [disabled]="busy()" (click)="complete()">
+    <div aria-live="polite">
+      @if (error()) {
+        <p class="fb bad" role="alert">{{ labels.failed }}</p>
+      }
+    </div>
+    <div class="acts end">
+      <button class="btn" type="button" [disabled]="busy()" (click)="complete()">
         {{ labels.markDone }}
       </button>
-      @if (error()) {
-        <p class="message error" role="alert">{{ labels.failed }}</p>
-      }
     </div>
   `,
   styles: `
-    .complete {
-      margin-top: var(--space-3);
+    .end {
+      justify-content: flex-end;
     }
   `,
 })

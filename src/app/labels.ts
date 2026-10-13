@@ -160,6 +160,30 @@ export const LABELS = {
     managerOf: (name: string) => `Manager de ${name}`,
   },
   learning: {
+    eyebrow: 'Parcours en ligne',
+    listTitle: 'Mon parcours en ligne',
+    levelEyebrow: 'Niveau',
+    levelLine: (points: number, toNext: number | null) =>
+      `${points} point${points > 1 ? 's' : ''} d’expérience · ${
+        toNext === null ? 'niveau maximal atteint' : `${toNext} avant le niveau suivant`
+      }`,
+    levelProgress: 'Vers le niveau suivant',
+    badgesCount: (n: number, total: number) => `Badges · ${n}/${total}`,
+    stats: {
+      modules: 'modules terminés',
+      points: 'points d’expérience',
+      duration: 'durée estimée',
+    },
+    tileOpen: (activities: number, duration: string) =>
+      `${activities} activité${activities > 1 ? 's' : ''} · ${duration}`,
+    tileLocked: (previous: number) => `Verrouillé · terminez le module ${previous}`,
+    tileDone: 'Terminé · à revoir quand vous voulez',
+    tileLabel: (n: number, titre: string, state: string) => `Module ${n} : ${titre} (${state})`,
+    backLink: 'Retour',
+    versionEyebrow: (theme: string, version: string) => `${theme} · version ${version}`,
+    cardInfo: (done: number, total: number, points: number) =>
+      `${done}/${total} modules · ${points} point${points > 1 ? 's' : ''}`,
+    about: 'À propos de ce parcours',
     title: 'Parcours en ligne',
     intro:
       'Des formations à suivre en autonomie, à votre rythme. Votre progression n’est visible que de vous.',
@@ -198,10 +222,13 @@ export const LABELS = {
     resume: 'Reprendre',
     review: 'Revoir',
     activitiesNav: 'Activités du module',
+    moduleNumber: (n: number) => `Module ${n}`,
+    moduleN: (n: number) => `module ${n}`,
+    pager: 'Activité précédente ou suivante',
     backToFormation: 'Retour au parcours',
     previous: 'Activité précédente',
     next: 'Activité suivante',
-    optional: 'facultative',
+    optional: 'facultatif',
     status: {
       'a-faire': 'À faire',
       faite: 'Faite',
@@ -212,13 +239,13 @@ export const LABELS = {
       lecon: 'Leçon',
       diaporama: 'Diaporama',
       quiz: 'Quiz',
-      ordre: 'Remettre dans l’ordre',
-      association: 'Associer',
-      scenario: 'Cas pratique',
-      fiches: 'Fiches de révision',
+      ordre: 'Exercice',
+      association: 'Exercice',
+      scenario: 'Mise en situation',
+      fiches: 'Fiches',
       pratique: 'Travaux pratiques',
     } as Record<string, string>,
-    markDone: 'J’ai terminé',
+    markDone: 'J’ai lu, continuer',
     marked: 'Activité terminée.',
     earned: (n: number) => `+${n} points`,
     moduleCompleted: 'Bravo, module terminé ! Le suivant est débloqué.',
@@ -233,6 +260,8 @@ export const LABELS = {
       definition: 'Définition',
     } as Record<string, string>,
     goFurther: 'Approfondir',
+    goFurtherRefs: 'Pour aller plus loin',
+    text: 'Texte',
     references: 'Références',
     access: {
       libre: 'accès libre',
@@ -251,15 +280,23 @@ export const LABELS = {
     quizIntro: (n: number, seuil: number) =>
       `${n} question${n > 1 ? 's' : ''}. Réussite à partir de ${Math.round(seuil * 100)} % de bonnes réponses.`,
     quizStart: 'Commencer le quiz',
-    quizRetry: 'Recommencer le quiz',
+    quizRetry: 'Retenter',
     quizSubmit: 'Valider mes réponses',
+    questionShort: (n: number, total: number) => `Question ${n} / ${total}`,
+    multipleShort: 'Plusieurs réponses',
+    nextQuestion: 'Question suivante',
+    previousQuestion: 'Question précédente',
+    xpEarned: (n: number) => `+${n} points d’expérience`,
+    threshold: (needed: number, total: number) =>
+      `Seuil de réussite : ${needed} bonne${needed > 1 ? 's' : ''} réponse${needed > 1 ? 's' : ''} sur ${total}.`,
+    corrections: 'Corrections',
     question: (n: number, total: number) => `Question ${n} sur ${total}`,
     hint: 'Indice',
     multiple: 'Plusieurs réponses possibles.',
     quizResult: (ok: number, total: number) =>
       `${ok} bonne${ok > 1 ? 's' : ''} réponse${ok > 1 ? 's' : ''} sur ${total}.`,
     quizPassed: 'Quiz réussi.',
-    quizFailed: 'Quiz non réussi : relisez les explications et recommencez.',
+    quizFailed: 'Encore un effort',
     correct: 'Bonne réponse',
     incorrect: 'Réponse incorrecte',
     expected: 'Réponse attendue :',
@@ -271,17 +308,25 @@ export const LABELS = {
     retry: 'Réessayer',
     orderRight: 'Bon ordre !',
     orderWrong: 'Pas tout à fait. Voici l’ordre attendu :',
+    orderHint: 'Glissez les étiquettes ou utilisez les flèches, puis vérifiez.',
+    orderScore: (n: number, total: number) => `${n}/${total} bien placés`,
+    orderFix: 'Corrigez les étiquettes en rouge et vérifiez à nouveau.',
     // Association
     choose: 'Choisir…',
     matchFor: (gauche: string) => `Associer « ${gauche} »`,
     matchRight: 'Toutes les associations sont justes !',
     matchWrong: 'Certaines associations sont à revoir. Les bonnes réponses :',
+    matchScore: (n: number, total: number) =>
+      `${n}/${total} bonne${n > 1 ? 's' : ''} association${n > 1 ? 's' : ''}`,
+    matchFix: 'Corrigez les lignes en rouge.',
     // Cas pratique
     scenarioStart: 'Commencer le cas pratique',
     scenarioRestart: 'Rejouer le cas pratique',
     yourChoice: 'Votre choix',
     feedback: 'Retour',
     stars: (n: number) => `${n} étoile${n > 1 ? 's' : ''} sur 3`,
+    decision: (n: number) => `Décision ${n}`,
+    nextStep: 'Suite',
     // Blocs de code
     copy: 'Copier',
     copyCode: 'Copier le code',
@@ -291,7 +336,13 @@ export const LABELS = {
     // Travaux pratiques
     practice: {
       objective: 'Objectif',
-      environment: 'Avant de commencer',
+      environment: 'Point de départ',
+      filesHint:
+        'Enregistrez chaque fichier sous son nom dans votre dossier de travail, avec l’arborescence indiquée.',
+      troubleshooting: 'Dépannage',
+      afterTp: 'Après le TP',
+      documentation: 'Documentation',
+      checkedCount: (n: number, total: number) => `${n}/${total} points vérifiés`,
       files: 'Fichiers fournis',
       downloadAll: 'Télécharger tous les fichiers (.zip)',
       downloadAllLabel: (n: number) =>
@@ -306,16 +357,20 @@ export const LABELS = {
       expected: 'Résultat attendu',
       check: 'Vérifiez votre travail',
       checkHint:
-        'Cochez chaque point une fois vérifié sur votre poste. La plateforme n’exécute rien.',
+        'Cochez chaque point quand vous l’avez constaté sur votre poste. La plateforme n’exécute rien.',
       submit: 'J’ai tout vérifié',
       incomplete: (n: number) =>
         n === 1 ? 'Il reste 1 point à vérifier.' : `Il reste ${n} points à vérifier.`,
       done: 'Travaux pratiques terminés.',
       alreadyDone: 'Vous avez déjà terminé ces travaux pratiques.',
-      cleanup: 'Remettre votre environnement en état',
+      cleanup: 'Nettoyage',
     },
     // Fiches
     card: (n: number, total: number) => `Fiche ${n} sur ${total}`,
+    cardsHint: 'Cliquez sur une carte pour la retourner.',
+    cardLabel: (n: number, side: string) => `Fiche ${n}, ${side} : retourner`,
+    question_: 'Question',
+    answer_: 'Réponse',
     previousCard: 'Fiche précédente',
     nextCard: 'Fiche suivante',
     flip: 'Retourner la fiche',

@@ -77,7 +77,7 @@ test.describe('formations', () => {
       .getByRole('link', { name: /^Commencer/ })
       .first()
       .click();
-    await page.getByRole('button', { name: 'J’ai terminé' }).click();
+    await page.getByRole('button', { name: 'J’ai lu, continuer' }).click();
     await expect(
       page.getByRole('navigation', { name: 'Activités du module' }).getByRole('link').first(),
     ).toContainText('(À faire)');
@@ -109,10 +109,10 @@ test.describe('formations', () => {
 
     // Les collaborateurs la trouvent dans les parcours en ligne de la production.
     await tab(page, 'Mon parcours en ligne').click();
-    await expect(page.getByRole('heading', { level: 2, name: file.titre })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: file.titre })).toBeVisible();
     // Et la démonstration a sa copie.
     await page.getByRole('button', { name: 'Passer en démonstration' }).click();
     await tab(page, 'Mon parcours en ligne').click();
-    await expect(page.getByRole('heading', { level: 2, name: file.titre })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: file.titre })).toBeVisible();
   });
 });

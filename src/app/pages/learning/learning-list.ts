@@ -1,63 +1,64 @@
 import { httpResource } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { FormationCard } from '@shared/learning';
 import { AuthService } from '../../core/auth';
 import { LABELS } from '../../labels';
-import { Md } from '../../learning/md';
+import { CourseCard } from '../../ui/course-card';
+import { EmptyState } from '../../ui/empty';
+import { Tag } from '../../ui/tag';
 import { LearnerProfileCard } from './profile';
 
-/** Parcours en ligne publiés dans l'espace, avec la progression de l'apprenant. */
+/**
+ * « Mon parcours en ligne » (SPEC-UI, capture 10) : carte de niveau et badges, puis les
+ * parcours publiés dans l'espace, avec la progression de l'apprenant.
+ */
 @Component({
   selector: 'app-learning-list',
-  imports: [RouterLink, Md, LearnerProfileCard],
+  imports: [RouterLink, CourseCard, EmptyState, Tag, LearnerProfileCard],
   template: `
-    <h1>{{ labels.title }}</h1>
-    <p>{{ labels.intro }}</p>
-    <app-learner-profile />
+    <p class="eyebrow">{{ labels.eyebrow }}</p>
+    <h1>{{ labels.listTitle }}</h1>
+    <p class="lead">{{ labels.intro }}</p>
     @if (cards.isLoading() && !cards.hasValue()) {
       <p role="status">{{ labels.loading }}</p>
     } @else if (cards.error()) {
-      <p class="message error" role="alert">{{ labels.loadFailed }}</p>
-    } @else if (!cards.value()?.length) {
-      <p>{{ labels.empty }}</p>
+      <p class="fb bad" role="alert">{{ labels.loadFailed }}</p>
     } @else {
-      <ul class="cards">
-        @for (card of cards.value(); track card.id) {
-          <li class="card">
-            <h2>{{ card.titre }}</h2>
-            @if (card.sousTitre) {
-              <p class="subtitle">{{ card.sousTitre }}</p>
-            }
-            <p class="hint">
-              {{ card.theme }} · {{ labels.duration(card.dureeEstimeeMinutes) }}
-              @if (card.niveau) {
-                · {{ labels.levels[card.niveau] }}
-              }
-            </p>
-            <app-md [text]="card.resume" />
-            <p>
-              <progress
-                [max]="card.modulesTotal"
-                [value]="card.modulesTermines"
-                aria-hidden="true"
-              ></progress>
-              {{ labels.modules(card.modulesTermines, card.modulesTotal) }} ·
-              {{ labels.points(card.points) }}
-            </p>
-            <a
-              class="button primary"
-              [routerLink]="['/parcours', card.id]"
-              [attr.aria-label]="labels.openLabel(card.titre)"
-            >
-              {{ labels.open }}
-            </a>
-          </li>
+      <app-learner-profile [done]="done()" [total]="total()">
+        @if (next(); as n) {
+          <a class="btn" [routerLink]="['/parcours', n.id]">
+            {{ n.modulesTermines ? labels.resume : labels.start }} : {{ n.titre }}
+          </a>
         }
-      </ul>
+      </app-learner-profile>
+      @if (!cards.value()?.length) {
+        <app-empty class="card">{{ labels.empty }}</app-empty>
+      } @else {
+        <div class="grid">
+          @for (card of cards.value(); track card.id) {
+            <app-course-card
+              [theme]="card.theme"
+              [heading]="card.titre"
+              [modes]="['online']"
+              [duration]="labels.duration(card.dureeEstimeeMinutes)"
+              [info]="labels.cardInfo(card.modulesTermines, card.modulesTotal, card.points)"
+            >
+              @if (card.niveau) {
+                <app-tag>{{ labels.levels[card.niveau] }}</app-tag>
+              }
+              <a
+                class="btn small"
+                [routerLink]="['/parcours', card.id]"
+                [attr.aria-label]="labels.openLabel(card.titre)"
+                >{{ labels.open }}</a
+              >
+            </app-course-card>
+          }
+        </div>
+      }
     }
   `,
-  styleUrl: './learning.scss',
 })
 export class LearningListPage {
   private readonly auth = inject(AuthService);
@@ -67,5 +68,17 @@ export class LearningListPage {
     return me
       ? { url: '/api/parcours', params: { espace: me.space, compte: me.actor.id } }
       : undefined;
+  });
+  protected readonly done = computed(() =>
+    (this.cards.value() ?? []).reduce((n, c) => n + c.modulesTermines, 0),
+  );
+  protected readonly total = computed(() =>
+    (this.cards.value() ?? []).reduce((n, c) => n + c.modulesTotal, 0),
+  );
+  /** Parcours à poursuivre : le premier commencé et non fini, sinon le premier non fini. */
+  protected readonly next = computed(() => {
+    const cards = this.cards.value() ?? [];
+    const open = cards.filter((c) => c.modulesTermines < c.modulesTotal);
+    return open.find((c) => c.modulesTermines > 0 || c.points > 0) ?? open[0] ?? null;
   });
 }

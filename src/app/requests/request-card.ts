@@ -50,8 +50,11 @@ export type AnyRequest =
     .eyebrow.muted {
       color: var(--muted);
     }
+    .req > span {
+      line-height: 1;
+    }
     dl {
-      margin: 0;
+      margin: 12px 0 0;
     }
   `,
 })

@@ -139,6 +139,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 - Statuts affichés comme dans le prototype, validation manager conservée : « Envoyée · Validation manager · Décision ». Pas de liste d'attente.
 - Ni `alert()` ni `confirm()` : dialogue natif et toast. La réinitialisation de la démo est dans Administration › Formations.
 - Pas de script en ligne (CSP `script-src 'self'`) : CSS critique non mis en ligne au build.
+- Comparaison visuelle : `npm run visual` (`playwright.visual.config.ts`, `e2e/visual/`) capture chaque écran à 1280×900 et 390×844, en clair et en sombre, et les met côte à côte avec les captures du prototype. Écarts assumés et rapport final : `docs/ui/RAPPORT-REFONTE.md`.
 
 ### Choix d'implémentation (étape 6)
 
@@ -183,6 +184,7 @@ Vérifications (les mêmes qu'en CI) :
 npm run format:check && npm test && npm run build && npm run typecheck:e2e
 (cd server && npm run typecheck && npm test)   # TEST_DATABASE_URL_PRODUCTION / _DEMO / _EVALUATION
 npm run e2e                   # E2E_DATABASE_URL_PRODUCTION / _DEMO / _EVALUATION ; PLAYWRIGHT_CHROMIUM_PATH facultatif
+npm run visual                # comparaison avec docs/ui/captures/ → visual-report/index.html (hors CI)
 npm run valider -- fixtures/formations/kubernetes-fondamentaux.formation.json   # et les autres formations exemples
 ```
 

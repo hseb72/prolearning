@@ -1,63 +1,73 @@
 @if (data.isLoading() && !data.hasValue()) {
   <p role="status">{{ labels.loading }}</p>
 } @else if (data.error() || !current()) {
-  <p class="message error" role="alert">{{ labels.loadFailed }}</p>
+  <p class="fb bad" role="alert">{{ labels.loadFailed }}</p>
 } @else if (current(); as c) {
   @if (mode.preview) {
-    <p class="message" role="note">{{ formations.previewBanner }}</p>
+    <p class="fb" role="note">{{ formations.previewBanner }}</p>
   }
-  <p>
+  <p class="crumbs">
     <a [routerLink]="[mode.route, c.formation.id]"
-      >{{ labels.backToFormation }} : {{ c.formation.titre }}</a
+      >← {{ labels.backLink
+      }}<span class="visually-hidden">
+        : {{ labels.backToFormation }} {{ c.formation.titre }}</span
+      ></a
     >
+    <span class="muted">/ {{ c.formation.titre }} / {{ c.module.titre }}</span>
   </p>
-  <div class="reader">
-    <nav class="reader-nav" [attr.aria-label]="labels.activitiesNav">
-      <p class="module-title">{{ c.module.titre }}</p>
-      <ol>
-        @for (a of c.module.activites; track a.id) {
-          @let s = c.states[a.id]?.statut ?? 'a-faire';
-          <li>
-            <a
-              [routerLink]="[mode.route, c.formation.id, c.module.id, a.id]"
-              [attr.aria-current]="a.id === c.ctx.activity.id ? 'page' : null"
-              [class.active]="a.id === c.ctx.activity.id"
-            >
-              <span class="status-dot" [attr.data-status]="s" aria-hidden="true"></span>
-              {{ a.titre }}
-              <span class="hint">({{ labels.status[s] }})</span>
-            </a>
-          </li>
-        }
-      </ol>
+  <div class="player">
+    <nav class="card toc" [attr.aria-label]="labels.activitiesNav">
+      <div class="tt">{{ labels.moduleNumber(c.moduleIndex + 1) }}</div>
+      @for (a of c.module.activites; track a.id) {
+        @let s = c.states[a.id]?.statut ?? 'a-faire';
+        @let done = s === 'faite' || s === 'reussie';
+        <a
+          [routerLink]="[mode.route, c.formation.id, c.module.id, a.id]"
+          [attr.aria-current]="a.id === c.ctx.activity.id ? 'step' : null"
+        >
+          <span class="ck" [class.on]="done" [class.ko]="s === 'echouee'" aria-hidden="true">{{
+            done ? '✓' : ''
+          }}</span>
+          <span
+            >{{ a.titre }}
+            @if (!a.obligatoire) {
+              <span class="muted small">({{ labels.optional }})</span>
+            }
+            <span class="visually-hidden">({{ labels.status[s] }})</span></span
+          >
+        </a>
+      }
     </nav>
 
-    <article class="reader-main" [attr.aria-labelledby]="'activity-title'">
-      <p class="hint">
+    <article class="card act" aria-labelledby="activity-title">
+      <p class="eyebrow">
         {{ labels.types[c.ctx.activity.type] }}
-        @if (!c.ctx.activity.obligatoire) {
-          · {{ labels.optional }}
+        @if (c.ctx.activity.dureeEstimeeMinutes) {
+          · {{ c.ctx.activity.dureeEstimeeMinutes }} min
         }
-        · {{ labels.status[c.ctx.state.statut] }}
         @if (c.ctx.state.points) {
           · {{ labels.points(c.ctx.state.points) }}
         }
       </p>
       <h1 id="activity-title">{{ c.ctx.activity.titre }}</h1>
 
-      @if (notice(); as n) {
-        <p class="message success" role="status">{{ n }}</p>
-      }
+      <div aria-live="polite">
+        @if (notice(); as n) {
+          <p class="fb good" role="status">
+            <strong>{{ n }}</strong>
+          </p>
+        }
+      </div>
 
       @if (!c.unlocked) {
-        <p class="message">{{ labels.lockedMessage }}</p>
+        <p class="fb">{{ labels.lockedMessage }}</p>
       } @else {
         @switch (c.ctx.activity.type) {
           @case ('lecon') {
-            <app-lesson [ctx]="c.ctx" (progressed)="onProgress($event)" />
+            <app-lesson [ctx]="c.ctx" (progressed)="onProgress($event, true)" />
           }
           @case ('diaporama') {
-            <app-slides [ctx]="c.ctx" (progressed)="onProgress($event)" />
+            <app-slides [ctx]="c.ctx" (progressed)="onProgress($event, true)" />
           }
           @case ('quiz') {
             <app-quiz [ctx]="c.ctx" (progressed)="onProgress($event)" />
@@ -75,23 +85,29 @@
             <app-practice [ctx]="c.ctx" (progressed)="onProgress($event)" />
           }
           @case ('fiches') {
-            <app-cards [ctx]="c.ctx" (progressed)="onProgress($event)" />
+            <app-cards [ctx]="c.ctx" (progressed)="onProgress($event, true)" />
           }
         }
       }
 
-      <div class="pager">
+      <nav class="pager" [attr.aria-label]="labels.pager">
         @if (c.previous) {
-          <a class="button" [routerLink]="[mode.route, c.formation.id, c.module.id, c.previous]">{{
-            labels.previous
-          }}</a>
+          <a
+            class="btn ghost small"
+            [routerLink]="[mode.route, c.formation.id, c.module.id, c.previous]"
+            >{{ labels.previous }}</a
+          >
+        } @else {
+          <span></span>
         }
         @if (c.next) {
-          <a class="button" [routerLink]="[mode.route, c.formation.id, c.module.id, c.next]">{{
-            labels.next
-          }}</a>
+          <a
+            class="btn ghost small"
+            [routerLink]="[mode.route, c.formation.id, c.module.id, c.next]"
+            >{{ labels.next }}</a
+          >
         }
-      </div>
+      </nav>
     </article>
   </div>
 }

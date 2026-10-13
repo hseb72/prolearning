@@ -68,26 +68,31 @@ test.describe('parcours en ligne', () => {
 
     await login(page, uniqueEmail('apprenant', info));
     await tab(page, 'Mon parcours en ligne').click();
-    await expect(page.getByRole('heading', { level: 1, name: 'Parcours en ligne' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Mon parcours en ligne' }),
+    ).toBeVisible();
     await expect(page.getByText('Pas encore de badge')).toBeVisible();
     await page.getByRole('link', { name: `Ouvrir le parcours « ${formation.titre} »` }).click();
     await expect(page.getByRole('heading', { level: 1, name: formation.titre })).toBeVisible();
-    await expect(page.getByText('0 module terminé sur 1')).toBeVisible();
+    await expect(page.locator('app-stat').first()).toContainText('0/1');
     await expectNoHorizontalOverflow(page);
     await page.getByRole('link', { name: `Commencer : ${module.titre}` }).click();
 
     for (const activity of module.activites) {
       await expect(page.getByRole('heading', { level: 1, name: activity.titre })).toBeVisible();
       await expectNoHorizontalOverflow(page);
+      // « J'ai lu, continuer » passe lui-même à l'activité suivante.
+      let advanced = false;
 
       switch (activity.type) {
         case 'lecon': {
           // Les blocs « Approfondir » sont repliés par défaut.
-          for (const details of await page.locator('article details.approfondir').all()) {
+          for (const details of await page.locator('article app-deepen details').all()) {
             await expect(details).not.toHaveAttribute('open');
           }
-          await page.getByRole('button', { name: 'J’ai terminé' }).click();
+          await page.getByRole('button', { name: 'J’ai lu, continuer' }).click();
           await expectStatus(page, activity.titre, 'Faite');
+          advanced = activity !== module.activites.at(-1);
           break;
         }
         case 'association': {
@@ -107,6 +112,7 @@ test.describe('parcours en ligne', () => {
           await page.keyboard.press('Enter');
           await page.getByRole('button', { name: /Clarifier avec lui/ }).click();
           await expect(page.getByText('Bon réflexe : partir de la vision métier.')).toBeVisible();
+          await page.getByRole('button', { name: 'Suite', exact: true }).click();
           await page.getByRole('button', { name: /La vente en magasin et en ligne/ }).focus();
           await page.keyboard.press('Enter');
           await expect(page.getByText('3 étoiles sur 3').first()).toBeVisible();
@@ -118,17 +124,23 @@ test.describe('parcours en ligne', () => {
           expect(activity.obligatoire).toBe(false);
           break;
         case 'quiz': {
+          // Une question à la fois ; toutes les réponses partent ensemble à la fin.
           await page.getByRole('button', { name: 'Commencer le quiz' }).click();
-          const asked = page.locator('fieldset.question');
-          await expect(asked).toHaveCount(5);
-          for (const fieldset of await asked.all()) {
+          for (let n = 1; n <= 5; n++) {
+            const fieldset = page.locator('fieldset.question');
+            await expect(page.getByText(`Question ${n} / 5`)).toBeVisible();
             const id = (await fieldset.getAttribute('data-question'))!;
             const question = activity.questions!.find((q) => q.id === id)!;
             for (const bonne of question.bonnes) {
-              await fieldset.locator(`input[value="${bonne}"]`).check();
+              await fieldset
+                .locator('label')
+                .filter({ has: page.locator(`input[value="${bonne}"]`) })
+                .click();
             }
+            await page
+              .getByRole('button', { name: n < 5 ? 'Question suivante' : 'Valider mes réponses' })
+              .click();
           }
-          await page.getByRole('button', { name: 'Valider mes réponses' }).click();
           await expect(page.getByText('Quiz réussi.')).toBeVisible();
           await expect(page.getByText('5 bonnes réponses sur 5.')).toBeVisible();
           await expect(page.getByText('Bravo, module terminé !')).toBeVisible();
@@ -139,20 +151,27 @@ test.describe('parcours en ligne', () => {
           throw new Error(`Type d'activité non prévu par le test : ${activity.type}`);
       }
       await expectNoHorizontalOverflow(page);
-      if (activity !== module.activites.at(-1)) await next(page);
+      if (activity !== module.activites.at(-1) && !advanced) await next(page);
     }
 
     // Retour au parcours : module terminé, points, niveau et badges.
     await page.getByRole('link', { name: /Retour au parcours/ }).click();
-    await expect(page.getByText('1 module terminé sur 1')).toBeVisible();
+    await expect(page.locator('app-stat').first()).toContainText('1/1');
     await expect(page.getByRole('link', { name: `Revoir : ${module.titre}` })).toBeVisible();
     const profile = page.getByRole('region', { name: 'Votre progression' });
-    await expect(profile).toContainText('Niveau 2 — Initié');
-    await expect(profile).toContainText('240 points');
-    for (const badge of ['Premier pas', 'Module accompli', 'Sans faute', 'Stratège']) {
-      await expect(profile.getByText(badge, { exact: true })).toBeVisible();
+    await expect(profile.locator('.lvl')).toHaveText('Initié');
+    await expect(profile).toContainText('240 points d’expérience');
+    for (const badge of [
+      'Premier pas',
+      'Module accompli',
+      'Sans faute',
+      'Stratège',
+      'Parcours terminé',
+    ]) {
+      await expect(profile.locator('app-badge:not(.off)').filter({ hasText: badge })).toHaveCount(
+        1,
+      );
     }
-    await expect(profile.getByText('Parcours terminé', { exact: true })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });
