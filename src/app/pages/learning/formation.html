@@ -34,6 +34,19 @@
   </div>
   <p class="visually-hidden">{{ labels.modules(modulesDone(), d.formation.modules.length) }}</p>
 
+  @if (!mode.preview) {
+    <app-learner-profile [done]="modulesDone()" [total]="d.formation.modules.length">
+      @if (nextModule(); as n) {
+        <a
+          class="btn"
+          [routerLink]="[mode.route, d.formation.id, n.module.id, resumeActivity(n.module)]"
+        >
+          {{ started(n.module) ? labels.resume : labels.start }} : {{ labels.moduleN(n.index + 1) }}
+        </a>
+      }
+    </app-learner-profile>
+  }
+
   <section aria-labelledby="modules-heading">
     <h2 id="modules-heading" class="visually-hidden">{{ labels.modulesHeading }}</h2>
     <div class="map">
@@ -74,10 +87,6 @@
       }
     </div>
   </section>
-
-  @if (!mode.preview) {
-    <app-learner-profile [done]="modulesDone()" [total]="d.formation.modules.length" />
-  }
 
   <details class="card about">
     <summary>{{ labels.about }}</summary>

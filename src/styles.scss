@@ -459,6 +459,10 @@ summary:focus-visible,
   padding: 8px 12px;
 }
 
+select.search {
+  flex: 0 1 220px;
+}
+
 .tags {
   display: flex;
   gap: 6px;
@@ -809,6 +813,12 @@ dialog {
   padding: 0;
   width: min(560px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
+
+  // Le navigateur donne le focus au dialogue lui-même à l'ouverture : pas d'anneau autour
+  // de toute la boîte, le focus suivant (Tab) arrive sur ses contrôles.
+  &:focus-visible {
+    outline: none;
+  }
 
   &::backdrop {
     background: rgba(10, 18, 38, 0.55);
@@ -1557,6 +1567,7 @@ h2.corrections {
     width: 100%;
     margin: 8px 0 14px;
     font-size: 14px;
+    line-height: 1.35;
     display: block;
     overflow-x: auto;
   }

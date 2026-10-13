@@ -1,6 +1,11 @@
 .import {
-  display: grid;
-  gap: 12px;
+  // Bloc et non grille : la zone d'annonces, souvent vide, ne doit pas ajouter d'écart.
+  display: block;
+
+  .fb,
+  .small {
+    margin: 12px 0 0;
+  }
 }
 
 .space {

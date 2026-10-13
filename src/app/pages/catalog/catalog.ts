@@ -10,7 +10,7 @@ import { EmptyState } from '../../ui/empty';
 import { FilterChips } from '../../ui/filter-chips';
 import { Stat } from '../../ui/stat';
 import { Tag } from '../../ui/tag';
-import { CourseSheet, FORMAT_KIND } from './course-sheet';
+import { CourseSheet, FORMAT_KIND, orderedFormats } from './course-sheet';
 
 const normalize = (s: string) =>
   s
@@ -155,7 +155,7 @@ export class CatalogPage {
   });
 
   protected modes(c: Course): ('online' | 'distance' | 'site')[] {
-    return c.formats.map((f) => FORMAT_KIND[f]);
+    return orderedFormats(c.formats).map((f) => FORMAT_KIND[f]);
   }
 
   protected sessionsOf(courseId: string): number {

@@ -74,6 +74,16 @@ export class LearningFormationPage {
     return p ? Object.values(p.modules).filter((m) => m.termine).length : 0;
   });
 
+  /** Prochain module à suivre (le premier ouvert et pas terminé), pour le bouton du profil. */
+  protected readonly nextModule = computed(() => {
+    const d = this.data.value();
+    if (!d) return null;
+    const index = d.formation.modules.findIndex(
+      (m) => !d.progression.modules[m.id]!.termine && d.progression.modules[m.id]!.debloque,
+    );
+    return index < 0 ? null : { module: d.formation.modules[index]!, index };
+  });
+
   /** État de la tuile : terminé, prochain à suivre, ouvert, ou verrouillé. */
   protected tileState(module: LearnerModule, index: number): TileState {
     const d = this.data.value()!;

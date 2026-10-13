@@ -319,8 +319,9 @@ export const SCENARIOS: Scenario[] = [
       await page.getByRole('button', { name: 'Commencer le quiz' }).click();
       const options = page.locator('fieldset.question label');
       await expect(options.first()).toBeVisible();
+      // Questions tirées au hasard : un vrai/faux n'a que deux réponses.
       await options.nth(0).click();
-      await options.nth(2).click();
+      if ((await options.count()) > 2) await options.nth(2).click();
     },
   },
   {

@@ -223,11 +223,12 @@ export const LABELS = {
     review: 'Revoir',
     activitiesNav: 'Activités du module',
     moduleNumber: (n: number) => `Module ${n}`,
+    moduleN: (n: number) => `module ${n}`,
     pager: 'Activité précédente ou suivante',
     backToFormation: 'Retour au parcours',
     previous: 'Activité précédente',
     next: 'Activité suivante',
-    optional: 'facultative',
+    optional: 'facultatif',
     status: {
       'a-faire': 'À faire',
       faite: 'Faite',
@@ -279,7 +280,7 @@ export const LABELS = {
     quizIntro: (n: number, seuil: number) =>
       `${n} question${n > 1 ? 's' : ''}. Réussite à partir de ${Math.round(seuil * 100)} % de bonnes réponses.`,
     quizStart: 'Commencer le quiz',
-    quizRetry: 'Recommencer le quiz',
+    quizRetry: 'Retenter',
     quizSubmit: 'Valider mes réponses',
     questionShort: (n: number, total: number) => `Question ${n} / ${total}`,
     multipleShort: 'Plusieurs réponses',
