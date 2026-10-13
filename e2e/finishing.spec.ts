@@ -12,10 +12,9 @@ test.describe('finitions', () => {
       .getByRole('group', { name: 'Type d’action' })
       .getByRole('button', { name: 'Connexions', exact: true })
       .click();
+    // La liste filtrée remplace la précédente : on attend qu'il ne reste que des connexions.
     await expect(rows.first().getByRole('rowheader')).toHaveText('Connexion');
-    for (const header of await rows.getByRole('rowheader').allTextContents()) {
-      expect(header).toBe('Connexion');
-    }
+    await expect(rows.getByRole('rowheader').filter({ hasNotText: /^Connexion$/ })).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
 

@@ -131,6 +131,8 @@ export class JournalPage {
     if (this.family() !== 'all') params['famille'] = this.family();
     if (!reset && this.next() !== null) params['avant'] = String(this.next());
     const request = ++this.request;
+    // Nouveau filtre : on n'affiche pas l'ancienne liste pendant la lecture de la nouvelle.
+    if (reset) this.entries.set([]);
     this.loading.set(true);
     this.error.set(false);
     try {
