@@ -22,6 +22,8 @@ export const AUDIT_FAMILIES = [
   'user',
   'space',
   'demo',
+  'settings',
+  'privacy',
   'login',
   'logout',
 ] as const;

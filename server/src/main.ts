@@ -5,6 +5,8 @@ import { loadConfig } from './config.js';
 import { closeDatabases, createDatabases } from './databases.js';
 import { loadDemo } from './demo.js';
 import { migrateAll } from './migrate.js';
+import { audit } from './audit.js';
+import { purgeExpiredData } from './privacy.js';
 
 const config = loadConfig();
 const databases = createDatabases(config);
@@ -49,9 +51,37 @@ const purge = setInterval(
 );
 purge.unref();
 
+// Durées de conservation (données personnelles) : chaque espace applique ses propres
+// réglages, une fois par jour et au démarrage. L'évaluation n'a ni comptes ni demandes.
+async function purgePersonalData(): Promise<void> {
+  for (const [space, db] of [
+    ['production', databases.production],
+    ['demo', databases.demo],
+  ] as const) {
+    try {
+      const done = await purgeExpiredData(db);
+      if (done.inscriptions || done.surMesure || done.journal) {
+        await audit(db, {
+          actorId: null,
+          actorLabel: null,
+          action: 'privacy.purge',
+          details: { ...done },
+        });
+        app.log.info({ space, ...done }, 'Données arrivées à échéance supprimées');
+      }
+    } catch (err) {
+      app.log.warn({ err, space }, 'Purge des données personnelles en échec');
+    }
+  }
+}
+const retention = setInterval(() => void purgePersonalData(), 24 * 3600_000);
+retention.unref();
+void purgePersonalData();
+
 async function shutdown(signal: string): Promise<void> {
   app.log.info(`${signal} reçu : arrêt en cours`);
   clearInterval(purge);
+  clearInterval(retention);
   await app.close();
   await closeDatabases(databases);
   process.exit(0);

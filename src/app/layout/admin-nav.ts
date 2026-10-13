@@ -33,6 +33,13 @@ import { LABELS } from '../labels';
         >
         <a
           class="chipbtn"
+          routerLink="/administration/donnees"
+          routerLinkActive
+          ariaCurrentWhenActive="page"
+          >{{ labels.privacy }}</a
+        >
+        <a
+          class="chipbtn"
           routerLink="/administration/journal"
           routerLinkActive
           ariaCurrentWhenActive="page"

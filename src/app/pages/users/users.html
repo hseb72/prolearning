@@ -32,6 +32,7 @@
           <th scope="col">{{ labels.role }}</th>
           <th scope="col">{{ labels.manager }}</th>
           <th scope="col">{{ labels.lastLogin }}</th>
+          <th scope="col">{{ labels.actions }}</th>
         </tr>
       </thead>
       <tbody>
@@ -74,6 +75,31 @@
             </td>
             <td [attr.data-label]="labels.lastLogin">
               {{ user.lastLoginAt ? (user.lastLoginAt | date: 'short') : labels.never }}
+              @if (user.dormant) {
+                <span class="status st-en_cours dormant" [attr.title]="dormantHint()">{{
+                  labels.dormant
+                }}</span>
+                <span class="visually-hidden">{{ dormantHint() }}</span>
+              }
+            </td>
+            <td [attr.data-label]="labels.actions" class="acts-cell">
+              <a
+                class="btn ghost small"
+                [href]="'/api/users/' + user.id + '/donnees'"
+                download
+                [attr.aria-label]="labels.exportLabel(user.displayName)"
+                >{{ labels.exportData }}</a
+              >
+              @if (!isSelf(user)) {
+                <button
+                  class="btn ghost small danger"
+                  type="button"
+                  [attr.aria-label]="labels.deleteLabel(user.displayName)"
+                  (click)="remove(user)"
+                >
+                  {{ labels.delete }}
+                </button>
+              }
             </td>
           </tr>
         }

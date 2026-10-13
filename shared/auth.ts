@@ -39,6 +39,8 @@ export interface UserRow extends AccountSummary {
   managerId: number | null;
   active: boolean;
   lastLoginAt: string | null;
+  /** Sans connexion depuis plus que la durée paramétrée (données personnelles). */
+  dormant: boolean;
 }
 
 /** Corps de PATCH /api/users/:id. */

@@ -10,6 +10,7 @@ import type { Databases } from './databases.js';
 import { registerFormationRoutes } from './formation-routes.js';
 import { registerJournalRoutes } from './journal-routes.js';
 import { registerLearningRoutes } from './learning-routes.js';
+import { registerPrivacyRoutes } from './privacy-routes.js';
 import { registerRequestRoutes } from './request-routes.js';
 import { registerPublicationRoutes } from './publication.js';
 import { registerSpaceRoutes } from './space-routes.js';
@@ -87,6 +88,7 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
   registerCatalogRoutes(app);
   registerRequestRoutes(app);
   registerJournalRoutes(app);
+  registerPrivacyRoutes(app);
 
   app.setNotFoundHandler((_request, reply) =>
     reply.code(404).send({ error: 'not_found', message: 'Ressource introuvable.' }),

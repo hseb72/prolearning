@@ -1,6 +1,7 @@
 import type pg from 'pg';
 import type { AccountSummary, UserRow } from '../../shared/auth.js';
 import type { Role } from '../../shared/roles.js';
+import { isInactive } from './privacy.js';
 
 /** Ligne de pl_users. */
 export interface UserRecord {
@@ -12,10 +13,12 @@ export interface UserRecord {
   managerId: number | null;
   active: boolean;
   lastLoginAt: Date | null;
+  createdAt: Date;
 }
 
 const COLUMNS = `id::int AS id, oidc_subject AS "oidcSubject", email, display_name AS "displayName",
-  role, manager_id::int AS "managerId", active, last_login_at AS "lastLoginAt"`;
+  role, manager_id::int AS "managerId", active, last_login_at AS "lastLoginAt",
+  created_at AS "createdAt"`;
 
 export async function findUser(db: pg.Pool, id: number): Promise<UserRecord | null> {
   const res = await db.query<UserRecord>(`SELECT ${COLUMNS} FROM pl_users WHERE id = $1`, [id]);
@@ -86,11 +89,13 @@ export function toSummary(user: UserRecord): AccountSummary {
   return { id: user.id, displayName: user.displayName, email: user.email, role: user.role };
 }
 
-export function toRow(user: UserRecord): UserRow {
+/** Ligne de la liste des comptes ; `inactiveMonths` signale les comptes sans connexion récente. */
+export function toRow(user: UserRecord, inactiveMonths: number): UserRow {
   return {
     ...toSummary(user),
     managerId: user.managerId,
     active: user.active,
     lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+    dormant: isInactive(user, inactiveMonths),
   };
 }
