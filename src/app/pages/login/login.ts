@@ -18,6 +18,7 @@ export class LoginPage {
   readonly erreur = input<string>();
 
   protected readonly labels = LABELS.login;
+  protected readonly app = LABELS.app;
   protected readonly config = signal<AuthConfig | null>(null);
   protected readonly devError = signal<string | null>(null);
   protected readonly busy = signal(false);
