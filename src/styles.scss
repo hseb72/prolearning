@@ -748,6 +748,17 @@ label.l {
   }
 }
 
+// Action destructrice (supprimer un compte) : texte rouge sur bouton secondaire ou principal.
+.btn.danger {
+  color: var(--bad);
+}
+
+.btn.danger:not(.ghost) {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: var(--surface);
+}
+
 // Champ : libellé, aide facultative, puis contrôle (label.l reste lié par for/id).
 .fld {
   display: grid;

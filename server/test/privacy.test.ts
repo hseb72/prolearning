@@ -144,6 +144,12 @@ describe.skipIf(!databasesAvailable)('données personnelles', () => {
     }
     const log = await db().query("SELECT details FROM pl_audit_log WHERE action = 'user.delete'");
     expect(log.rows).toEqual([{ details: { userId: leaId } }]);
+    // Anonymisation : ses connexions restent au journal, sans son identité.
+    const traces = await db().query(
+      "SELECT DISTINCT actor_label, actor_id FROM pl_audit_log WHERE action = 'login' AND (actor_label = 'lea@soredi.example' OR actor_label = $1)",
+      [DELETED_ACTOR],
+    );
+    expect(traces.rows).toEqual([{ actor_label: DELETED_ACTOR, actor_id: null }]);
     // La session de connexion de Léa ne vaut plus rien.
     expect((await call('GET', '/api/demandes', lea)).statusCode).toBe(401);
   });
@@ -157,6 +163,38 @@ describe.skipIf(!databasesAvailable)('données personnelles', () => {
     );
     expect(events.rows.map((e) => e.actor_name)).toEqual(['lea', DELETED_ACTOR, 'equipe']);
     expect(events.rows[1].actor_id).toBeNull();
+  });
+
+  it('laisse chacun supprimer son compte, seulement sur une plateforme publique', async () => {
+    const url = '/api/parametres/plateforme';
+    expect((await call('GET', url, lea)).json()).toEqual({ publique: false });
+    const refused = await call('DELETE', '/api/moi', lea);
+    expect(refused.statusCode).toBe(403);
+    expect(refused.json().message).toMatch(/administrateur/);
+    expect((await call('PUT', url, lea, { publique: true })).statusCode).toBe(403);
+
+    expect((await call('PUT', url, admin, { publique: true })).json()).toEqual({ publique: true });
+    expect((await call('GET', url, lea)).json()).toEqual({ publique: true });
+    const done = await call('DELETE', '/api/moi', lea);
+    expect(done.json()).toEqual({ deconnecte: true });
+    expect(done.headers['set-cookie']).toMatch(/pl_session=;/);
+    expect((await db().query('SELECT 1 FROM pl_users WHERE id = $1', [leaId])).rowCount).toBe(0);
+    expect((await call('GET', '/api/demandes', lea)).statusCode).toBe(401);
+    const log = await db().query(
+      "SELECT actor_label, details FROM pl_audit_log WHERE action IN ('user.delete', 'settings.platform') ORDER BY id",
+    );
+    expect(log.rows).toEqual([
+      {
+        actor_label: BOOTSTRAP_ADMIN,
+        details: { from: 'interne', to: 'publique' },
+      },
+      { actor_label: DELETED_ACTOR, details: { userId: leaId, parLuiMeme: true } },
+    ]);
+
+    // Le dernier administrateur ne peut pas partir.
+    const last = await call('DELETE', '/api/moi', admin);
+    expect(last.statusCode).toBe(409);
+    expect(last.json().error).toBe('last_admin');
   });
 
   it('refuse de supprimer son propre compte, et réserve la suppression aux administrateurs', async () => {

@@ -1,6 +1,8 @@
 import type pg from 'pg';
 import {
+  DEFAULT_PLATFORM,
   DEFAULT_RETENTION,
+  type PlatformSettings,
   RETENTION_BOUNDS,
   type PurgeSummary,
   type RetentionSettings,
@@ -39,6 +41,36 @@ export async function setRetention(
      ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = now(), updated_by = $2`,
     [JSON.stringify(value), actorId],
   );
+}
+
+export async function getPlatform(db: pg.Pool): Promise<PlatformSettings> {
+  const res = await db.query<{ value: { publique?: unknown } }>(
+    "SELECT value FROM pl_settings WHERE key = 'platform'",
+  );
+  const publique = res.rows[0]?.value?.publique;
+  return typeof publique === 'boolean' ? { publique } : DEFAULT_PLATFORM;
+}
+
+export async function setPlatform(
+  db: pg.Pool,
+  value: PlatformSettings,
+  actorId: number,
+): Promise<void> {
+  await db.query(
+    `INSERT INTO pl_settings (key, value, updated_at, updated_by) VALUES ('platform', $1, now(), $2)
+     ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = now(), updated_by = $2`,
+    [JSON.stringify(value), actorId],
+  );
+}
+
+/** Dernier administrateur actif de cet espace : il ne peut pas disparaître. */
+export async function isLastAdmin(db: pg.Pool, userId: number): Promise<boolean> {
+  const res = await db.query<{ is_admin: boolean; admins: string }>(
+    `SELECT bool_or(id = $1) AS is_admin, count(*) AS admins
+       FROM pl_users WHERE role = 'admin' AND active`,
+    [userId],
+  );
+  return !!res.rows[0]?.is_admin && Number(res.rows[0].admins) <= 1;
 }
 
 /**
@@ -198,9 +230,10 @@ export const DELETED_ACTOR = 'Compte supprimé';
 
 /**
  * Supprime une personne et ses données de cet espace : compte, connexions, progression,
- * demandes et leur historique, places occupées (libérées). Son nom disparaît aussi de
- * l'historique des demandes des autres. Le journal d'audit garde ses actions jusqu'à sa
- * propre purge (obligation de traçabilité).
+ * demandes et leur historique, places occupées (libérées). Son nom disparaît de
+ * l'historique des demandes des autres, et le journal d'audit comme les formations qu'elle
+ * a importées ou publiées ne gardent plus que « Compte supprimé » (anonymisation, décidée
+ * le 16 octobre 2026) : les actions restent tracées, plus la personne.
  */
 export async function deleteUserData(db: pg.Pool, userId: number): Promise<boolean> {
   const client = await db.connect();
@@ -227,6 +260,23 @@ export async function deleteUserData(db: pg.Pool, userId: number): Promise<boole
     await client.query(
       'UPDATE pl_request_events SET actor_name = $2, actor_id = NULL WHERE actor_id = $1',
       [userId, DELETED_ACTOR],
+    );
+    // Journal et formations : rattachés par l'identifiant, ou seulement par l'e-mail quand
+    // l'action a été faite depuis un autre espace (libellé figé au moment de l'action).
+    const email = await client.query<{ email: string }>(
+      'SELECT email FROM pl_users WHERE id = $1',
+      [userId],
+    );
+    const address = email.rows[0]?.email ?? null;
+    await client.query(
+      `UPDATE pl_audit_log SET actor_label = $2, actor_id = NULL
+        WHERE actor_id = $1 OR ($3::text IS NOT NULL AND lower(actor_label) = lower($3))`,
+      [userId, DELETED_ACTOR, address],
+    );
+    await client.query(
+      `UPDATE pl_formation_versions SET imported_by_label = $2, imported_by = NULL
+        WHERE imported_by = $1 OR ($3::text IS NOT NULL AND lower(imported_by_label) = lower($3))`,
+      [userId, DELETED_ACTOR, address],
     );
     // Le reste suit par ON DELETE CASCADE (connexions, progression, demandes, places).
     const deleted = await client.query('DELETE FROM pl_users WHERE id = $1', [userId]);

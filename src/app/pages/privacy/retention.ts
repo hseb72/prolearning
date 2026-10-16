@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { RETENTION_BOUNDS, type RetentionSettings } from '@shared/privacy';
+import { RETENTION_BOUNDS, type PlatformSettings, type RetentionSettings } from '@shared/privacy';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth';
 import { AdminNav } from '../../layout/admin-nav';
@@ -52,10 +52,47 @@ type Key = keyof RetentionSettings;
         </div>
       </form>
     }
+
+    <section class="card platform" aria-labelledby="platform-title">
+      <h2 id="platform-title">{{ labels.platformTitle }}</h2>
+      <p class="small muted">{{ labels.platformIntro }}</p>
+      @if (platform.value(); as p) {
+        <div class="chips" role="radiogroup" [attr.aria-labelledby]="'platform-title'">
+          @for (option of platformOptions; track option) {
+            <label class="radio">
+              <input
+                type="radio"
+                name="platform"
+                [checked]="(option === 'publique') === p.publique"
+                [disabled]="busy()"
+                (change)="setPlatform(option === 'publique')"
+              />
+              {{ labels.platformOptions[option] }}
+            </label>
+          }
+        </div>
+      }
+    </section>
   `,
   styles: `
-    .retention {
+    .retention,
+    .platform {
       max-width: 560px;
+    }
+    .platform {
+      margin-top: 24px;
+      display: grid;
+      gap: 10px;
+    }
+    .platform h2,
+    .platform p {
+      margin: 0;
+    }
+    .radio {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      margin-right: 16px;
     }
     .acts {
       justify-content: flex-start;
@@ -81,6 +118,30 @@ export class RetentionPage {
       this.auth.space() === 'demo' ? LABELS.space.demoName : LABELS.space.productionName,
     ),
   );
+
+  protected readonly platformOptions = ['interne', 'publique'] as const;
+  protected readonly platform = httpResource<PlatformSettings>(() => {
+    const me = this.auth.me();
+    return me
+      ? { url: '/api/parametres/plateforme', params: { espace: me.space, compte: me.actor.id } }
+      : undefined;
+  });
+
+  protected async setPlatform(publique: boolean): Promise<void> {
+    this.busy.set(true);
+    try {
+      const saved = await firstValueFrom(
+        this.http.put<PlatformSettings>('/api/parametres/plateforme', { publique }),
+      );
+      this.platform.set(saved);
+      this.toast.show(this.labels.platformSaved(saved.publique));
+    } catch {
+      this.toast.show(this.labels.saveFailed);
+      this.platform.reload();
+    } finally {
+      this.busy.set(false);
+    }
+  }
 
   protected readonly data = httpResource<RetentionSettings>(() => {
     const me = this.auth.me();
