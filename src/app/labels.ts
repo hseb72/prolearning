@@ -72,6 +72,7 @@ export const LABELS = {
       'user.bootstrap_admin': 'Administrateur d’amorçage',
       'user.delete': 'Suppression d’un compte et de ses données',
       'settings.retention': 'Durées de conservation',
+      'settings.platform': 'Ouverture de la plateforme',
       'privacy.purge': 'Purge des données arrivées à échéance',
       'formation.import': 'Import d’une formation',
       'formation.publish': 'Publication en production',
@@ -97,6 +98,7 @@ export const LABELS = {
       inscriptions: 'inscriptions',
       surMesure: 'sur mesure',
       journal: 'journal',
+      parLuiMeme: 'par la personne elle-même',
     } as Record<string, string>,
   },
   /** Composants communs de l'interface (SPEC-UI § 4), libellés du prototype. */
@@ -311,6 +313,21 @@ export const LABELS = {
     deleteTitle: 'Faire effacer vos données',
     deleteText:
       'Demandez-le à un administrateur du portail : il supprime votre compte et vos données de cet espace. Si vous vous reconnectez ensuite, un compte neuf est créé.',
+    deleteSelfText:
+      'Votre compte, votre progression, vos demandes et leur historique sont effacés de cet espace ; votre nom disparaît aussi du journal et de l’historique des demandes des autres. Si vous vous reconnectez ensuite, un compte neuf est créé.',
+    deleteSelfButton: 'Supprimer mon compte',
+    deleteSelfConfirmTitle: 'Supprimer votre compte ?',
+    deleteSelfConfirmText:
+      'Tout ce que le portail garde sur vous dans cet espace est effacé. C’est définitif : pensez à télécharger vos données avant.',
+    deleteSelfConfirm: 'Supprimer définitivement',
+    deletedSelf: 'Votre compte et vos données ont été supprimés.',
+    deleteSelfFailed: 'La suppression n’a pas abouti.',
+    platformTitle: 'Ouverture de la plateforme',
+    platformIntro:
+      'Interne : seul un administrateur supprime un compte. Publique : chacun peut supprimer son compte depuis « Mes données personnelles ».',
+    platformOptions: { interne: 'Interne', publique: 'Publique' } as Record<string, string>,
+    platformSaved: (publique: boolean) =>
+      publique ? 'Plateforme publique : chacun peut supprimer son compte.' : 'Plateforme interne.',
     settingsTitle: 'Données personnelles',
     settingsIntro:
       'Durées de conservation de cet espace. Au-delà, une purge quotidienne efface les demandes clôturées et les lignes du journal ; les comptes inactifs sont seulement signalés dans « Comptes et rôles ».',

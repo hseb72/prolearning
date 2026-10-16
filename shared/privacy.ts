@@ -28,3 +28,14 @@ export interface PurgeSummary {
   surMesure: number;
   journal: number;
 }
+
+/**
+ * Ouverture de la plateforme (paramétrage administrateur). Interne : un compte ne se
+ * supprime que par un administrateur. Publique : chacun peut supprimer son compte depuis
+ * « Mes données personnelles ».
+ */
+export interface PlatformSettings {
+  publique: boolean;
+}
+
+export const DEFAULT_PLATFORM: PlatformSettings = { publique: false };

@@ -1,8 +1,13 @@
-import { httpResource } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
-import type { RetentionSettings } from '@shared/privacy';
+import { HttpClient, httpResource } from '@angular/common/http';
+import { Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import type { PlatformSettings, RetentionSettings } from '@shared/privacy';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth';
+import { apiMessage } from '../../core/requests';
 import { LABELS } from '../../labels';
+import { ConfirmService } from '../../ui/confirm';
+import { ToastService } from '../../ui/toast';
 
 /** « Mes données personnelles » : ce qui est gardé, combien de temps, export, effacement. */
 @Component({
@@ -46,7 +51,15 @@ import { LABELS } from '../../labels';
 
     <section class="card block" aria-labelledby="delete-title">
       <h2 id="delete-title">{{ labels.deleteTitle }}</h2>
-      <p>{{ labels.deleteText }}</p>
+      <!-- Plateforme publique : chacun supprime son compte ; interne : un administrateur. -->
+      @if (platform.value()?.publique) {
+        <p>{{ labels.deleteSelfText }}</p>
+        <button class="btn danger" type="button" [disabled]="busy()" (click)="deleteAccount()">
+          {{ labels.deleteSelfButton }}
+        </button>
+      } @else if (platform.hasValue()) {
+        <p>{{ labels.deleteText }}</p>
+      }
     </section>
   `,
   styles: `
@@ -79,6 +92,45 @@ import { LABELS } from '../../labels';
 })
 export class MyDataPage {
   private readonly auth = inject(AuthService);
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly confirm = inject(ConfirmService);
+  private readonly toast = inject(ToastService);
+  protected readonly busy = signal(false);
+  protected readonly platform = httpResource<PlatformSettings>(() => {
+    const me = this.auth.me();
+    return me
+      ? { url: '/api/parametres/plateforme', params: { espace: me.space, compte: me.actor.id } }
+      : undefined;
+  });
+
+  protected async deleteAccount(): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: this.labels.deleteSelfConfirmTitle,
+      text: this.labels.deleteSelfConfirmText,
+      confirm: this.labels.deleteSelfConfirm,
+    });
+    if (!ok) return;
+    this.busy.set(true);
+    try {
+      const res = await firstValueFrom(this.http.delete<{ deconnecte: boolean }>('/api/moi'));
+      this.toast.show(this.labels.deletedSelf);
+      if (res.deconnecte) {
+        // Fermer aussi la session Keycloak, sinon la reconnexion recréerait le compte aussitôt.
+        const redirect = await this.auth.logout();
+        if (redirect.startsWith('/')) await this.router.navigateByUrl(redirect);
+        else window.location.href = redirect;
+      } else {
+        // Démonstration : le compte joué a disparu, l'administrateur reprend le compte par défaut.
+        await this.auth.load(true);
+        await this.router.navigateByUrl('/catalogue');
+      }
+    } catch (error) {
+      this.toast.show(apiMessage(error, this.labels.deleteSelfFailed));
+    } finally {
+      this.busy.set(false);
+    }
+  }
   protected readonly labels = LABELS.privacy;
   protected readonly retention = httpResource<RetentionSettings>(() => {
     const me = this.auth.me();

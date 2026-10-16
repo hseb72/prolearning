@@ -10,6 +10,7 @@ export type AuditAction =
   | 'user.bootstrap_admin'
   | 'user.delete'
   | 'settings.retention'
+  | 'settings.platform'
   | 'privacy.purge'
   | 'formation.import'
   | 'formation.publish'

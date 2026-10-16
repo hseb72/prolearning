@@ -1,14 +1,25 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { RETENTION_BOUNDS, type RetentionSettings } from '../../shared/privacy.js';
+import { SESSION_COOKIE } from './auth/sessions.js';
 import { audit } from './audit.js';
 import { requireRole } from './context.js';
-import { deleteUserData, exportUserData, getRetention, setRetention } from './privacy.js';
+import {
+  DELETED_ACTOR,
+  deleteUserData,
+  exportUserData,
+  getPlatform,
+  getRetention,
+  isLastAdmin,
+  setPlatform,
+  setRetention,
+} from './privacy.js';
 import { findUser } from './users.js';
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
 const bound = (key: keyof RetentionSettings) =>
   z.number().int().min(RETENTION_BOUNDS[key].min).max(RETENTION_BOUNDS[key].max);
+const platformBody = z.object({ publique: z.boolean() });
 const retentionBody = z.object({
   requestsMonths: bound('requestsMonths'),
   auditMonths: bound('auditMonths'),
@@ -61,8 +72,8 @@ export function registerPrivacyRoutes(app: FastifyInstance): void {
     const target = await findUser(ctx.db, params.data.id);
     if (!target)
       return reply.code(404).send({ error: 'not_found', message: 'Compte introuvable.' });
-    // Ni son propre compte, ni (dans l'espace démo) le compte qu'on est en train de jouer.
-    if (target.id === ctx.actor.id || target.id === ctx.user.id) {
+    // Pas son propre compte (en démonstration : pas le compte qu'on est en train de jouer).
+    if (target.id === ctx.actor.id) {
       return reply.code(409).send({
         error: 'self_delete',
         message: 'Vous ne pouvez pas supprimer votre propre compte.',
@@ -78,6 +89,71 @@ export function registerPrivacyRoutes(app: FastifyInstance): void {
     });
     return reply.code(204).send();
   });
+
+  /**
+   * Plateforme publique seulement : chacun supprime son compte et ses données de l'espace
+   * actif. En production, la connexion part avec le compte ; en démonstration, l'administrateur
+   * supprime le compte fictif qu'il joue et reprend le compte fictif par défaut.
+   */
+  app.delete('/api/moi', async (request, reply) => {
+    const ctx = request.auth;
+    if (!ctx)
+      return reply.code(401).send({ error: 'unauthenticated', message: 'Connexion requise.' });
+    if (!(await getPlatform(ctx.db)).publique) {
+      return reply.code(403).send({
+        error: 'internal_platform',
+        message: 'Plateforme interne : demandez la suppression à un administrateur.',
+      });
+    }
+    if (await isLastAdmin(ctx.db, ctx.actor.id)) {
+      return reply.code(409).send({
+        error: 'last_admin',
+        message:
+          'Vous êtes le dernier administrateur : nommez-en un autre avant de supprimer votre compte.',
+      });
+    }
+    await deleteUserData(ctx.db, ctx.actor.id);
+    await audit(ctx.db, {
+      actorId: null,
+      actorLabel: DELETED_ACTOR,
+      action: 'user.delete',
+      details: { userId: ctx.actor.id, parLuiMeme: true },
+    });
+    const signedOut = ctx.space === 'production';
+    if (signedOut) reply.clearCookie(SESSION_COOKIE, { path: '/' });
+    return { deconnecte: signedOut };
+  });
+
+  // Lisible par tous : « Mes données » montre le bouton ou le message selon l'ouverture.
+  app.get('/api/parametres/plateforme', async (request, reply) => {
+    if (!request.auth)
+      return reply.code(401).send({ error: 'unauthenticated', message: 'Connexion requise.' });
+    return getPlatform(request.auth.db);
+  });
+
+  app.put(
+    '/api/parametres/plateforme',
+    { preHandler: requireRole('admin') },
+    async (request, reply) => {
+      const ctx = request.auth!;
+      const body = platformBody.safeParse(request.body);
+      if (!body.success) {
+        return reply.code(400).send({ error: 'invalid', message: 'Paramètre invalide.' });
+      }
+      const before = await getPlatform(ctx.db);
+      await setPlatform(ctx.db, body.data, ctx.actor.id);
+      await audit(ctx.db, {
+        actorId: ctx.actor.id,
+        actorLabel: ctx.actor.email,
+        action: 'settings.platform',
+        details: {
+          from: before.publique ? 'publique' : 'interne',
+          to: body.data.publique ? 'publique' : 'interne',
+        },
+      });
+      return body.data;
+    },
+  );
 
   // Lisible par tous (« Mes données ») : chacun sait combien de temps ses données sont gardées.
   app.get('/api/parametres/conservation', async (request, reply) => {

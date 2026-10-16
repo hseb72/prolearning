@@ -70,4 +70,37 @@ test.describe('données personnelles', () => {
     ).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
+
+  test('plateforme publique : chacun supprime son compte lui-même', async ({ page }, info) => {
+    // Le réglage est commun à la production : un seul format d'écran le bascule, pour que
+    // les deux exécutions parallèles ne se contredisent pas.
+    test.skip(info.project.name !== 'bureau', 'réglage partagé, testé une fois');
+    const email = uniqueEmail('depart', info);
+    await login(page, email);
+    await page.getByRole('link', { name: 'Mes données personnelles' }).click();
+    // Plateforme interne (par défaut) : on demande à un administrateur.
+    await expect(page.getByText(/Demandez-le à un administrateur/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Supprimer mon compte' })).toHaveCount(0);
+
+    await page.context().clearCookies();
+    await login(page, ADMIN);
+    await openAdmin(page, 'Données personnelles');
+    await page.getByRole('radio', { name: 'Publique' }).check();
+    await expect(page.locator('.toast')).toContainText('Plateforme publique');
+
+    await page.context().clearCookies();
+    await login(page, email);
+    await page.getByRole('link', { name: 'Mes données personnelles' }).click();
+    await page.getByRole('button', { name: 'Supprimer mon compte' }).click();
+    await confirmDialog(page, 'Supprimer définitivement');
+    await expect(page).toHaveURL(/\/connexion/);
+
+    // Retour à la plateforme interne, et le compte n'existe plus.
+    await login(page, ADMIN);
+    await openAdmin(page, 'Données personnelles');
+    await page.getByRole('radio', { name: 'Interne' }).check();
+    await expect(page.locator('.toast')).toContainText('Plateforme interne');
+    await openAdmin(page, 'Comptes et rôles');
+    await expect(page.getByRole('row').filter({ hasText: email })).toHaveCount(0);
+  });
 });
