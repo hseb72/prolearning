@@ -13,13 +13,13 @@ l'application, dans un seul namespace : `prolearning`. Le modèle suivi est celu
 Internet
    │
    ▼
-ingress-nginx (ns platform-ingress) ── TLS cert-manager + WAF
+ingress-nginx (ns ingress) ── TLS cert-manager + WAF
    │
    ├──▶ prolearning.crealcs.com ──────▶ web (nginx, ns prolearning)
    │        pages, retour Keycloak            │
    │                                          └── relaie /api ──┐
    │                                                            ▼
-   └──▶ api.prolearning.crealcs.com ──▶ kong-proxy (ns gateway)
+   └──▶ api.prolearning.crealcs.com ──▶ kong-proxy (ns kong)
                                                 │  Ingress classe kong
                                                 ▼
                                         api (Node.js, ns prolearning)
@@ -85,7 +85,7 @@ scripts/verify-tenant.sh prolearning-eval --app-namespace prolearning
 Le kit côté application que génère le guichet (namespace, NetworkPolicies, Ingress
 kong) **n'est pas à reprendre** : son équivalent est déjà dans `argocd/application.yaml`
 et `manifests/`. Son Ingress kong déclare en plus l'hôte interne
-`kong-proxy.gateway.svc.cluster.local`, inutile ici (le front relaie avec l'hôte
+`kong-proxy.kong.svc.cluster.local`, inutile ici (le front relaie avec l'hôte
 public) et qui entrerait en conflit avec les autres applications.
 
 **2. DNS.** Deux enregistrements vers l'IP publique de l'ingress, **avant** la demande
