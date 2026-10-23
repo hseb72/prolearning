@@ -42,7 +42,11 @@ COPY --chown=node:node docs/format/formation.schema.json /app/docs/format/format
 COPY --chown=node:node fixtures/demo /app/fixtures/demo
 COPY --chown=node:node fixtures/formations /app/fixtures/formations
 
-# Compte non privilégié de l'image de base (uid 1000).
-USER node
+# Compte non privilégié de l'image de base (uid 1000), déclaré en NUMÉRIQUE.
+# Le securityContext `restricted` du chart platform-patterns rend `runAsNonRoot:
+# true` sans `runAsUser` ; avec un USER par NOM (`node`), kubelet ne peut pas
+# vérifier qu'il n'est pas root et refuse le conteneur (« image has non-numeric
+# user (node), cannot verify user is non-root »). L'UID numérique lève ce refus.
+USER 1000:1000
 EXPOSE 5080
 CMD ["node", "dist/server/src/main.js"]
