@@ -1,17 +1,22 @@
-# Valeurs du chart `app` de platform-patterns, pattern `shared`, pour la plateforme
-# mutualisée décrite dans hseb72/homelab-platform (modèle : hseb72/treasurehunters).
+# Valeurs du chart `app` de platform-patterns, pattern `shared` CANONIQUE (1.0.0),
+# pour la plateforme mutualisée décrite dans hseb72/homelab-platform.
 #
 # Rendu : oci://ghcr.io/hseb72/platform-patterns/app (version épinglée dans
-# argocd/application.yaml). Argo lit ce fichier sur la branche `deploy-state`, copie
-# de deploy/ tenue à jour par la CI ; le tag d'image (global.imageTag) y est écrit
-# dans deploy/values-image.yaml.
+# argocd/application.yaml : 1.0.0). Argo lit ce fichier sur la branche
+# `deploy-state`, copie de deploy/ tenue à jour par la CI ; le tag d'image
+# (global.imageTag) y est écrit dans deploy/values-image.yaml.
 #
-# Ce que le chart rend, dans le namespace `prolearning` :
-#   - Deployments + Services `web` (nginx, 8080) et `api` (Node.js, 5080) ;
-#   - ConfigMap `api-config` (ci-dessous, non sensible) ;
-#   - NetworkPolicy : entrée des pods réservée à la passerelle Kong (ns `kong`).
-# Ce qu'il ne rend pas, et qui vit dans manifests/ : l'Ingress nginx du front,
-# l'Ingress kong de l'API, l'entrée depuis ingress-nginx vers le front.
+# ── Modèle réaligné (chart 1.0.0) ────────────────────────────────────────────
+# Le chart POSSÈDE deux namespaces et y rend TOUT :
+#   - `ui-prolearning`  : web (nginx, 8080) + Ingress nginx + NetworkPolicy.
+#   - `api-prolearning` : api (Node.js, 5080) + ConfigMap + Ingress kong +
+#                         NetworkPolicy. Étiquette postgres-client posée par le chart.
+# Plus de deploy/manifests/ : le chart rend les deux Ingress et les NetworkPolicies.
+#
+# Spécificité prolearning : TROIS bases (production, démonstration, évaluation) sur
+# le PostgreSQL mutualisé CloudNativePG (ns `postgres`). Les trois sont câblées par
+# les DATABASE_URL_* du Secret et provisionnées hors-bande. SSO : Keycloak du socle
+# (ns `sso`, realm `soredi`).
 
 mode: shared
 
@@ -31,12 +36,12 @@ api:
   image:
     repository: ghcr.io/hseb72/prolearning/api
   replicas: 2
-  port: 5080
-  # Vérifie les deux bases (production et démonstration) : une API qui n'en joint
+  # Vérifie les bases (production et démonstration) : une API qui n'en joint
   # qu'une n'est pas en état de servir.
   healthPath: /api/health
-  # Configuration non sensible (ConfigMap). Les adresses des bases et le secret du
-  # client Keycloak sont dans le Secret ci-dessous : cf. deploy/README.md.
+  # Configuration non sensible (ConfigMap). Les trois adresses de bases et le
+  # secret du client Keycloak sont dans `prolearning-api-secrets` (ns
+  # api-prolearning) : cf. create-secrets.sh.
   env:
     NODE_ENV: production
     HOST: 0.0.0.0
@@ -45,11 +50,10 @@ api:
     # Adresse publique du front : base des redirections Keycloak (le front relaie /api).
     APP_URL: https://prolearning.crealcs.com
     SESSION_DAYS: '7'
-    # SSO : Keycloak de Soredi (docs/keycloak.md).
+    # SSO : Keycloak de Soredi (docs/keycloak.md), realm du socle.
     OIDC_ISSUER: https://sso.crealcs.com/realms/soredi
     OIDC_CLIENT_ID: pro-learning
-    # Premiers administrateurs, promus à leur connexion ; ils attribuent ensuite
-    # les autres rôles depuis l'application.
+    # Premiers administrateurs, promus à leur connexion.
     BOOTSTRAP_ADMIN_EMAILS: sebastien.raimondi@soredi-group.com,sebastien.raimondi@gmail.com,pierre.rolin@soredi-group.com
   envFrom:
     - prolearning-api-secrets
@@ -61,16 +65,53 @@ api:
     limits: { cpu: 500m, memory: 384Mi }
 
 shared:
-  # La plateforme expose les API par des Ingress de classe `kong` (pas de Gateway
-  # API) : l'HTTPRoute du chart est désactivée, la route Kong est dans
-  # manifests/api-kong-ingress.yaml.
+  namespaces:
+    ui: ui-prolearning
+    api: api-prolearning
+    create: true
+  # SPA : le navigateur appelle /api (relais même-origine par le nginx du front).
+  front:
+    type: spa
+  # Service mutualisé consommé : PostgreSQL (les trois bases). Le chart pose
+  # `platform-patterns.io/postgres-client` sur api-prolearning — une seule
+  # étiquette couvre les trois connexions.
+  clients:
+    postgres: true
+  gatewayDataplaneNamespace: kong
   httproute:
     enabled: false
-  # Namespace du plan de données Kong : seule source admise vers les pods.
-  gatewayDataplaneNamespace: kong
+  # Front servi directement par l'edge ingress-nginx (ns `ingress`). Corps à 200m :
+  # imports de contenus de formation volumineux.
+  webIngress:
+    enabled: true
+    className: nginx
+    controllerNamespace: ingress
+    hosts: [prolearning.crealcs.com]
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+    tls:
+      enabled: true
+      clusterIssuer: letsencrypt-http01
+  # API routée par Kong. L'hôte api.prolearning.crealcs.com est amené jusqu'à
+  # kong-proxy par le socle (gateway).
+  kongIngress:
+    enabled: true
+    className: kong
+    hosts: [api.prolearning.crealcs.com]
+    stripPath: false
+    preserveHost: true
+    pathType: ImplementationSpecific
+    rules:
+      - path: /
+        service: api
   networkPolicy:
     enabled: true
-  # Les trois bases sont provisionnées par le socle (locataires `prolearning`,
-  # `prolearning-demo` et `prolearning-eval` déclarés dans homelab-platform/database/values.yaml).
+  # Provisionnement self-service DÉSACTIVÉ. Deux raisons : (1) la latence
+  # d'indexation kube-router fait échouer le Job PreSync one-shot (cf. mtgwars) ;
+  # (2) le bloc `shared.provisioning.postgres` du chart ne décrit QU'UNE base,
+  # alors que prolearning en a TROIS (prolearning, prolearning_demo,
+  # prolearning_eval). Les trois rôles + bases sont donc provisionnés hors-bande
+  # (cf. runbook de bascule).
   provisioning:
     enabled: false

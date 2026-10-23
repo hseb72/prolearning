@@ -1,33 +1,34 @@
 #!/usr/bin/env bash
-# Crée le Secret de l'API directement dans le cluster, comme treasurehunters. Aucun
-# secret n'est versionné dans ce dépôt.
+# Crée (ou met à jour) le Secret de l'API dans le cluster. Aucun secret n'est
+# versionné dans ce dépôt.
 #
-#   [OIDC_CLIENT_SECRET=<secret Keycloak>] [DB_PASSWORD=…] [DEMO_DB_PASSWORD=…] [EVAL_DB_PASSWORD=…] \
-#     ./deploy/create-secrets.sh
+#   OIDC_CLIENT_SECRET=<secret Keycloak> \
+#     [DB_PASSWORD=…] [DEMO_DB_PASSWORD=…] [EVAL_DB_PASSWORD=…] ./deploy/create-secrets.sh
 #
-# Les trois mots de passe de base sont lus dans le cluster s'ils ne sont pas fournis
-# (Secret database/database-tenant-keys, clés `prolearning`, `prolearning-demo` et
-# `prolearning-eval`) : ce sont les valeurs que le socle donne aux rôles PostgreSQL, on ne peut donc
-# pas se tromper. Ils sont encodés pour l'URL (caractères spéciaux admis).
+# ── Modèle réaligné (chart 1.0.0) ────────────────────────────────────────────
+# L'API vit dans `api-prolearning` et joint TROIS bases du PostgreSQL MUTUALISÉ
+# CloudNativePG (ns `postgres`, postgres-rw) : production, démonstration,
+# évaluation. Les trois rôles/bases ne sont plus provisionnés par le socle ; ils
+# sont posés hors-bande (runbook). Les mots de passe des rôles vivent dans CE
+# Secret (clés DB_PASSWORD / DEMO_DB_PASSWORD / EVAL_DB_PASSWORD), et les
+# DATABASE_URL_* en sont dérivées — les deux doivent coïncider.
 #
-# OIDC_CLIENT_SECRET : secret du client Keycloak `pro-learning` (onglet Credentials).
-# Obligatoire au premier passage ; ensuite, absent, la valeur déjà en place est
-# conservée. Ne jamais le committer ni le coller dans un ticket.
+# Chaque mot de passe absent de la ligne de commande est repris du Secret
+# existant, sinon tiré au hasard (plus aucune lecture du socle).
 #
-# Relancer le script met le Secret à jour (rotation) ; les pods de l'API le relisent
-# au redémarrage :
-#   kubectl -n prolearning rollout restart deploy/api
+# OIDC_CLIENT_SECRET : secret du client Keycloak `pro-learning` (onglet
+# Credentials). Obligatoire au premier passage ; ensuite conservé s'il est absent.
 #
-# Si `kubeseal` est installé, une copie SCELLÉE est aussi produite, HORS du dépôt
-# (SEALED_DIR, par défaut ~/sealed-secrets), à conserver avec celles des autres
-# applications du cluster.
+# Relancer met à jour ; les pods relisent au redémarrage :
+#   kubectl -n api-prolearning rollout restart deploy/api
+#
+# Si `kubeseal` est installé, une copie SCELLÉE est aussi produite, HORS dépôt.
 set -euo pipefail
 
-NS=prolearning
+NS=api-prolearning
 NAME=prolearning-api-secrets
-DB_HOST=postgres.database.svc.cluster.local:5432
+DB_HOST=postgres-rw.postgres.svc.cluster.local:5432
 
-# Valeur d'un Secret existant (vide s'il n'existe pas).
 secret_value() {
   kubectl -n "$1" get secret "$2" -o "jsonpath={.data.$3}" 2>/dev/null | base64 -d 2>/dev/null || true
 }
@@ -45,25 +46,24 @@ urlencode() {
   printf '%s' "$out"
 }
 
-# Mot de passe d'un locataire du socle : fourni, ou lu dans database-tenant-keys.
-tenant_password() {
-  local given="$1" tenant="$2" value
+# Mot de passe d'un rôle : fourni, sinon Secret existant, sinon tiré au hasard.
+role_password() {
+  local given="$1" key="$2" value
   if [[ -n "$given" ]]; then printf '%s' "$given"; return; fi
-  value="$(secret_value database database-tenant-keys "$tenant")"
-  [[ -n "$value" ]] || {
-    echo "✗ Clé « $tenant » absente de database/database-tenant-keys : le locataire est-il provisionné ?" >&2
-    exit 1
-  }
-  echo "ℹ Mot de passe du locataire $tenant lu dans database/database-tenant-keys." >&2
+  value="$(secret_value "$NS" "$NAME" "$key")"
+  if [[ -z "$value" ]]; then
+    value="$(openssl rand -base64 36 | tr -d '\n/+=' | cut -c1-32)"
+    echo "ℹ $key tiré au hasard." >&2
+  fi
   printf '%s' "$value"
 }
 
-DB_PASSWORD="$(tenant_password "${DB_PASSWORD:-}" prolearning)"
-DEMO_DB_PASSWORD="$(tenant_password "${DEMO_DB_PASSWORD:-}" prolearning-demo)"
-EVAL_DB_PASSWORD="$(tenant_password "${EVAL_DB_PASSWORD:-}" prolearning-eval)"
+DB_PASSWORD="$(role_password "${DB_PASSWORD:-}" DB_PASSWORD)"
+DEMO_DB_PASSWORD="$(role_password "${DEMO_DB_PASSWORD:-}" DEMO_DB_PASSWORD)"
+EVAL_DB_PASSWORD="$(role_password "${EVAL_DB_PASSWORD:-}" EVAL_DB_PASSWORD)"
 
-# `sslmode=disable` : le PostgreSQL du socle n'offre pas TLS (le cloisonnement y est
-# assuré par les NetworkPolicies), et `prefer` ferait exiger TLS au pilote.
+# `sslmode=disable` : le PostgreSQL mutualisé n'offre pas TLS (cloisonnement par
+# NetworkPolicies) ; `prefer` ferait exiger TLS au pilote.
 DATABASE_URL_PRODUCTION="postgresql://prolearning:$(urlencode "$DB_PASSWORD")@$DB_HOST/prolearning?sslmode=disable"
 DATABASE_URL_DEMO="postgresql://prolearning-demo:$(urlencode "$DEMO_DB_PASSWORD")@$DB_HOST/prolearning_demo?sslmode=disable"
 DATABASE_URL_EVALUATION="postgresql://prolearning-eval:$(urlencode "$EVAL_DB_PASSWORD")@$DB_HOST/prolearning_eval?sslmode=disable"
@@ -76,22 +76,24 @@ OIDC_CLIENT_SECRET="${OIDC_CLIENT_SECRET:-$(secret_value "$NS" "$NAME" OIDC_CLIE
 
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
+# Mots de passe BRUTS (lus par le provisionnement hors-bande) ET URLs (lues par l'app).
 manifest="$(kubectl -n "$NS" create secret generic "$NAME" \
+  --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+  --from-literal=DEMO_DB_PASSWORD="$DEMO_DB_PASSWORD" \
+  --from-literal=EVAL_DB_PASSWORD="$EVAL_DB_PASSWORD" \
   --from-literal=DATABASE_URL_PRODUCTION="$DATABASE_URL_PRODUCTION" \
   --from-literal=DATABASE_URL_DEMO="$DATABASE_URL_DEMO" \
   --from-literal=DATABASE_URL_EVALUATION="$DATABASE_URL_EVALUATION" \
   --from-literal=OIDC_CLIENT_SECRET="$OIDC_CLIENT_SECRET" \
   --dry-run=client -o yaml)"
 
-# `apply` plutôt que `create` : le script est rejouable.
 printf '%s\n' "$manifest" | kubectl apply -f -
 echo "✓ Secret $NS/$NAME à jour."
 
 if command -v kubeseal >/dev/null 2>&1; then
   dir="${SEALED_DIR:-$HOME/sealed-secrets}"
   mkdir -p "$dir"
-  printf '%s\n' "$manifest" \
-    | kubeseal --controller-namespace kube-system --format yaml > "$dir/$NAME.sealed.yaml"
+  printf '%s\n' "$manifest" | kubeseal --controller-namespace kube-system --format yaml > "$dir/$NAME.sealed.yaml"
   echo "✓ Copie scellée : $dir/$NAME.sealed.yaml (hors dépôt)."
 else
   echo "ℹ kubeseal absent : pas de copie scellée (facultative)."
