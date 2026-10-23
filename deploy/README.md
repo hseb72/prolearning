@@ -1,11 +1,14 @@
 # Déploiement — 3S - Pro Learning sur la plateforme mutualisée
 
 3S - Pro Learning suit le **pattern `shared`** de
-[platform-patterns](https://github.com/hseb72/platform-patterns). Il se pose sur le socle
-décrit dans [homelab-platform](https://github.com/hseb72/homelab-platform) :
-ingress-nginx, Kong, cert-manager, PostgreSQL mutualisé. Ce dépôt ne déploie **que**
-l'application, dans un seul namespace : `prolearning`. Le modèle suivi est celui de
-[treasurehunters](https://github.com/hseb72/treasurehunters/tree/master/deploy).
+[platform-patterns](https://github.com/hseb72/platform-patterns) (chart `app`
+**1.0.0**). Il se pose sur le socle décrit dans
+[homelab-platform](https://github.com/hseb72/homelab-platform) : ingress-nginx,
+Kong, cert-manager, PostgreSQL mutualisé **CloudNativePG**, Keycloak et SealedSecrets.
+
+Modèle réaligné (1.0.0) : le chart POSSÈDE **deux namespaces** et y rend tout —
+`ui-prolearning` (front) et `api-prolearning` (API). Plus de `deploy/manifests/` :
+le chart rend les deux Ingress et les NetworkPolicies.
 
 ## Le chemin d'une requête
 
@@ -15,20 +18,21 @@ Internet
    ▼
 ingress-nginx (ns ingress) ── TLS cert-manager + WAF
    │
-   ├──▶ prolearning.crealcs.com ──────▶ web (nginx, ns prolearning)
+   ├──▶ prolearning.crealcs.com ──────▶ web (nginx, ns ui-prolearning)
    │        pages, retour Keycloak            │
    │                                          └── relaie /api ──┐
    │                                                            ▼
    └──▶ api.prolearning.crealcs.com ──▶ kong-proxy (ns kong)
                                                 │  Ingress classe kong
                                                 ▼
-                                        api (Node.js, ns prolearning)
+                                        api (Node.js, ns api-prolearning)
                                           │                  │
                                           ▼                  ▼
-                           PostgreSQL mutualisé (ns database)   Keycloak Soredi
-                           base prolearning       (production)  sso.crealcs.com
-                           base prolearning_demo  (démo)
-                           base prolearning_eval  (évaluation)
+                           PostgreSQL CNPG (ns postgres)   Keycloak Soredi
+                           postgres-rw :                   sso.crealcs.com
+                             prolearning       (production)  realm `soredi`
+                             prolearning_demo  (démo)
+                             prolearning_eval  (évaluation)
 ```
 
 Le front appelle l'API en chemin relatif (`/api`), sous la même origine : pas de CORS,
@@ -37,86 +41,69 @@ directement par l'API.
 
 ## Ce qui vient d'où
 
-| Élément                                                                                                                            | Source                                                                                                                                                   |
-| ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Deployments / Services `web` et `api`, ConfigMap `api-config`, PDB, NetworkPolicy « Kong seulement »                               | chart `app` de platform-patterns (OCI, **épinglé**), valeurs [`values.yaml`](values.yaml)                                                                |
-| Tag des images                                                                                                                     | `deploy/values-image.yaml` sur la branche **`deploy-state`**, écrit par la CI                                                                            |
-| Ce qu'Argo CD lit                                                                                                                  | la branche d'environnement **`deploy-state`** : copie de `deploy/` depuis `master`, plus le tag d'image. Tenue à jour par `.github/workflows/deploy.yml` |
-| Ingress nginx du front, Ingress kong de l'API, entrée ingress-nginx → web                                                          | [`manifests/`](manifests/)                                                                                                                               |
-| Secret `prolearning-api-secrets` (`DATABASE_URL_PRODUCTION`, `DATABASE_URL_DEMO`, `DATABASE_URL_EVALUATION`, `OIDC_CLIENT_SECRET`) | créé **directement dans le cluster** par [`create-secrets.sh`](create-secrets.sh), jamais versionné                                                      |
-| Bases + rôles `prolearning`, `prolearning-demo` et `prolearning-eval`, hôte public de l'API                                        | **socle** (homelab-platform)                                                                                                                             |
-| Client OIDC `pro-learning`                                                                                                         | Keycloak de Soredi, royaume `soredi` ([`docs/keycloak.md`](../docs/keycloak.md))                                                                         |
+| Élément | Source |
+|---|---|
+| Deployments / Services `web` et `api`, ConfigMap `api-config`, PDB, les **deux Ingress** (nginx du front, kong de l'API) et les **NetworkPolicies** | chart `app` 1.0.0 de platform-patterns (OCI, **épinglé**), valeurs [`values.yaml`](values.yaml) |
+| Tag des images | `deploy/values-image.yaml` sur la branche **`deploy-state`**, écrit par la CI |
+| Secret `prolearning-api-secrets` (`DB_PASSWORD`, `DEMO_DB_PASSWORD`, `EVAL_DB_PASSWORD`, `DATABASE_URL_PRODUCTION`, `DATABASE_URL_DEMO`, `DATABASE_URL_EVALUATION`, `OIDC_CLIENT_SECRET`) | créé **dans le cluster** par [`create-secrets.sh`](create-secrets.sh), jamais versionné |
+| Bases/rôles `prolearning`, `prolearning-demo`, `prolearning-eval` (CNPG) | provisionnés **hors-bande** ; hôte public de l'API amené à kong-proxy par le **socle** (gateway) |
+| Client OIDC `pro-learning` | Keycloak de Soredi, realm `soredi` ([`docs/keycloak.md`](../docs/keycloak.md)) |
 
-L'API applique elle-même les migrations SQL au démarrage, aux trois bases, sous verrou
-PostgreSQL : les deux répliques peuvent démarrer ensemble. Au premier démarrage, si la
-base démo est vide, elle charge le jeu de démonstration (`fixtures/demo/`, formations de
-`fixtures/formations/`). La base d'évaluation (formations importées, en attente de
-relecture et de publication) n'est jamais réinitialisée.
+Le chart pose `platform-patterns.io/postgres-client` sur `api-prolearning` — une
+seule étiquette couvre les trois connexions. Les images tournent en non-root
+numérique (uid 1000 API, 101 nginx) : le `securityContext` `restricted` du chart
+passe sans réglage.
+
+L'API applique elle-même les migrations SQL au démarrage, aux trois bases, sous
+verrou PostgreSQL. Au premier démarrage, si la base démo est vide, elle charge le
+jeu de démonstration (`fixtures/demo/`). La base d'évaluation n'est jamais
+réinitialisée.
+
+> **Provisionnement hors-bande (ce cluster).** Deux raisons : la latence
+> d'indexation kube-router fait échouer le Job PreSync (cf. mtgwars), ET le chart
+> ne provisionne qu'UNE base là où prolearning en a trois. Les trois rôles + bases
+> sont donc créés une fois à la main dans CNPG (runbook de bascule), avec les mots
+> de passe DB_PASSWORD / DEMO_DB_PASSWORD / EVAL_DB_PASSWORD du Secret.
 
 ## Première installation
 
-**0. Prérequis côté pattern — chart publié.** L'Application référence
-`oci://ghcr.io/hseb72/platform-patterns/app:0.4.0`, déjà utilisé par treasurehunters :
-Argo CD sait déjà lire ce registre.
+**0. Chart publié.** L'Application référence `oci://ghcr.io/hseb72/platform-patterns/app:1.0.0`.
 
-**1. Côté socle (homelab-platform) — trois locataires.** Le socle donne à chaque
-locataire **une** base et **un** rôle ; une base par espace (production, démonstration,
-évaluation) demande donc trois locataires, dans le même namespace `prolearning` :
+**1. Côté socle (homelab-platform) — trois bases, hors-bande.** Dans le PostgreSQL
+CNPG, créer les trois rôles et bases (mots de passe = `*_DB_PASSWORD` du Secret de
+l'étape 5) :
 
-| Locataire          | Base                               | Hôte d'API                                             |
-| ------------------ | ---------------------------------- | ------------------------------------------------------ |
-| `prolearning`      | `prolearning` (production)         | `api.prolearning.crealcs.com`, port 5080, corps ≤ 200m |
-| `prolearning-demo` | `prolearning_demo` (démonstration) | —                                                      |
-| `prolearning-eval` | `prolearning_eval` (évaluation)    | —                                                      |
+| Rôle | Base |
+|---|---|
+| `prolearning` | `prolearning` (production) |
+| `prolearning-demo` | `prolearning_demo` (démonstration) |
+| `prolearning-eval` | `prolearning_eval` (évaluation) |
 
-Le plus court : une issue « Nouveau locataire » par locataire ; le guichet ouvre la PR.
-Après fusion, sur le poste admin :
+L'hôte `api.prolearning.crealcs.com` est déjà amené à kong-proxy par le socle
+(`gateway/10-ingress-api-hosts.yaml`).
 
-```bash
-scripts/tenant-keys.sh prolearning --database --app-namespace prolearning
-scripts/tenant-keys.sh prolearning-demo --database --app-namespace prolearning
-scripts/tenant-keys.sh prolearning-eval --database --app-namespace prolearning
-argocd app sync database
-scripts/verify-tenant.sh prolearning --app-namespace prolearning
-scripts/verify-tenant.sh prolearning-demo --app-namespace prolearning
-scripts/verify-tenant.sh prolearning-eval --app-namespace prolearning
-```
+**2. DNS.** Deux enregistrements vers l'IP publique de l'ingress, **avant** la
+demande de certificat (HTTP-01) : `prolearning.crealcs.com` et `api.prolearning.crealcs.com`.
 
-Le kit côté application que génère le guichet (namespace, NetworkPolicies, Ingress
-kong) **n'est pas à reprendre** : son équivalent est déjà dans `argocd/application.yaml`
-et `manifests/`. Son Ingress kong déclare en plus l'hôte interne
-`kong-proxy.kong.svc.cluster.local`, inutile ici (le front relaie avec l'hôte
-public) et qui entrerait en conflit avec les autres applications.
+**3. Keycloak.** Client `pro-learning` dans le realm `soredi`
+([`docs/keycloak.md`](../docs/keycloak.md)) : confidentiel, _standard flow_, PKCE
+`S256`, redirection `https://prolearning.crealcs.com/api/auth/callback`,
+déconnexion vers `https://prolearning.crealcs.com/connexion`. L'hôte et les URLs
+ne changent pas : rien à refaire côté Keycloak lors de la bascule.
 
-**2. DNS.** Deux enregistrements vers l'IP publique de l'ingress, **avant** la demande
-de certificat (HTTP-01) :
+**4. Images.** Le passage de la CI sur `master` publie
+`ghcr.io/hseb72/prolearning/{web,api}:<sha>` et écrit ce SHA sur `deploy-state`.
+Images GHCR privées tirées via l'auth du **nœud** (`registries.yaml`).
 
-```
-prolearning.crealcs.com.       A   <IP>
-api.prolearning.crealcs.com.   A   <IP>
-```
-
-**3. Keycloak.** Client `pro-learning` dans le royaume `soredi`, réglé comme décrit
-dans [`docs/keycloak.md`](../docs/keycloak.md) : client confidentiel, _standard flow_,
-PKCE `S256`, redirection `https://prolearning.crealcs.com/api/auth/callback`,
-déconnexion vers `https://prolearning.crealcs.com/connexion`.
-
-**4. Images.** Le premier passage de la CI sur `master` publie
-`ghcr.io/hseb72/prolearning/{web,api}:<sha>` et écrit ce SHA dans
-`deploy/values-image.yaml`, sur la branche `deploy-state` (créée au premier passage).
-Si les paquets GHCR sont privés, déclarer un `imagePullSecret`
-(`global.imagePullSecrets` dans `values.yaml`) ou rendre les paquets publics.
-
-**5. Secret de l'API**, créé directement dans le cluster. Les mots de passe des trois
-bases sont lus dans `database/database-tenant-keys` (clés `prolearning`,
-`prolearning-demo` et `prolearning-eval`) ; le secret Keycloak est fourni une fois :
+**5. Secret de l'API** (ns `api-prolearning`) :
 
 ```bash
 OIDC_CLIENT_SECRET='…' ./deploy/create-secrets.sh
 ```
 
-Relancé sans `OIDC_CLIENT_SECRET`, le script conserve celui en place. Si `kubeseal`
-est installé, il produit aussi une copie scellée **hors du dépôt** (`~/sealed-secrets/`).
+Les trois `*_DB_PASSWORD` sont tirés au hasard la première fois puis conservés (ou
+passés en ligne de commande pour reprendre des valeurs existantes). Relancé sans
+`OIDC_CLIENT_SECRET`, le script conserve celui en place.
 
 **6. Argo CD :**
 
@@ -126,29 +113,9 @@ kubectl apply -f deploy/argocd/application.yaml
 kubectl -n argocd get application prolearning -w
 ```
 
-À partir de là, rien ne se fait plus à la main : chaque commit sur `master` construit
-les images, la CI promeut leur SHA sur la branche `deploy-state`, et Argo CD applique.
-
-**7. Premier administrateur.** Se connecter avec le compte Soredi
-`sebastien.raimondi@soredi-group.com` (`BOOTSTRAP_ADMIN_EMAILS` dans `values.yaml`) : il
-reçoit le rôle d'administrateur et attribue ensuite les autres rôles depuis
-« Comptes et rôles ».
-
-## Ajouter la base d'évaluation à une installation existante
-
-L'API refuse de démarrer sans `DATABASE_URL_EVALUATION`. **Avant** de déployer la version
-qui introduit l'évaluation :
-
-1. Socle : issue « Nouveau locataire » pour `prolearning-eval` (base `prolearning_eval`,
-   namespace `prolearning`, sans hôte d'API), puis `tenant-keys.sh`, `argocd app sync
-database` et `verify-tenant.sh` comme à l'étape 1.
-2. Relancer `./deploy/create-secrets.sh` (sans `OIDC_CLIENT_SECRET` : la valeur en place
-   est conservée) : le Secret reçoit `DATABASE_URL_EVALUATION`.
-3. Fusionner : l'API applique les migrations à la nouvelle base au démarrage.
-
-Les formations importées auparavant dans la démonstration ne sont pas déplacées : les
-réimporter depuis leurs fichiers d'origine (elles arrivent en évaluation) avant de
-réinitialiser la démonstration.
+**7. Premier administrateur.** Se connecter avec un compte de `BOOTSTRAP_ADMIN_EMAILS`
+(dans `values.yaml`) : il reçoit le rôle d'administrateur et attribue ensuite les
+autres rôles depuis « Comptes et rôles ».
 
 ## Vérifier
 
@@ -156,17 +123,16 @@ réinitialiser la démonstration.
 curl -fsS https://prolearning.crealcs.com/healthz              # front
 curl -fsS https://prolearning.crealcs.com/api/health           # front → Kong → API → 3 bases
 curl -fsS https://api.prolearning.crealcs.com/api/health       # nginx → Kong → API
-kubectl -n prolearning logs deploy/api | grep -iE 'migration|jeu chargé'
+kubectl -n api-prolearning logs deploy/api | grep -iE 'migration|jeu chargé'
 ```
 
-`/api/health` répond `{"status":"ok","databases":{"production":"ok","demo":"ok","evaluation":"ok"}}`, ou
-503 en désignant la base injoignable. Depuis la VM, ajouter
+`/api/health` répond `{"status":"ok","databases":{"production":"ok","demo":"ok","evaluation":"ok"}}`,
+ou 503 en désignant la base injoignable. Depuis la VM, ajouter
 `--resolve <hôte>:443:<IP interne>` (hairpin, cf. homelab-platform/gateway/README.md).
 
-L'API doit aussi joindre `https://sso.crealcs.com` (découverte OIDC, échange du code) :
-si la connexion échoue avec « Le service de connexion Soredi est indisponible »,
-vérifier depuis un pod que cet hôte répond (le même piège du hairpin peut s'y
-appliquer si Keycloak tourne sur le même cluster).
+L'API doit aussi joindre `https://sso.crealcs.com` (découverte OIDC, échange du
+code) ; Keycloak tourne sur le même cluster (ns `sso`), le piège du hairpin peut
+s'y appliquer.
 
 ## Retour arrière
 
@@ -175,14 +141,3 @@ git switch deploy-state
 git revert <commit de promotion>   # Argo redéploie le SHA précédent
 git push origin deploy-state
 ```
-
-## Écarts connus avec le pattern
-
-Les mêmes que treasurehunters (chart `app` 0.4.0, qui suppose une plateforme Gateway API) :
-
-1. **Ingress kong** de l'API en manifeste local, l'`HTTPRoute` du chart désactivée.
-2. **Ingress nginx** du front et l'entrée correspondante dans la NetworkPolicy.
-3. **`securityContext`** absent des workloads : namespace en Pod Security `baseline`
-   (avertissement `restricted`). Les images tournent déjà en non-root (uid 1000 pour
-   l'API, 101 pour nginx).
-4. **Provisionnement** des bases par le socle, celui du chart désactivé.

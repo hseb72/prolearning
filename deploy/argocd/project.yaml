@@ -1,16 +1,18 @@
-# AppProject Argo CD — périmètre de 3S - Pro Learning.
+# AppProject Argo CD — périmètre de 3S Pro Learning.
 #
-# Un projet par application : la liste des destinations est la barrière qui empêche
-# ce déploiement d'écrire ailleurs que dans son namespace. L'hôte d'API vit dans le
-# namespace `gateway`, qui appartient au socle : on y demande une entrée
-# (homelab-platform) plutôt que d'obtenir le droit d'y écrire.
+# Un projet par application : la liste des destinations est la barrière qui
+# empêche ce déploiement d'écrire ailleurs que dans SES namespaces. Modèle
+# réaligné (chart 1.0.0) : l'app possède deux namespaces, `ui-prolearning`
+# (front) et `api-prolearning` (API). L'hôte d'API public vit dans le namespace
+# `kong` (socle) : on y demande une entrée (homelab-platform/gateway) plutôt que
+# d'obtenir le droit d'y écrire.
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: prolearning
   namespace: argocd
 spec:
-  description: 3S - Pro Learning — portail de formation (pattern shared de platform-patterns)
+  description: 3S Pro Learning — portail de formation (pattern shared de platform-patterns)
   sourceRepos:
     - https://github.com/hseb72/prolearning.git
     - https://github.com/hseb72/prolearning
@@ -18,11 +20,13 @@ spec:
     - ghcr.io/hseb72/platform-patterns
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: prolearning
-  # Seule ressource hors namespace : le Namespace lui-même (CreateNamespace).
+      namespace: ui-prolearning
+    - server: https://kubernetes.default.svc
+      namespace: api-prolearning
+  # Seule ressource hors namespace : les Namespaces eux-mêmes (rendus par le chart).
   clusterResourceWhitelist:
-    - group: ''
+    - group: ""
       kind: Namespace
   namespaceResourceWhitelist:
-    - group: '*'
-      kind: '*'
+    - group: "*"
+      kind: "*"

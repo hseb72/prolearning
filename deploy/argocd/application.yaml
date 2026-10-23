@@ -1,8 +1,10 @@
-# Application Argo CD — 3S - Pro Learning.
+# Application Argo CD — 3S Pro Learning.
 #
-# Pattern `shared` de platform-patterns : le chart `app`, publié en OCI et ÉPINGLÉ,
-# rend les workloads avec les valeurs de ce dépôt ; les manifestes propres à la
-# plateforme (Ingress nginx/kong, NetworkPolicy) viennent de deploy/manifests.
+# Pattern `shared` CANONIQUE de platform-patterns (chart `app` 1.0.0) : le chart,
+# publié en OCI et ÉPINGLÉ, possède les DEUX namespaces de l'app
+# (`ui-prolearning`, `api-prolearning`) et y rend tout — workloads, Ingress
+# (nginx + kong), NetworkPolicies. Plus de source `deploy/manifests`.
+#
 # Modèle « pull » : Argo lit la branche d'environnement `deploy-state`, que la CI
 # tient à jour (copie de deploy/ depuis master + SHA d'image promu dans
 # deploy/values-image.yaml).
@@ -22,37 +24,30 @@ spec:
     # 1. Le chart du pattern — version immuable, montée par choix explicite.
     - repoURL: ghcr.io/hseb72/platform-patterns
       chart: app
-      targetRevision: 0.4.0
+      targetRevision: 1.0.0
       helm:
         releaseName: prolearning
         valueFiles:
           - $values/deploy/values.yaml
           - $values/deploy/values-image.yaml
     # 2. Les valeurs et le SHA d'image, depuis la branche d'environnement.
-    #    Son historique EST l'historique des déploiements.
     - repoURL: https://github.com/hseb72/prolearning.git
       targetRevision: deploy-state
       ref: values
-    # 3. Les manifestes propres à la plateforme mutualisée (même révision).
-    - repoURL: https://github.com/hseb72/prolearning.git
-      targetRevision: deploy-state
-      path: deploy/manifests
   destination:
     server: https://kubernetes.default.svc
-    namespace: prolearning
+    # Namespace par défaut d'Argo. Le chart rend chaque ressource avec son propre
+    # namespace (ui-/api-prolearning) et crée les Namespaces lui-même.
+    namespace: api-prolearning
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-    # Le chart ne possède pas le namespace : ses étiquettes d'adhésion sont posées
-    # ici (protocole de consommation de homelab-platform).
-    managedNamespaceMetadata:
-      labels:
-        # Ouvre l'accès au PostgreSQL mutualisé (bases prolearning, prolearning_demo, prolearning_eval).
-        database-client: 'true'
-        # Le chart `app` 0.4.0 ne pose pas encore de securityContext : on applique
-        # `baseline` et on signale les écarts à `restricted`.
-        pod-security.kubernetes.io/enforce: baseline
-        pod-security.kubernetes.io/warn: restricted
+    # Plus de CreateNamespace ni de managedNamespaceMetadata : le chart possède
+    # les namespaces et y pose l'étiquette d'adhésion (postgres-client).
+    retry:
+      limit: 5
+      backoff:
+        duration: 15s
+        factor: 2
+        maxDuration: 5m
