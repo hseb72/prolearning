@@ -6,7 +6,7 @@ Ce kit contient de quoi démarrer le développement avec Claude Code.
 CLAUDE.md                                   contexte du projet, lu par Claude Code à chaque session
 docs/format/format-formation-3s.md          spécification du format d'échange des formations (v1.0)
 docs/format/formation.schema.json           schéma JSON de validation
-fixtures/formations/togaf10-m1.formation.json   formation exemple : TOGAF 10, module 1 complet
+fixtures/formations/togaf10.formation.json   formation exemple : parcours TOGAF 10 complet (9 modules)
 tools/valider-formation.js                  validateur de référence (schéma + contrôles métier)
 ```
 
@@ -29,4 +29,4 @@ npm install ajv@8
 node tools/valider-formation.js ma-formation.formation.json
 ```
 
-Puis importez-le dans la plateforme, rubrique Administration (il arrive dans l'espace démonstration).
+Puis importez-le dans la plateforme, rubrique Administration (il arrive dans l'espace d'évaluation).

@@ -15,7 +15,7 @@ Une plateforme interne de formation : catalogue, sessions à distance et sur sit
 | Format d'échange des formations | `docs/format/format-formation-3s.md` | **Contrat** entre l'atelier de production de contenus et la plateforme |
 | Schéma JSON du format | `docs/format/formation.schema.json` | Validation à l'import |
 | Validateur de référence | `tools/valider-formation.js` | Schéma + contrôles métier ; la plateforme doit donner les mêmes verdicts |
-| Formation exemple | `fixtures/formations/togaf10-m1.formation.json` | Jeu de test et contenu de démonstration |
+| Formation exemple (parcours TOGAF 10 complet, 9 modules) | `fixtures/formations/togaf10.formation.json` | Jeu de test et contenu de démonstration |
 
 Le format est un contrat : on ne le modifie pas pour arranger l'implémentation. Toute évolution passe par une nouvelle `formatVersion` et une mise à jour de la spécification, validée par le porteur du projet.
 
@@ -30,18 +30,23 @@ Interface, messages, contenus et documentation en **français**. Code, noms de v
 | Collaborateur | Catalogue, sessions, demandes, parcours en ligne, « Mes demandes » |
 | Manager | + valide les demandes de son équipe, demande des sessions sur mesure |
 | Équipe formation | + traite les demandes, gère catalogue et sessions |
-| Administrateur | + import/publication des formations, **bascule production/démo**, paramétrage |
+| Administrateur | + import, évaluation et publication des formations, **bascule production/démo**, paramétrage |
 
-## Espaces production et démonstration
+## Espaces : production, démonstration, évaluation
 
-Ce sont deux **espaces de données** dans la même application, à ne pas confondre avec les environnements techniques (développement, recette, production) qui existent en plus.
+Ce sont trois **espaces de données** dans la même application, à ne pas confondre avec les environnements techniques (développement, recette, production) qui existent en plus.
 
-- **Production** : les vraies données. C'est le seul espace visible des non-administrateurs.
-- **Démonstration** : des données de test (formations, sessions, demandes fictives), pour montrer la plateforme et relire une formation importée avant de la publier.
+| Espace | Contenu | Qui y accède | Réinitialisation |
+|---|---|---|---|
+| **Production** | Les vraies données : catalogue, sessions, demandes, formations publiées, progression | Tout le monde ; seul espace visible des non-administrateurs | Jamais |
+| **Démonstration** | Données de test (formations, sessions, demandes fictives) pour montrer la plateforme | Administrateurs, via la bascule | Oui, à partir de `fixtures/` |
+| **Évaluation** | Les formations importées, en attente de relecture et de publication | Administrateurs, depuis l'administration | **Jamais** par la réinitialisation de la démo |
+
 - Un **bouton de bascule production/démo** n'apparaît qu'aux administrateurs. L'espace actif est toujours signalé par un bandeau de couleur différente.
-- Isolation stricte : aucune requête ne doit pouvoir mélanger les deux espaces. Chaque table métier porte l'espace, ou bien chaque espace a son propre schéma de base, au choix de l'architecture retenue. Des tests le vérifient.
-- L'espace démonstration se **réinitialise** à partir des jeux de données de `fixtures/` (action réservée aux administrateurs).
-- Les comptes utilisateurs et la progression personnelle sont propres à chaque espace.
+- L'**évaluation** n'est pas un espace qu'on « bascule » : c'est une zone de l'administration où vivent les formations importées. Elle est indépendante de la démonstration, pour qu'une réinitialisation de la démo ne puisse jamais effacer une formation en cours d'import ou de relecture.
+- Isolation stricte : aucune requête ne doit pouvoir mélanger les espaces. Chaque table métier porte l'espace, ou bien chaque espace a son propre schéma de base, au choix de l'architecture retenue. Des tests le vérifient, dont un test qui réinitialise la démo pendant un import et vérifie que l'évaluation est intacte.
+- L'espace démonstration se **réinitialise** à partir des jeux de données de `fixtures/` (action réservée aux administrateurs, journalisée).
+- Les comptes utilisateurs et la progression personnelle sont propres à chaque espace (production et démonstration).
 
 ## Formations en ligne
 
@@ -55,8 +60,8 @@ Ce sont deux **espaces de données** dans la même application, à ne pas confon
 
 1. L'administrateur dépose un `.formation.json` ou un `.formation.zip`.
 2. La plateforme valide (schéma + contrôles métier, mêmes règles que `tools/valider-formation.js`) et affiche un rapport lisible, avec le chemin de chaque erreur.
-3. Une formation valide est importée **dans l'espace démonstration**.
-4. Un administrateur la relit dans le lecteur, puis la **publie en production**.
+3. Une formation valide est importée **dans l'espace d'évaluation**. Un import en cours est une opération atomique : la formation n'apparaît qu'une fois entièrement enregistrée.
+4. Un administrateur la relit dans le lecteur, puis la **publie en production**. Il peut aussi la **copier dans l'espace démonstration** pour la montrer ; cette copie disparaît à la réinitialisation de la démo, pas l'original en évaluation.
 5. Règles de version : voir § 11 du format. Tout import et toute publication sont journalisés (qui, quand, quelle version).
 6. Export : toute formation se réexporte au même format, sans perte (test d'aller-retour obligatoire).
 
@@ -82,8 +87,8 @@ Ne pas trancher ces points seul : poser la question, puis consigner la réponse 
 
 ## Ordre de réalisation proposé pour le pilote
 
-1. Socle : projet, base de données, authentification, rôles, espaces production/démo avec la bascule et le bandeau.
-2. Format : modèle de données des formations, import (validation + rapport), export, tests d'aller-retour avec la formation exemple.
+1. Socle : projet, base de données, authentification, rôles, espaces production, démonstration et évaluation, avec la bascule et le bandeau.
+2. Format : modèle de données des formations, import dans l'espace d'évaluation (validation + rapport), publication, export, tests d'aller-retour avec la formation exemple.
 3. Lecteur de formation : tous les types d'activités, progression, déblocage, points.
 4. Catalogue et sessions : fiches formation, sessions à distance et sur site, places restantes.
 5. Demandes : inscription, session sur mesure, « Mes demandes », traitement par l'équipe formation.
@@ -92,6 +97,6 @@ Ne pas trancher ces points seul : poser la question, puis consigner la réponse 
 
 ## Définition de « terminé »
 
-- Tests automatisés verts, dont : validation du format (cas valides et invalides), aller-retour import/export, isolation des espaces, parcours complet de la formation exemple dans le navigateur.
+- Tests automatisés verts, dont : validation du format (cas valides et invalides), aller-retour import/export, isolation des trois espaces (réinitialiser la démo ne touche ni l'évaluation ni la production), parcours complet de la formation exemple dans le navigateur.
 - Aucun texte d'interface en anglais.
 - Parcours clé utilisable au clavier et sur un écran de 375 px de large.

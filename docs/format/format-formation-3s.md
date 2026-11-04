@@ -225,7 +225,7 @@ CommonMark + tableaux GFM. **Pas de HTML brut** (supprimé à l'import). Liens `
 
 ## 10. Ce que gère la plateforme (et non le format)
 
-- Les comptes, rôles, espaces production et démonstration.
+- Les comptes, rôles, espaces production, démonstration et évaluation.
 - Les points d'expérience par défaut : leçon 10, diaporama 10, bonne réponse de quiz 10, ordre 30, association 20, étoile de scénario 20, fiches 10 ; bonus de 50 par module terminé.
 - Les niveaux et les badges communs à toutes les formations.
 - L'enregistrement de la progression, par `formation.id` + `module.id` + `activite.id`.
@@ -236,8 +236,8 @@ CommonMark + tableaux GFM. **Pas de HTML brut** (supprimé à l'import). Liens `
 
 1. **Validation** contre `formation.schema.json`, puis contrôles métier : unicité des identifiants, références citées existantes, fichiers présents, scénarios cohérents, bonnes réponses existantes.
 2. **Rapport** lisible : erreurs bloquantes et avertissements, avec le chemin de l'élément (`modules[0].activites[3].questions[2]`).
-3. **Destination** : toujours l'espace **démonstration** d'abord, pour relecture.
-4. **Publication en production** par un administrateur, depuis l'espace démonstration.
+3. **Destination** : toujours l'**espace d'évaluation**, réservé aux administrateurs et indépendant de l'espace démonstration (une réinitialisation de la démo ne l'affecte pas).
+4. **Publication en production** par un administrateur, depuis l'espace d'évaluation. Une copie peut aussi être placée dans l'espace démonstration pour les présentations.
 
 Versions :
 
@@ -245,7 +245,7 @@ Versions :
 |---|---|
 | Nouvel `id` | Nouvelle formation. |
 | Même `id`, `version` supérieure | Nouvelle version. La progression des apprenants est conservée pour les modules et activités dont l'`id` n'a pas changé. |
-| Même `id`, même `version` | Refusé, sauf remplacement explicite en démonstration. |
+| Même `id`, même `version` | Refusé, sauf remplacement explicite dans l'espace d'évaluation. |
 | Même `id`, `version` inférieure | Refusé. |
 
 ---
