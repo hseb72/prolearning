@@ -17,6 +17,8 @@ Une plateforme interne de formation : catalogue, sessions à distance et sur sit
 | Validateur de référence | `tools/valider-formation.js` | Schéma + contrôles métier ; la plateforme doit donner les mêmes verdicts |
 | Formation exemple (parcours TOGAF 10 complet, 9 modules, format 1.0) | `fixtures/formations/togaf10.formation.json` | Jeu de test et contenu de démonstration |
 | Formation exemple (Kubernetes, 9 modules avec travaux pratiques, format 1.1) | `fixtures/formations/kubernetes-fondamentaux.formation.json` | Jeu de test de l'activité `pratique` et contenu de démonstration |
+| Formation exemple (LLM : comprendre et utiliser, 4 modules, format 1.1) | `fixtures/formations/llm-comprendre-utiliser.formation.json` | Jeu de test riche en exemples de balises dans du code ; doit s'importer sans aucun avertissement |
+| Formation exemple (LLM : développer, 5 modules, format 1.1) | `fixtures/formations/llm-developper.formation.json` | Idem, avec travaux pratiques ; doit s'importer sans aucun avertissement |
 | Formation exemple courte (TOGAF 10, module 1, format 1.0) | `fixtures/formations/togaf10-m1.formation.json` | Exemple de référence de la spécification ; jeu de test rapide (parité du validateur, parcours complet dans le navigateur) |
 
 Le format est un contrat : on ne le modifie pas pour arranger l'implémentation. Toute évolution passe par une nouvelle `formatVersion` et une mise à jour de la spécification, validée par le porteur du projet.
