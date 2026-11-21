@@ -1,12 +1,67 @@
 import type { GlossaryEntry } from '@shared/learning';
+import DOMPurify from 'dompurify';
 import { Marked, type Tokens } from 'marked';
 
 /**
  * Rendu du markdown des formations importées (§ 9 du format) : CommonMark + tableaux GFM,
  * sans HTML brut (ignoré), liens http(s) seulement (ouverts dans un nouvel onglet),
- * termes du glossaire `[[terme]]` avec leur définition. Le résultat passe en plus par le
- * nettoyage HTML d'Angular ([innerHTML]) : deux barrières plutôt qu'une.
+ * termes du glossaire `[[terme]]` avec leur définition.
+ *
+ * Jamais d'expression régulière sur le texte source : `marked` découpe le markdown, si
+ * bien que le contenu des codes (en ligne ou en bloc) reste du texte, échappé et intact.
+ * Le HTML produit est ensuite assaini par DOMPurify, avec la seule liste des balises que
+ * produit le rendu, puis une dernière fois par Angular ([innerHTML]) : trois barrières.
  */
+
+/** Balises et attributs que produit le rendu ; tout le reste est retiré. */
+const ALLOWED_TAGS = [
+  'p',
+  'br',
+  'hr',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'blockquote',
+  'pre',
+  'code',
+  'ul',
+  'ol',
+  'li',
+  'strong',
+  'em',
+  'del',
+  'table',
+  'thead',
+  'tbody',
+  'tr',
+  'th',
+  'td',
+  'a',
+  'abbr',
+  'span',
+  'input',
+];
+const ALLOWED_ATTR = [
+  'href',
+  'title',
+  'target',
+  'rel',
+  'class',
+  'align',
+  'start',
+  'type',
+  'checked',
+  'disabled',
+];
+
+/** HTML brut écrit dans le markdown : on n'en garde que le texte, jamais les balises. */
+const textOnly = (html: string) =>
+  DOMPurify.sanitize(html, { ALLOWED_TAGS: [], ALLOWED_ATTR: [], KEEP_CONTENT: true });
+
+const purify = (html: string) => DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR });
 const ESCAPES: Record<string, string> = {
   '&': '&amp;',
   '<': '&lt;',
@@ -42,8 +97,8 @@ export function createMarkdown(glossary: readonly GlossaryEntry[] = []) {
       },
     ],
     renderer: {
-      // HTML brut : ignoré (§ 9).
-      html: () => '',
+      // HTML brut (§ 9) : balises retirées, texte gardé (DOMPurify, pas d'expression régulière).
+      html: (token: Tokens.HTML | Tokens.Tag) => textOnly(token.text),
       link(
         this: { parser: { parseInline(tokens: Tokens.Generic[]): string } },
         token: Tokens.Link,
@@ -62,7 +117,7 @@ export function createMarkdown(glossary: readonly GlossaryEntry[] = []) {
   });
 
   return {
-    block: (markdown: string) => marked.parse(markdown ?? '') as string,
-    inline: (markdown: string) => marked.parseInline(markdown ?? '') as string,
+    block: (markdown: string) => purify(marked.parse(markdown ?? '') as string),
+    inline: (markdown: string) => purify(marked.parseInline(markdown ?? '') as string),
   };
 }

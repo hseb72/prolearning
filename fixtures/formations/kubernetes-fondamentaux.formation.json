@@ -8448,7 +8448,7 @@
               "options": [
                 {
                   "id": "a",
-                  "texte": "kubectl logs <pod> --previous"
+                  "texte": "`kubectl logs <pod> --previous`"
                 },
                 {
                   "id": "b",

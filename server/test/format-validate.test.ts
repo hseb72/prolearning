@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { validateFormation } from '../src/format/validate.js';
@@ -277,5 +277,49 @@ describe('validation du format, à parité avec le validateur de référence', (
     const report = validateFormation(JSON.stringify(f));
     expect(report.ok).toBe(true);
     expect(report.avertissements.filter((w) => w.chemin === 'resume')).toHaveLength(2);
+  });
+
+  it('ne prend pas le code pour du HTML brut (§ 9, CommonMark)', () => {
+    const f = base();
+    const warn = (text: string) => {
+      f['resume'] = text;
+      return validateFormation(JSON.stringify(f)).avertissements.filter(
+        (w) => w.chemin === 'resume',
+      );
+    };
+    // Codes en ligne, simples ou doubles, et blocs délimités ``` ou ~~~ : du texte.
+    expect(warn('Utilisez `<avis>`…`</avis>` pour encadrer la réponse.')).toEqual([]);
+    expect(warn('La balise ``<a href="x">`` et ses [liens](javascript:x)')).toHaveLength(1);
+    expect(
+      warn('Exemple :\n\n```xml\n<document numero="1">\n  <avis>oui</avis>\n</document>\n```'),
+    ).toEqual([]);
+    expect(warn('~~~\n<b>gras</b> et [lien](ftp://x)\n~~~')).toEqual([]);
+    expect(warn('    <indente>bloc de code indenté</indente>')).toEqual([]);
+    // Hors code, le HTML brut est bien signalé.
+    expect(warn('Texte <b>gras</b>')).toEqual([
+      { chemin: 'resume', message: 'HTML brut : il sera ignoré à l’affichage (§ 9).' },
+    ]);
+    // Une adresse e-mail nue n'est pas un lien écrit : rien à signaler.
+    expect(warn('Écrivez à formation@soredi.example.')).toEqual([]);
+  });
+
+  // Toutes les formations exemples (dont les parcours sur les LLM, pleins d'exemples de
+  // balises dans du code) s'importent sans aucun avertissement.
+  it.each(
+    readdirSync(join(ROOT, 'fixtures', 'formations')).filter((f) => f.endsWith('.formation.json')),
+  )('importe %s sans avertissement', (name) => {
+    const report = validateFormation(readFileSync(join(ROOT, 'fixtures', 'formations', name)));
+    expect(report.ok).toBe(true);
+    expect(report.avertissements).toEqual([]);
+  });
+
+  it('n’analyse pas les fichiers des travaux pratiques : c’est du texte brut', () => {
+    const f = k8s();
+    const tp = f['modules']
+      .flatMap((m: Record<string, any>) => m['activites'])
+      .find((a: Record<string, any>) => a['type'] === 'pratique');
+    tp.fichiers[0].contenu = '<html><body><a href="javascript:x">[x](ftp://y)</a></body></html>';
+    const report = validateFormation(JSON.stringify(f));
+    expect(report.avertissements.filter((w) => w.chemin.includes('.fichiers['))).toEqual([]);
   });
 });

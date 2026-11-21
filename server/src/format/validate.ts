@@ -1,3 +1,4 @@
+import { Marked } from 'marked';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -215,26 +216,50 @@ function branchType(schema: Record<string, unknown>, branch: unknown): string | 
   return typeof constant === 'string' ? constant : undefined;
 }
 
+/** Analyseur CommonMark + GFM, le même moteur que le lecteur (`marked`). */
+const markdown = new Marked({ gfm: true, async: false });
+
+/** Fichier d'une activité « pratique » : son `contenu` est du texte brut, pas du markdown. */
+const PRACTICE_FILE_CONTENT = /\.fichiers\[\d+\]\.contenu$/;
+
 /**
  * Avertissements sur le contenu (§ 9) : HTML brut et liens non http(s). Ils ne bloquent
  * pas l'import — le validateur de référence ne les refuse pas — mais le lecteur les
  * neutralise à l'affichage.
+ *
+ * Chaque texte est découpé par l'analyseur markdown, comme à l'affichage : le contenu des
+ * blocs de code (délimités ou indentés) et des codes en ligne est du texte, jamais du HTML
+ * ni des liens, et ne déclenche donc rien. Les fichiers des travaux pratiques ne sont pas
+ * analysés.
  */
 function contentWarnings(document: unknown): ReportItem[] {
   const warnings: ReportItem[] = [];
+  const inspect = (text: string, path: string) => {
+    if (!/[<\]]/.test(text)) return; // ni balise ni lien possible : rien à analyser
+    let html = false;
+    const targets: string[] = [];
+    markdown.walkTokens(markdown.lexer(text), (token) => {
+      if (token.type === 'html') html = true;
+      // Liens écrits `[texte](cible)` et images ; pas les adresses que GFM relie d'office.
+      else if ((token.type === 'link' || token.type === 'image') && /^!?\[/.test(token.raw)) {
+        targets.push(token.href);
+      }
+    });
+    if (html) {
+      warnings.push({ chemin: path, message: 'HTML brut : il sera ignoré à l’affichage (§ 9).' });
+    }
+    for (const target of targets) {
+      if (!/^(https?:\/\/|assets\/|#)/i.test(target)) {
+        warnings.push({
+          chemin: path,
+          message: `Lien « ${target} » : seuls les liens http(s) sont acceptés (§ 9), il sera neutralisé.`,
+        });
+      }
+    }
+  };
   const walk = (node: unknown, path: string) => {
     if (typeof node === 'string') {
-      if (/<\/?[a-zA-Z][^>]*>/.test(node)) {
-        warnings.push({ chemin: path, message: 'HTML brut : il sera ignoré à l’affichage (§ 9).' });
-      }
-      for (const [, target] of node.matchAll(/\]\(\s*<?([^)\s>]+)/g)) {
-        if (!/^(https?:\/\/|assets\/|#)/i.test(target!)) {
-          warnings.push({
-            chemin: path,
-            message: `Lien « ${target} » : seuls les liens http(s) sont acceptés (§ 9), il sera neutralisé.`,
-          });
-        }
-      }
+      if (!PRACTICE_FILE_CONTENT.test(path)) inspect(node, path);
     } else if (Array.isArray(node)) {
       node.forEach((item, i) => walk(item, `${path}[${i}]`));
     } else if (node && typeof node === 'object') {
