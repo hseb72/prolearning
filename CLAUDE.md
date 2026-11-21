@@ -63,7 +63,7 @@ Ce sont trois **espaces de données** dans la même application, à ne pas confo
   - Le quiz tire ses questions côté API et enregistre la tentative (`pl_quiz_attempts`) ; une tentative ne se corrige qu'une fois.
   - On garde le **meilleur** résultat par activité (`pl_activity_results`). Un module est terminé quand toutes ses activités obligatoires sont faites et ses quiz réussis ; il rapporte un bonus de 50 points, une seule fois (`pl_module_completions`).
   - Niveaux et badges sont calculés, non stockés (`shared/gamification.ts`) : Découverte, Initié (100), Praticien (300), Confirmé (600), Expert (1000) ; badges Premier pas, Module accompli, Sans faute, Stratège, Parcours terminé.
-  - Markdown rendu avec `marked`, HTML brut supprimé, liens `http(s)` seulement (`src/app/learning/markdown.ts`).
+  - Markdown rendu avec `marked`, puis HTML produit assaini par DOMPurify (liste fermée des balises du rendu) et par Angular ; HTML brut : balises retirées, texte gardé ; code toujours échappé et intact ; liens `http(s)` seulement (`src/app/learning/markdown.ts`).
 
 ## Import et export des formations
 
@@ -108,6 +108,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 - **Évaluation** (12 octobre 2026) : import, liste, relecture, export, publication et copie en démonstration se font dans « Formations », depuis n'importe quel espace, par un administrateur (compte joué ET personne réelle). Import, publication et copie sont journalisés en **production** (`formation.import`, `formation.publish`, `formation.copy_demo`), journal permanent. La relecture utilise le lecteur en **aperçu** (`/api/evaluation/parcours`) : tout est ouvert et corrigé, rien n'est enregistré. La copie en démo peut remplacer une version déjà copiée ; la publication en production, jamais (§ 11). Une version publiée **quitte l'évaluation** (décidé le 13 octobre 2026, migration `009` pour les publications antérieures) ; les listes « Espace démonstration » et « Espace production » de la page Formations sont lues dans ces bases (`GET /api/formations/espaces`).
 
 - **HTML brut et liens non http(s)** dans le markdown (§ 9) : signalés en **avertissement** à l'import, sans bloquer ni modifier le fichier ; le lecteur les neutralise à l'affichage. Les supprimer à l'import casserait l'aller-retour sans perte et la parité avec le validateur de référence, qui ne les refuse pas.
+  - Détection (21 novembre 2026) : chaque texte est découpé par l'analyseur CommonMark de `marked`, comme à l'affichage ; le contenu des codes (blocs délimités ou indentés, codes en ligne) est du texte et ne déclenche rien. Les champs `contenu` des fichiers d'une activité `pratique` ne sont pas analysés. Jamais d'expression régulière sur le texte source.
 - **Archives `.formation.zip`** (images, PDF) : reportées jusqu'à la demande du seau MinIO au socle. Seuls les `.formation.json` s'importent pour l'instant.
 - **Export** : restitue le fichier importé à l'octet près (texte conservé en base).
 
