@@ -88,8 +88,8 @@ shared:
     controllerNamespace: ingress
     hosts: [prolearning.crealcs.com]
     annotations:
-      nginx.ingress.kubernetes.io/ssl-redirect: "true"
-      nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+      nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+      nginx.ingress.kubernetes.io/proxy-body-size: '200m'
     tls:
       enabled: true
       clusterIssuer: letsencrypt-http01

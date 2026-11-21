@@ -41,13 +41,13 @@ directement par l'API.
 
 ## Ce qui vient d'où
 
-| Élément | Source |
-|---|---|
-| Deployments / Services `web` et `api`, ConfigMap `api-config`, PDB, les **deux Ingress** (nginx du front, kong de l'API) et les **NetworkPolicies** | chart `app` 1.0.0 de platform-patterns (OCI, **épinglé**), valeurs [`values.yaml`](values.yaml) |
-| Tag des images | `deploy/values-image.yaml` sur la branche **`deploy-state`**, écrit par la CI |
-| Secret `prolearning-api-secrets` (`DB_PASSWORD`, `DEMO_DB_PASSWORD`, `EVAL_DB_PASSWORD`, `DATABASE_URL_PRODUCTION`, `DATABASE_URL_DEMO`, `DATABASE_URL_EVALUATION`, `OIDC_CLIENT_SECRET`) | créé **dans le cluster** par [`create-secrets.sh`](create-secrets.sh), jamais versionné |
-| Bases/rôles `prolearning`, `prolearning-demo`, `prolearning-eval` (CNPG) | provisionnés **hors-bande** ; hôte public de l'API amené à kong-proxy par le **socle** (gateway) |
-| Client OIDC `pro-learning` | Keycloak de Soredi, realm `soredi` ([`docs/keycloak.md`](../docs/keycloak.md)) |
+| Élément                                                                                                                                                                                   | Source                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Deployments / Services `web` et `api`, ConfigMap `api-config`, PDB, les **deux Ingress** (nginx du front, kong de l'API) et les **NetworkPolicies**                                       | chart `app` 1.0.0 de platform-patterns (OCI, **épinglé**), valeurs [`values.yaml`](values.yaml)  |
+| Tag des images                                                                                                                                                                            | `deploy/values-image.yaml` sur la branche **`deploy-state`**, écrit par la CI                    |
+| Secret `prolearning-api-secrets` (`DB_PASSWORD`, `DEMO_DB_PASSWORD`, `EVAL_DB_PASSWORD`, `DATABASE_URL_PRODUCTION`, `DATABASE_URL_DEMO`, `DATABASE_URL_EVALUATION`, `OIDC_CLIENT_SECRET`) | créé **dans le cluster** par [`create-secrets.sh`](create-secrets.sh), jamais versionné          |
+| Bases/rôles `prolearning`, `prolearning-demo`, `prolearning-eval` (CNPG)                                                                                                                  | provisionnés **hors-bande** ; hôte public de l'API amené à kong-proxy par le **socle** (gateway) |
+| Client OIDC `pro-learning`                                                                                                                                                                | Keycloak de Soredi, realm `soredi` ([`docs/keycloak.md`](../docs/keycloak.md))                   |
 
 Le chart pose `platform-patterns.io/postgres-client` sur `api-prolearning` — une
 seule étiquette couvre les trois connexions. Les images tournent en non-root
@@ -73,11 +73,11 @@ réinitialisée.
 CNPG, créer les trois rôles et bases (mots de passe = `*_DB_PASSWORD` du Secret de
 l'étape 5) :
 
-| Rôle | Base |
-|---|---|
-| `prolearning` | `prolearning` (production) |
+| Rôle               | Base                               |
+| ------------------ | ---------------------------------- |
+| `prolearning`      | `prolearning` (production)         |
 | `prolearning-demo` | `prolearning_demo` (démonstration) |
-| `prolearning-eval` | `prolearning_eval` (évaluation) |
+| `prolearning-eval` | `prolearning_eval` (évaluation)    |
 
 L'hôte `api.prolearning.crealcs.com` est déjà amené à kong-proxy par le socle
 (`gateway/10-ingress-api-hosts.yaml`).
