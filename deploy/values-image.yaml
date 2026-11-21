@@ -2,4 +2,4 @@
 # Argo CD, en synchronisation automatique, déploie ce SHA : l'historique de
 # cette branche EST l'historique des déploiements.
 global:
-  imageTag: "3c5f41a6d966df640b7f0a88dbcd4e116241b79f"
+  imageTag: "367a4b451dd8b2b112d7502ad43620ac9d575dae"
