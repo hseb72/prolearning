@@ -417,6 +417,8 @@ export const LABELS = {
       reussie: 'Réussie',
       echouee: 'À refaire',
     } as Record<string, string>,
+    // Familles d'activités, lues par les lecteurs d'écran dans le sommaire du module.
+    kinds: { cours: 'Cours', exercice: 'Exercice', quiz: 'Quiz' },
     types: {
       lecon: 'Leçon',
       diaporama: 'Diaporama',
