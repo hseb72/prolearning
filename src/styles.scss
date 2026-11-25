@@ -27,6 +27,8 @@
   --info: #2b5c8a;
   --info-bg: #e3edf7;
   --chip: #e9eef3;
+  // Fond des activités où l'on répond (exercices, mises en situation, TP, quiz).
+  --practice-bg: #e8eef7;
   color-scheme: light;
 }
 
@@ -51,6 +53,7 @@
   --info: #8db8e6;
   --info-bg: #1a2d47;
   --chip: #223053;
+  --practice-bg: #22335a;
   color-scheme: dark;
 }
 
@@ -1189,10 +1192,22 @@ table.bo {
     color: inherit;
     text-decoration: none;
 
+    &.kind-exercice,
+    &.kind-quiz {
+      background: var(--practice-bg);
+    }
+
     &[aria-current='step'] {
       background: var(--chip);
       font-weight: 600;
+      box-shadow: inset 3px 0 0 var(--accent-fill);
     }
+  }
+
+  .kind-icon {
+    font-size: 16px;
+    margin-top: 2px;
+    color: var(--muted);
   }
 
   .ck {
@@ -2037,5 +2052,21 @@ details.ap {
 
   .bar i {
     transition: none;
+  }
+}
+
+// Familles d'activités dans le lecteur : on lit (fond de carte habituel) ou on répond
+// (fond teinté) ; une petite icône le redit, la couleur n'étant jamais seule à porter le sens.
+.card.act.practice {
+  background: var(--practice-bg);
+}
+
+.eyebrow.kind {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .kind-icon {
+    font-size: 18px;
   }
 }

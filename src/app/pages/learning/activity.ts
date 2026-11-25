@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import type { LearnerFormationResponse } from '@shared/learning';
 import { AuthService } from '../../core/auth';
 import { LABELS } from '../../labels';
+import { ActivityIcon, activityKind } from '../../learning/activity-kind';
 import { READER_MODE } from '../../learning/reader-mode';
 import type { ActivityContext, ActivityProgress } from '../../learning/activities/activity-context';
 import { Cards } from '../../learning/activities/cards';
@@ -18,7 +19,18 @@ import { Slides } from '../../learning/activities/slides';
 /** Une activité, avec la liste des activités du module et la navigation précédente/suivante. */
 @Component({
   selector: 'app-learning-activity',
-  imports: [RouterLink, Lesson, Slides, Quiz, Order, Match, Scenario, Cards, Practice],
+  imports: [
+    RouterLink,
+    ActivityIcon,
+    Lesson,
+    Slides,
+    Quiz,
+    Order,
+    Match,
+    Scenario,
+    Cards,
+    Practice,
+  ],
   templateUrl: './activity.html',
   styles: `
     .act {
@@ -51,6 +63,7 @@ export class LearningActivityPage {
   readonly activite = input.required<string>();
   protected readonly labels = LABELS.learning;
   protected readonly formations = LABELS.formations;
+  protected readonly kind = activityKind;
   protected readonly notice = signal<string | null>(null);
 
   constructor() {

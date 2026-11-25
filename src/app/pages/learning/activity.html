@@ -21,15 +21,18 @@
       @for (a of c.module.activites; track a.id) {
         @let s = c.states[a.id]?.statut ?? 'a-faire';
         @let done = s === 'faite' || s === 'reussie';
+        @let k = kind(a.type);
         <a
+          [class]="'kind-' + k"
           [routerLink]="[mode.route, c.formation.id, c.module.id, a.id]"
           [attr.aria-current]="a.id === c.ctx.activity.id ? 'step' : null"
         >
           <span class="ck" [class.on]="done" [class.ko]="s === 'echouee'" aria-hidden="true">{{
             done ? '✓' : ''
           }}</span>
+          <app-activity-icon class="kind-icon" [kind]="k" />
           <span
-            >{{ a.titre }}
+            ><span class="visually-hidden">{{ labels.kinds[k] }} : </span>{{ a.titre }}
             @if (!a.obligatoire) {
               <span class="muted small">({{ labels.optional }})</span>
             }
@@ -39,8 +42,14 @@
       }
     </nav>
 
-    <article class="card act" aria-labelledby="activity-title">
-      <p class="eyebrow">
+    @let current = kind(c.ctx.activity.type);
+    <article
+      class="card act"
+      [class.practice]="current !== 'cours'"
+      aria-labelledby="activity-title"
+    >
+      <p class="eyebrow kind">
+        <app-activity-icon class="kind-icon" [kind]="current" />
         {{ labels.types[c.ctx.activity.type] }}
         @if (c.ctx.activity.dureeEstimeeMinutes) {
           · {{ c.ctx.activity.dureeEstimeeMinutes }} min

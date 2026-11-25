@@ -1,0 +1,18 @@
+{
+  "name": "prolearning-presentations",
+  "private": true,
+  "description": "Présentations PowerPoint des parcours en ligne",
+  "scripts": {
+    "llm-comprendre-utiliser": "node generer-presentation.js ../../fixtures/formations/llm-comprendre-utiliser.formation.json llm-comprendre-utiliser.pptx \"Développer avec les LLM\"",
+    "llm-developper": "node generer-presentation.js ../../fixtures/formations/llm-developper.formation.json llm-developper.pptx",
+    "build": "npm run llm-comprendre-utiliser && npm run llm-developper"
+  },
+  "dependencies": {
+    "jszip": "3.10.2",
+    "pptxgenjs": "4.0.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-icons": "5.7.0",
+    "sharp": "0.35.5"
+  }
+}
