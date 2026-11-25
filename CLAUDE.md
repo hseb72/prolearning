@@ -20,6 +20,7 @@ Une plateforme interne de formation : catalogue, sessions à distance et sur sit
 | Formation exemple (LLM : comprendre et utiliser, 4 modules, format 1.1) | `fixtures/formations/llm-comprendre-utiliser.formation.json` | Jeu de test riche en exemples de balises dans du code ; doit s'importer sans aucun avertissement |
 | Formation exemple (LLM : développer, 5 modules, format 1.1) | `fixtures/formations/llm-developper.formation.json` | Idem, avec travaux pratiques ; doit s'importer sans aucun avertissement |
 | Formation exemple courte (TOGAF 10, module 1, format 1.0) | `fixtures/formations/togaf10-m1.formation.json` | Exemple de référence de la spécification ; jeu de test rapide (parité du validateur, parcours complet dans le navigateur) |
+| Présentations des parcours LLM | `docs/presentations/` | Diaporamas PowerPoint générés depuis les formations exemples LLM (`npm run build` dans le dossier pour les régénérer) |
 
 Le format est un contrat : on ne le modifie pas pour arranger l'implémentation. Toute évolution passe par une nouvelle `formatVersion` et une mise à jour de la spécification, validée par le porteur du projet.
 
