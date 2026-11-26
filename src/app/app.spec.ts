@@ -20,6 +20,7 @@ function me(overrides: Partial<Me> = {}): Me {
     space: 'production',
     canSwitchSpace: false,
     sso: false,
+    suppleant: false,
     ...overrides,
   };
 }

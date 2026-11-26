@@ -27,6 +27,8 @@ export interface Me {
   canSwitchSpace: boolean;
   /** Vrai si la personne s'est connectée par Keycloak : elle peut y changer son mot de passe. */
   sso: boolean;
+  /** Vrai si le compte joué supplée aujourd'hui un manager : il voit « Mon équipe ». */
+  suppleant: boolean;
 }
 
 /** Corps de POST /api/space. */

@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { AuthConfig, Me } from '../../../shared/auth.js';
 import { audit } from '../audit.js';
+import { delegationsTo } from '../delegations.js';
 import { requireAuth, type RequestContext } from '../context.js';
 import type { Databases } from '../databases.js';
 import { setRole, toSummary, upsertDevUser, upsertSsoUser, type UserRecord } from '../users.js';
@@ -41,13 +42,16 @@ export function safeReturnTo(value: unknown): string {
     : '/';
 }
 
-export function toMe(ctx: RequestContext): Me {
+export async function toMe(ctx: RequestContext): Promise<Me> {
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' });
+  const delegations = await delegationsTo(ctx.db, ctx.actor.id);
   return {
     user: toSummary(ctx.user),
     space: ctx.space,
     actor: toSummary(ctx.actor),
     canSwitchSpace: ctx.user.role === 'admin',
     sso: ctx.user.oidcSubject !== null,
+    suppleant: delegations.some((d) => d.debut <= today),
   };
 }
 

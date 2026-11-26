@@ -72,6 +72,17 @@ const dataFile = z.object({
       etapes: z.array(step(REGISTRATION_STATUSES)).default([]),
     }),
   ),
+  /** Suppléances : jours relatifs au chargement, bornes comprises. */
+  suppleances: z
+    .array(
+      z.object({
+        manager: z.string(),
+        suppleant: z.string(),
+        debut: z.number().int(),
+        fin: z.number().int(),
+      }),
+    )
+    .default([]),
   surMesure: z.array(
     z.object({
       compte: z.string(),
@@ -324,6 +335,16 @@ export async function loadDemo(
           await event('sur_mesure', id, 'a_traiter', user, '');
           for (const e of q.etapes)
             await event('sur_mesure', id, e.statut, account(e.par), e.commentaire);
+        }
+        for (const d of data.suppleances) {
+          const day = (offset: number) =>
+            new Date(today.getTime() + offset * 24 * 3600 * 1000).toLocaleDateString('sv-SE', {
+              timeZone: 'Europe/Paris',
+            });
+          await client.query(
+            `INSERT INTO pl_delegations (manager_id, delegate_id, debut, fin) VALUES ($1, $2, $3, $4)`,
+            [account(d.manager).id, account(d.suppleant).id, day(d.debut), day(d.fin)],
+          );
         }
       });
 

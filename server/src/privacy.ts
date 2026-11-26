@@ -1,4 +1,5 @@
 import type pg from 'pg';
+import { purgeEndedDelegations } from './delegations.js';
 import {
   DEFAULT_PLATFORM,
   DEFAULT_RETENTION,
@@ -127,6 +128,7 @@ export async function purgeExpiredData(db: pg.Pool, now = new Date()): Promise<P
       'sur_mesure',
       surMesure.rows.map((r) => r.id),
     );
+    await purgeEndedDelegations(client);
     const journal = await client.query(
       `DELETE FROM pl_audit_log WHERE occurred_at < $1::timestamptz - make_interval(months => $2)`,
       [now, auditMonths],
@@ -218,6 +220,14 @@ export async function exportUserData(
       `SELECT formation_id AS "formation", visibility AS "visibilite", updated_at AS "publieeLe"
          FROM pl_achievement_shares WHERE user_id = $1 ORDER BY formation_id`,
     ),
+    suppleances: await q(
+      `SELECT m.display_name AS "manager", s.display_name AS "suppleant", d.debut::text AS "du",
+              d.fin::text AS "au"
+         FROM pl_delegations d
+         JOIN pl_users m ON m.id = d.manager_id
+         JOIN pl_users s ON s.id = d.delegate_id
+        WHERE d.manager_id = $1 OR d.delegate_id = $1 ORDER BY d.debut`,
+    ),
     actionsSurLesDemandesDesAutres: await q(
       `SELECT kind AS "type", statut, commentaire, created_at AS "le"
          FROM pl_request_events WHERE actor_id = $1 ORDER BY id`,
@@ -259,6 +269,10 @@ export async function deleteUserData(db: pg.Pool, userId: number): Promise<boole
     );
     await client.query(
       'UPDATE pl_request_events SET actor_name = $2, actor_id = NULL WHERE actor_id = $1',
+      [userId, DELETED_ACTOR],
+    );
+    await client.query(
+      'UPDATE pl_request_events SET for_name = $2, for_id = NULL WHERE for_id = $1',
       [userId, DELETED_ACTOR],
     );
     // Journal et formations : rattachés par l'identifiant, ou seulement par l'e-mail quand

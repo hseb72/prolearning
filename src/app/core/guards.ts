@@ -23,6 +23,18 @@ export function roleGuard(role: Role): CanActivateFn {
   };
 }
 
+/** « Mon équipe » : un manager, ou un collaborateur qui supplée aujourd'hui un manager. */
+export const teamGuard: CanActivateFn = async (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!(await auth.load())) {
+    return router.createUrlTree(['/connexion'], { queryParams: { retour: state.url } });
+  }
+  return auth.hasRole('manager') || auth.me()?.suppleant
+    ? true
+    : router.createUrlTree(['/acces-refuse']);
+};
+
 /** La page de connexion n'a pas de sens pour une personne déjà connectée. */
 export const anonymousGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);

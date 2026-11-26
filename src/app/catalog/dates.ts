@@ -90,3 +90,16 @@ export function sessionDays(debutIso: string, finIso: string): number {
   if (days === 1 && fin.getTime() - debut.getTime() <= 4.5 * 3_600_000) return 0;
   return days;
 }
+
+/** « 26 novembre 2026 » pour une date de calendrier (AAAA-MM-JJ, sans heure). */
+export function formatCalendarDay(day: string): string {
+  // Midi UTC tombe le même jour à Paris, quelle que soit l'heure d'été.
+  return shortDayFormat.format(new Date(`${day}T12:00:00Z`));
+}
+
+/** Date du jour à Paris, décalée de `offset` jours (AAAA-MM-JJ). */
+export function parisDay(offset = 0): string {
+  return new Date(Date.now() + offset * 24 * 3600 * 1000).toLocaleDateString('sv-SE', {
+    timeZone: TIME_ZONE,
+  });
+}

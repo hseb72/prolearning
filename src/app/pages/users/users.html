@@ -92,6 +92,16 @@
                 [attr.aria-label]="labels.exportLabel(user.displayName)"
                 >{{ labels.exportData }}</a
               >
+              @if (isManagerRow(user)) {
+                <button
+                  class="btn ghost small"
+                  type="button"
+                  [attr.aria-label]="delegationLabels.openLabel(user.displayName)"
+                  (click)="delegationFor.set(user)"
+                >
+                  {{ delegationLabels.open }}
+                </button>
+              }
               @if (!isSelf(user)) {
                 <button
                   class="btn ghost small danger"
@@ -109,3 +119,20 @@
     </table>
   </div>
 }
+
+<app-dialog
+  [open]="delegationFor() !== null"
+  (openChange)="$event || delegationFor.set(null)"
+  labelledBy="delegation-title"
+>
+  @if (delegationFor(); as manager) {
+    <h2 id="delegation-title">{{ delegationLabels.adminTitle(manager.displayName) }}</h2>
+    <p class="small muted">{{ delegationLabels.adminIntro }}</p>
+    <app-delegation [managerId]="manager.id" />
+    <div class="acts">
+      <button class="btn ghost" type="button" (click)="delegationFor.set(null)">
+        {{ delegationLabels.close }}
+      </button>
+    </div>
+  }
+</app-dialog>
