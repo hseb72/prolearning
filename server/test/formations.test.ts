@@ -317,7 +317,12 @@ describe.skipIf(!databasesAvailable)('évaluation, publication et copie des form
     // La 0.1.0, publiée, a quitté l'évaluation ; la 0.2.0 y est arrivée entière.
     expect(versions.rows.map((r) => r.version)).toEqual(['0.2.0']);
     // La démonstration a son jeu de départ, la production sa version publiée.
-    expect(await ids('demo')).toEqual(['kubernetes-fondamentaux', 'togaf10']);
+    expect(await ids('demo')).toEqual([
+      'kubernetes-fondamentaux',
+      'llm-comprendre-utiliser',
+      'llm-developper',
+      'togaf10',
+    ]);
     const demoOrigin = await databases.demo.query(
       `SELECT origin FROM pl_formation_versions WHERE formation_id = 'togaf10'`,
     );
