@@ -33,6 +33,8 @@ export interface RequestEvent {
   date: string;
   statut: string;
   par: string;
+  /** Manager pour le compte duquel `par` a validé, en suppléance ; sinon absent. */
+  pour?: string;
   commentaire: string;
 }
 
@@ -81,6 +83,16 @@ export interface MyRequests {
 export interface TeamRequests {
   aValider: RegistrationRequestView[];
   recentes: RegistrationRequestView[];
+  /** Équipes dont la personne est suppléante aujourd'hui : demandes qu'elle peut valider. */
+  suppleances: DelegatedTeam[];
+}
+
+/** Équipe d'un manager absent, vue par son suppléant. */
+export interface DelegatedTeam {
+  manager: { id: number; displayName: string };
+  /** Dernier jour de la suppléance (AAAA-MM-JJ, heure de Paris). */
+  fin: string;
+  aValider: RegistrationRequestView[];
 }
 
 /** Ce que traite l'équipe formation. */

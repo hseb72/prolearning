@@ -183,6 +183,13 @@ Décidés avec le porteur du projet le 13 octobre 2026.
   - Un collaborateur inconnu reçoit un compte, relié à son identité Keycloak à sa première connexion par son adresse. Un collaborateur qui reçoit une équipe devient manager. Une case manager vide retire le rattachement ; les comptes absents du fichier ne changent pas.
   - Journalisé (`user.import`, et `user.manager` / `user.role` pour chaque changement). L'export `GET /api/users/rattachements.csv` donne les rattachements actuels au même format et sert de modèle.
 
+- **Suppléance** (26 novembre 2026) : un manager désigne, pour une période (dates de Paris, bornes comprises, 366 jours au plus), un **collaborateur de son choix** qui valide à sa place les demandes d'inscription de son équipe (`pl_delegations`, migration `010`, `server/src/delegations.ts`).
+  - **Validation partagée** : le manager garde la main pendant la suppléance. Pas de filet de sécurité vers l'équipe formation.
+  - Une seule suppléance, en cours ou à venir, par manager ; elle ne se transmet pas (le suppléant d'un suppléant n'hérite de rien). Le suppléant ne valide jamais sa propre demande et ne voit pas les réussites partagées avec le manager (décision 5). Les demandes de session sur mesure restent au manager.
+  - Réglage : le manager dans « Mon équipe » (« Ma suppléance », `GET`/`PUT`/`DELETE /api/suppleance`) ; un administrateur pour un manager absent, dans Comptes et rôles (`/api/users/:id/suppleance`).
+  - Pendant la période, le suppléant voit l'onglet « Mon équipe » (`Me.suppleant`) avec une section par manager suppléé. L'historique de la demande dit « par X, suppléant de Y » (`pl_request_events.for_name`, anonymisé à la suppression du manager).
+  - Journalisé (`delegation.set`, `delegation.end`) ; une suppléance terminée est effacée par la purge quotidienne. La démonstration en contient une : David Moreau supplée Chloé Bernard.
+
 ## Structure du dépôt
 
 | Dossier | Contenu |

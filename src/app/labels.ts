@@ -46,6 +46,7 @@ export const LABELS = {
       course: 'Fiches',
       session: 'Sessions',
       user: 'Comptes',
+      delegation: 'Suppléances',
       space: 'Espaces',
       demo: 'Démonstration',
       settings: 'Paramétrage',
@@ -70,6 +71,8 @@ export const LABELS = {
       'user.role': 'Changement de rôle',
       'user.manager': 'Rattachement à un manager',
       'user.import': 'Import des rattachements',
+      'delegation.set': 'Suppléance d’un manager',
+      'delegation.end': 'Fin d’une suppléance',
       'user.bootstrap_admin': 'Administrateur d’amorçage',
       'user.delete': 'Suppression d’un compte et de ses données',
       'settings.retention': 'Durées de conservation',
@@ -104,6 +107,10 @@ export const LABELS = {
       crees: 'comptes créés',
       modifies: 'rattachements modifiés',
       promus: 'managers promus',
+      managerId: 'manager',
+      delegateId: 'suppléant',
+      debut: 'du',
+      fin: 'au',
     } as Record<string, string>,
   },
   /** Composants communs de l'interface (SPEC-UI § 4), libellés du prototype. */
@@ -292,6 +299,38 @@ export const LABELS = {
     } as Record<string, string>,
     importFrom: (previous: string | null) => `avant : ${previous ?? 'aucun'}`,
     importNone: 'aucun',
+  },
+  /** Suppléance d'un manager absent (26 novembre 2026). */
+  delegation: {
+    title: 'Ma suppléance',
+    intro:
+      'Pendant une absence, un collègue de votre choix valide à votre place les demandes d’inscription de votre équipe. Vous gardez la main ; votre suppléant ne voit pas les réussites partagées avec vous.',
+    adminTitle: (name: string) => `Suppléance de ${name}`,
+    adminIntro:
+      'Pour un manager absent qui n’a rien prévu : le suppléant valide à sa place les demandes d’inscription de son équipe.',
+    none: 'Aucune suppléance prévue.',
+    current: (name: string, from: string, to: string) =>
+      `${name} vous supplée du ${from} au ${to} inclus.`,
+    planned: (name: string, from: string, to: string) =>
+      `${name} vous suppléera du ${from} au ${to} inclus.`,
+    adminCurrent: (name: string, from: string, to: string) =>
+      `${name} supplée ce manager du ${from} au ${to} inclus.`,
+    delegate: 'Suppléant',
+    from: 'Du',
+    to: 'Au (inclus)',
+    choose: 'Choisir un collègue…',
+    save: 'Enregistrer la suppléance',
+    change: 'Modifier',
+    end: 'Mettre fin à la suppléance',
+    cancel: 'Annuler',
+    saved: 'Suppléance enregistrée.',
+    ended: 'Suppléance terminée.',
+    failed: 'La suppléance n’a pas été enregistrée.',
+    loadFailed: 'Impossible de charger la suppléance.',
+    loading: 'Chargement de la suppléance…',
+    open: 'Suppléance',
+    openLabel: (name: string) => `Régler la suppléance de ${name}`,
+    close: 'Fermer',
   },
   /** Publication des réussites (décision 5) : choix de l'apprenant, équipe, communauté. */
   shares: {
@@ -849,6 +888,8 @@ export const LABELS = {
     teamTitle: 'Demandes de mon équipe',
     teamIntro:
       'Les demandes d’inscription des collaborateurs qui vous sont rattachés. Les parcours en ligne ne demandent pas de validation.',
+    teamIntroDelegate:
+      'Vous suppléez un manager absent : vous validez à sa place les demandes d’inscription de son équipe.',
     toValidate: 'À valider',
     nothingToValidate: 'Aucune demande en attente de votre validation.',
     recent: 'Demandes récentes',
@@ -861,6 +902,11 @@ export const LABELS = {
     refuseLabel: (name: string, titre: string) => `Refuser la demande de ${name} pour « ${titre} »`,
     validated: (name: string) => `Demande de ${name} validée : elle part à l’équipe formation.`,
     refused: (name: string) => `Demande de ${name} refusée.`,
+    byDelegate: (name: string, manager: string) => `par ${name}, suppléant de ${manager}`,
+    delegatedTitle: (manager: string) => `Suppléance de ${manager}`,
+    delegatedIntro: (end: string) =>
+      `Vous validez à sa place, jusqu’au ${end} inclus, les demandes d’inscription de son équipe. Le manager garde la main et peut aussi valider.`,
+    delegatedNothing: 'Aucune demande en attente dans cette équipe.',
     // File de l'équipe formation
     adminEyebrow: (space: string) => `Administration · ${space}`,
     queueStats: {

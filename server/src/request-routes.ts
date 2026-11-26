@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { COURSE_ID_PATTERN } from '../../shared/catalog.js';
+import { hasRole } from '../../shared/roles.js';
 import type { MyRequests, TeamRequests, TrainingQueue } from '../../shared/requests.js';
 import { courseExists } from './catalog/store.js';
 import { requireAuth, requireRole } from './context.js';
@@ -100,13 +101,18 @@ export function registerRequestRoutes(app: FastifyInstance): void {
     return registration(ctx.db, p.data.id);
   });
 
-  // Manager : demandes de son équipe.
-  app.get('/api/demandes/equipe', manager, async (request): Promise<TeamRequests> => {
+  // Manager (ou suppléant) : demandes de son équipe.
+  // Manager, ou collaborateur qui supplée aujourd'hui un manager absent.
+  app.get('/api/demandes/equipe', auth, async (request, reply) => {
     const ctx = request.auth!;
-    return teamRegistrations(ctx.db, ctx.actor.id);
+    const team: TeamRequests = await teamRegistrations(ctx.db, ctx.actor.id);
+    if (!hasRole(ctx.actor.role, 'manager') && !team.suppleances.length) {
+      return reply.code(403).send({ error: 'forbidden', message: 'Accès non autorisé.' });
+    }
+    return team;
   });
 
-  app.post('/api/demandes/inscriptions/:id/avis-manager', manager, async (request, reply) => {
+  app.post('/api/demandes/inscriptions/:id/avis-manager', auth, async (request, reply) => {
     const ctx = request.auth!;
     const p = idParam.safeParse(request.params);
     const body = decisionBody.safeParse(request.body);

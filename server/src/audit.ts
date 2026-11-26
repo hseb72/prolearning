@@ -8,6 +8,8 @@ export type AuditAction =
   | 'user.role'
   | 'user.manager'
   | 'user.import'
+  | 'delegation.set'
+  | 'delegation.end'
   | 'user.bootstrap_admin'
   | 'user.delete'
   | 'settings.retention'

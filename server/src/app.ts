@@ -5,6 +5,7 @@ import type { HealthReport } from '../../shared/health.js';
 import { DATABASE_NAMES } from '../../shared/spaces.js';
 import { registerAuthRoutes, type AuthSettings } from './auth/routes.js';
 import { registerCatalogRoutes } from './catalog-routes.js';
+import { registerDelegationRoutes } from './delegation-routes.js';
 import { resolveContext, sessionToken } from './context.js';
 import type { Databases } from './databases.js';
 import { registerFormationRoutes } from './formation-routes.js';
@@ -83,6 +84,7 @@ export function buildApp({ databases, auth, logLevel = 'info' }: AppOptions): Fa
   registerAuthRoutes(app, databases, auth);
   registerSpaceRoutes(app, databases);
   registerUserRoutes(app);
+  registerDelegationRoutes(app);
   registerFormationRoutes(app, databases);
   registerPublicationRoutes(app, databases);
   registerLearningRoutes(app);

@@ -10,12 +10,14 @@ import { LABELS } from '../../labels';
 import { ConfirmService } from '../../ui/confirm';
 import { ToastService } from '../../ui/toast';
 import { ManagerImport } from './manager-import';
+import { Dialog } from '../../ui/dialog';
+import { DelegationEditor } from '../../requests/delegation';
 import type { RetentionSettings } from '@shared/privacy';
 
 /** Comptes et rôles de l'espace actif (RBAC tenu dans l'application). */
 @Component({
   selector: 'app-users',
-  imports: [DatePipe, AdminNav, ManagerImport],
+  imports: [DatePipe, AdminNav, Dialog, DelegationEditor, ManagerImport],
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })
@@ -28,6 +30,9 @@ export class UsersPage {
   protected readonly labels = LABELS.users;
   protected readonly roleLabels = LABELS.roles;
   protected readonly roles = ROLES;
+  protected readonly delegationLabels = LABELS.delegation;
+  /** Manager dont on règle la suppléance (dialogue ouvert). */
+  protected readonly delegationFor = signal<UserRow | null>(null);
   protected readonly demo = computed(() => this.auth.space() === 'demo');
   protected readonly eyebrow = computed(() =>
     LABELS.requests.adminEyebrow(this.demo() ? LABELS.space.demoName : LABELS.space.productionName),
@@ -50,6 +55,10 @@ export class UsersPage {
   protected readonly dormantHint = computed(() =>
     this.labels.dormantHint(this.retention.value()?.inactiveMonths ?? 12),
   );
+
+  protected isManagerRow(user: UserRow): boolean {
+    return user.active && hasRole(user.role, 'manager');
+  }
 
   protected isSelf(user: UserRow): boolean {
     const me = this.auth.me();

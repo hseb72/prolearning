@@ -13,7 +13,8 @@ import { LABELS } from '../labels';
         @for (e of events(); track $index) {
           <li>
             <span class="hint">{{ when(e.date) }}</span>
-            {{ statusLabels()[e.statut] ?? e.statut }} {{ labels.by(e.par) }}
+            {{ statusLabels()[e.statut] ?? e.statut }}
+            {{ e.pour ? labels.byDelegate(e.par, e.pour) : labels.by(e.par) }}
             @if (e.commentaire) {
               <q>{{ e.commentaire }}</q>
             }

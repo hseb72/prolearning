@@ -8,6 +8,7 @@ import type {
   RegistrationStatus,
   RequestEvent,
 } from '../../../shared/requests.js';
+import { delegationsTo, isActiveDelegate } from '../delegations.js';
 import type { UserRecord } from '../users.js';
 
 /** Refus métier : code HTTP et message affichable. */
@@ -50,11 +51,22 @@ async function addEvent(
   statut: string,
   actor: UserRecord | null,
   commentaire = '',
+  onBehalfOf: { id: number; displayName: string } | null = null,
 ): Promise<void> {
   await db.query(
-    `INSERT INTO pl_request_events (kind, request_id, statut, actor_id, actor_name, commentaire)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [kind, requestId, statut, actor?.id ?? null, actor?.displayName ?? '', commentaire],
+    `INSERT INTO pl_request_events
+       (kind, request_id, statut, actor_id, actor_name, commentaire, for_id, for_name)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      kind,
+      requestId,
+      statut,
+      actor?.id ?? null,
+      actor?.displayName ?? '',
+      commentaire,
+      onBehalfOf?.id ?? null,
+      onBehalfOf?.displayName ?? '',
+    ],
   );
 }
 
@@ -69,10 +81,11 @@ async function events(
     request_id: string;
     statut: string;
     actor_name: string;
+    for_name: string;
     commentaire: string;
     created_at: Date;
   }>(
-    `SELECT request_id, statut, actor_name, commentaire, created_at FROM pl_request_events
+    `SELECT request_id, statut, actor_name, for_name, commentaire, created_at FROM pl_request_events
      WHERE kind = $1 AND request_id = ANY($2) ORDER BY id`,
     [kind, ids],
   );
@@ -83,6 +96,7 @@ async function events(
       date: row.created_at.toISOString(),
       statut: row.statut,
       par: row.actor_name,
+      ...(row.for_name ? { pour: row.for_name } : {}),
       commentaire: row.commentaire,
     });
     map.set(id, list);
@@ -184,10 +198,27 @@ export async function activeRequestsBySession(
   );
 }
 
-/** Demandes des collaborateurs rattachés au manager. */
+/**
+ * Demandes des collaborateurs rattachés au manager, et celles des équipes qu'il supplée
+ * aujourd'hui (sauf les siennes : on ne valide pas sa propre demande).
+ */
 export async function teamRegistrations(db: pg.Pool, managerId: number) {
   const team = 'u.manager_id = $1';
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' });
+  const delegated = (await delegationsTo(db, managerId)).filter((d) => d.debut <= today);
   return {
+    suppleances: await Promise.all(
+      delegated.map(async (d) => ({
+        manager: { id: d.manager.id, displayName: d.manager.displayName },
+        fin: d.fin,
+        aValider: await registrations(
+          db,
+          `u.manager_id = $1 AND u.id <> $2 AND r.statut = 'attente_manager'`,
+          [d.manager.id, managerId],
+          's.debut, r.id',
+        ),
+      })),
+    ),
     aValider: await registrations(
       db,
       `${team} AND r.statut = 'attente_manager'`,
@@ -306,7 +337,10 @@ async function setStatus(client: pg.PoolClient, id: number, statut: Registration
   );
 }
 
-/** Avis du manager : seul le manager actuel du demandeur se prononce. */
+/**
+ * Avis du manager : le manager actuel du demandeur, ou son suppléant du jour (sauf pour sa
+ * propre demande). Une validation en suppléance le dit dans l'historique.
+ */
 export async function managerDecision(
   db: pg.Pool,
   actor: UserRecord,
@@ -316,13 +350,25 @@ export async function managerDecision(
 ): Promise<Outcome<RegistrationStatus>> {
   return transaction(db, async (client) => {
     const request = await lockRequest(client, id);
-    if (!request || request.managerId !== actor.id) return NOT_FOUND;
+    if (!request || request.managerId === null) return NOT_FOUND;
+    let onBehalfOf: { id: number; displayName: string } | null = null;
+    if (request.managerId !== actor.id) {
+      const delegate =
+        request.userId !== actor.id &&
+        (await isActiveDelegate(client, actor.id, request.managerId));
+      if (!delegate) return NOT_FOUND;
+      const manager = await client.query<{ display_name: string }>(
+        'SELECT display_name FROM pl_users WHERE id = $1',
+        [request.managerId],
+      );
+      onBehalfOf = { id: request.managerId, displayName: manager.rows[0]!.display_name };
+    }
     if (request.statut !== 'attente_manager') {
       return refuse(409, 'Cette demande n’attend plus votre validation.');
     }
     const statut = accept ? 'attente_formation' : 'refusee';
     await setStatus(client, id, statut);
-    await addEvent(client, 'inscription', id, statut, actor, commentaire);
+    await addEvent(client, 'inscription', id, statut, actor, commentaire, onBehalfOf);
     return { ok: statut };
   });
 }

@@ -67,7 +67,7 @@ export function registerSpaceRoutes(app: FastifyInstance, databases: Databases):
       details: { from: ctx.space, to: body.data.space, personaId },
     });
     const updated = await resolveContext(databases, ctx.token);
-    return toMe(updated!);
+    return await toMe(updated!);
   });
 
   /**
@@ -94,6 +94,6 @@ export function registerSpaceRoutes(app: FastifyInstance, databases: Databases):
       details: { ...summary },
     });
     const updated = await resolveContext(databases, ctx.token);
-    return { me: toMe(updated!), resume: summary };
+    return { me: await toMe(updated!), resume: summary };
   });
 }

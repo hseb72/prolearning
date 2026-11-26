@@ -324,6 +324,14 @@
       ]
     }
   ],
+  "suppleances": [
+    {
+      "manager": "manager",
+      "suppleant": "collab1",
+      "debut": -1,
+      "fin": 12
+    }
+  ],
   "surMesure": [
     {
       "compte": "manager",

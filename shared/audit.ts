@@ -20,6 +20,7 @@ export const AUDIT_FAMILIES = [
   'course',
   'session',
   'user',
+  'delegation',
   'space',
   'demo',
   'settings',

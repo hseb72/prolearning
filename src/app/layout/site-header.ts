@@ -98,7 +98,7 @@ import { ToastService } from '../ui/toast';
               <span class="n">{{ counts().mine }}</span>
             }
           </a>
-          @if (isManager()) {
+          @if (isTeam()) {
             <a routerLink="/demandes/equipe" routerLinkActive ariaCurrentWhenActive="page"
               >{{ nav.team }}
               @if (counts().team) {
@@ -190,6 +190,8 @@ export class SiteHeader {
   protected readonly busy = signal(false);
 
   protected readonly isManager = computed(() => this.auth.hasRole('manager'));
+  /** « Mon équipe » : un manager, ou un collaborateur qui supplée aujourd'hui un manager. */
+  protected readonly isTeam = computed(() => this.isManager() || !!this.auth.me()?.suppleant);
   protected readonly isTraining = computed(() => this.auth.hasRole('training'));
 
   // Compteurs des onglets, relus à chaque navigation (les demandes changent d'une page à l'autre).
@@ -210,7 +212,7 @@ export class SiteHeader {
   });
   private readonly team = httpResource<TeamRequests>(() => {
     const key = this.key();
-    return key && this.isManager() ? { url: '/api/demandes/equipe', params: key } : undefined;
+    return key && this.isTeam() ? { url: '/api/demandes/equipe', params: key } : undefined;
   });
   private readonly queue = httpResource<TrainingQueue>(() => {
     const key = this.key();
@@ -228,7 +230,9 @@ export class SiteHeader {
           ).length +
           mine.surMesure.filter((r) => ['a_traiter', 'en_cours'].includes(r.statut)).length
         : 0,
-      team: team ? team.aValider.length : 0,
+      team: team
+        ? team.aValider.length + team.suppleances.reduce((n, d) => n + d.aValider.length, 0)
+        : 0,
       admin: queue
         ? queue.inscriptions.length + queue.surMesure.filter((r) => r.statut === 'a_traiter').length
         : 0,

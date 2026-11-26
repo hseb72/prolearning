@@ -1,5 +1,5 @@
 import type { Routes, UrlMatchResult, UrlSegment } from '@angular/router';
-import { anonymousGuard, authGuard, roleGuard } from './core/guards';
+import { anonymousGuard, authGuard, roleGuard, teamGuard } from './core/guards';
 import { LABELS } from './labels';
 import { LearningService } from './learning/learning.service';
 import { PREVIEW_MODE, READER_MODE } from './learning/reader-mode';
@@ -99,7 +99,7 @@ export const routes: Routes = [
   {
     path: 'demandes/equipe',
     title: title(LABELS.requests.teamTitle),
-    canActivate: [roleGuard('manager')],
+    canActivate: [teamGuard],
     loadComponent: () => import('./pages/requests/team').then((m) => m.TeamRequestsPage),
   },
   {
