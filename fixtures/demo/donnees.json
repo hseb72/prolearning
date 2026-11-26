@@ -2,7 +2,9 @@
   "description": "Jeu de données de l'espace démonstration : catalogue, sessions et demandes fictives. Les dates sont relatives au jour du chargement (« jour » : nombre de jours à partir d'aujourd'hui), à l'heure de Paris. Les comptes sont désignés par leur clé dans comptes.json ; « formations » liste les fichiers de fixtures/formations chargés en démonstration.",
   "formations": [
     "togaf10.formation.json",
-    "kubernetes-fondamentaux.formation.json"
+    "kubernetes-fondamentaux.formation.json",
+    "llm-comprendre-utiliser.formation.json",
+    "llm-developper.formation.json"
   ],
   "fiches": [
     {

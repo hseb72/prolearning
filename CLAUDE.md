@@ -149,7 +149,7 @@ Prises avec le porteur du projet le 11 octobre 2026. Toute remise en cause passe
 
 ### Choix d'implémentation (étape 6)
 
-- **Jeu de démonstration** : `fixtures/demo/comptes.json` (comptes fictifs), `fixtures/demo/donnees.json` (les 7 fiches et 10 sessions de l'exemple du prototype, inscriptions et demandes sur mesure avec leur historique, et la liste des formations de `fixtures/formations/` à charger : TOGAF 10 complet et Kubernetes), importées comme le ferait un administrateur.
+- **Jeu de démonstration** : `fixtures/demo/comptes.json` (comptes fictifs), `fixtures/demo/donnees.json` (les 7 fiches et 10 sessions de l'exemple du prototype, inscriptions et demandes sur mesure avec leur historique, et la liste des formations de `fixtures/formations/` à charger : TOGAF 10 complet, Kubernetes et les deux parcours LLM, ajoutés le 26 novembre 2026), importées comme le ferait un administrateur.
   - Les dates des sessions sont **relatives au jour du chargement** (heure de Paris), pour que la démonstration ait toujours des sessions à venir.
 - **Chargement** : au démarrage si la base démo est vide, et à chaque **réinitialisation** (Administration › Formations, administrateurs seulement).
   - La réinitialisation vide toutes les tables `pl_` de la base démo (sauf migrations et authentification), puis recharge le jeu. Elle ne touche ni l'évaluation ni la production, qui sont d'autres bases.
@@ -176,7 +176,7 @@ Décidés avec le porteur du projet le 13 octobre 2026.
 
 ### Comptes : mot de passe et hiérarchie (26 novembre 2026)
 
-- **Mot de passe** : tenu par Keycloak. « Mes données personnelles » propose « Changer mon mot de passe » à une personne connectée par Keycloak, en production (`Me.sso`). `GET /api/auth/mot-de-passe` démarre une connexion avec `kc_action=UPDATE_PASSWORD` ; au retour, la session en cours est gardée et la page affiche l'issue (`?motdepasse=modifie|inchange|erreur`). Détails : `docs/keycloak.md`.
+- **Mot de passe** (vérifié sur le realm Soredi) : tenu par Keycloak. « Mes données personnelles » propose « Changer mon mot de passe » à une personne connectée par Keycloak, en production (`Me.sso`). `GET /api/auth/mot-de-passe` démarre une connexion avec `kc_action=UPDATE_PASSWORD` ; au retour, la session en cours est gardée et la page affiche l'issue (`?motdepasse=modifie|inchange|erreur`). Détails : `docs/keycloak.md`.
 - **Hiérarchie à un seul niveau** : chaque compte a au plus un manager direct ; un manager ne voit que ses collaborateurs directs. Pas de transitivité vers le N+2 dans l'application : c'est au manager de faire son propre compte rendu à son manager. Les rattachements sont tenus dans l'application (pas d'alimentation depuis Keycloak). Un rattachement en boucle est refusé.
 - **Import CSV des rattachements** (Administration › Comptes et rôles, `server/src/manager-import.ts`) : colonnes `collaborateur`, `nom` (facultatif), `manager` ; séparateur `;`, `,` ou tabulation.
   - Vérification d'abord, avec un rapport ligne par ligne, puis application **tout ou rien** (`POST /api/users/rattachements`, `appliquer`), refusée tant qu'une ligne est en erreur.
@@ -185,7 +185,7 @@ Décidés avec le porteur du projet le 13 octobre 2026.
 
 - **Suppléance** (26 novembre 2026) : un manager désigne, pour une période (dates de Paris, bornes comprises, 366 jours au plus), un **collaborateur de son choix** qui valide à sa place les demandes d'inscription de son équipe (`pl_delegations`, migration `010`, `server/src/delegations.ts`).
   - **Validation partagée** : le manager garde la main pendant la suppléance. Pas de filet de sécurité vers l'équipe formation.
-  - Une seule suppléance, en cours ou à venir, par manager ; elle ne se transmet pas (le suppléant d'un suppléant n'hérite de rien). Le suppléant ne valide jamais sa propre demande et ne voit pas les réussites partagées avec le manager (décision 5). Les demandes de session sur mesure restent au manager.
+  - Une seule suppléance, en cours ou à venir, par manager ; elle ne se transmet pas (le suppléant d'un suppléant n'hérite de rien). Le suppléant ne valide jamais sa propre demande et ne voit pas les réussites partagées avec le manager (décision 5). Les demandes de session sur mesure restent au manager. Une suppléance à la fois et sur mesure au manager : validés par le porteur du projet.
   - Réglage : le manager dans « Mon équipe » (« Ma suppléance », `GET`/`PUT`/`DELETE /api/suppleance`) ; un administrateur pour un manager absent, dans Comptes et rôles (`/api/users/:id/suppleance`).
   - Pendant la période, le suppléant voit l'onglet « Mon équipe » (`Me.suppleant`) avec une section par manager suppléé. L'historique de la demande dit « par X, suppléant de Y » (`pl_request_events.for_name`, anonymisé à la suppression du manager).
   - Journalisé (`delegation.set`, `delegation.end`) ; une suppléance terminée est effacée par la purge quotidienne. La démonstration en contient une : David Moreau supplée Chloé Bernard.

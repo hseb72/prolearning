@@ -38,11 +38,12 @@ describe.skipIf(!databasesAvailable)('jeu de démonstration et réinitialisation
 
   it('charge un jeu complet et cohérent', async () => {
     const summary = await loadDemo(databases.demo);
-    expect(summary).toEqual({ comptes: 5, formations: 2, fiches: 7, sessions: 10, demandes: 6 });
+    expect(summary).toEqual({ comptes: 5, formations: 4, fiches: 7, sessions: 10, demandes: 6 });
 
     await post('/api/space', { space: 'demo' });
     const catalogue = (await get('/api/catalogue')).json();
-    expect(catalogue).toHaveLength(7);
+    // Les 7 fiches, plus les deux parcours LLM, présentés sans fiche (« parcoursSeul »).
+    expect(catalogue).toHaveLength(9);
     const togaf = (await get('/api/catalogue/togaf-fondamentaux')).json();
     expect(togaf.formationId).toBe('togaf10');
     expect(togaf.formats).toEqual(['distance', 'site', 'en-ligne']);
@@ -59,7 +60,10 @@ describe.skipIf(!databasesAvailable)('jeu de démonstration et réinitialisation
     ]);
     expect(file.surMesure.map((d: Json) => d.statut).sort()).toEqual(['a_traiter', 'en_cours']);
     expect((await get('/api/parcours')).json().map((p: Json) => p.id)).toEqual([
+      // Par titre : Architecture…, Développer…, IA générative…, Kubernetes…
       'togaf10',
+      'llm-developper',
+      'llm-comprendre-utiliser',
       'kubernetes-fondamentaux',
     ]);
   });
