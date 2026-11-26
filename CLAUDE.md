@@ -174,6 +174,15 @@ Décidés avec le porteur du projet le 13 octobre 2026.
   - Choix sur la vue d'ensemble du parcours, possible dès qu'un module est terminé (`PUT /api/parcours/:formation/partage`) ; une ligne de `pl_achievement_shares` par parcours publié, aucune pour privé.
   - Une réussite montre le nom, le parcours, les modules terminés, le niveau et les badges ; jamais les scores ni les réponses. Le manager voit ses collaborateurs rattachés (`GET /api/equipe/reussites`), tous voient ce qui est publié pour tous (`GET /api/reussites`). Pas de classement.
 
+### Comptes : mot de passe et hiérarchie (26 novembre 2026)
+
+- **Mot de passe** : tenu par Keycloak. « Mes données personnelles » propose « Changer mon mot de passe » à une personne connectée par Keycloak, en production (`Me.sso`). `GET /api/auth/mot-de-passe` démarre une connexion avec `kc_action=UPDATE_PASSWORD` ; au retour, la session en cours est gardée et la page affiche l'issue (`?motdepasse=modifie|inchange|erreur`). Détails : `docs/keycloak.md`.
+- **Hiérarchie à un seul niveau** : chaque compte a au plus un manager direct ; un manager ne voit que ses collaborateurs directs. Pas de transitivité vers le N+2 dans l'application : c'est au manager de faire son propre compte rendu à son manager. Les rattachements sont tenus dans l'application (pas d'alimentation depuis Keycloak). Un rattachement en boucle est refusé.
+- **Import CSV des rattachements** (Administration › Comptes et rôles, `server/src/manager-import.ts`) : colonnes `collaborateur`, `nom` (facultatif), `manager` ; séparateur `;`, `,` ou tabulation.
+  - Vérification d'abord, avec un rapport ligne par ligne, puis application **tout ou rien** (`POST /api/users/rattachements`, `appliquer`), refusée tant qu'une ligne est en erreur.
+  - Un collaborateur inconnu reçoit un compte, relié à son identité Keycloak à sa première connexion par son adresse. Un collaborateur qui reçoit une équipe devient manager. Une case manager vide retire le rattachement ; les comptes absents du fichier ne changent pas.
+  - Journalisé (`user.import`, et `user.manager` / `user.role` pour chaque changement). L'export `GET /api/users/rattachements.csv` donne les rattachements actuels au même format et sert de modèle.
+
 ## Structure du dépôt
 
 | Dossier | Contenu |

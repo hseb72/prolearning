@@ -14,7 +14,14 @@ function me(overrides: Partial<Me> = {}): Me {
     email: 'lea@soredi.example',
     role: 'employee' as const,
   };
-  return { user, actor: user, space: 'production', canSwitchSpace: false, ...overrides };
+  return {
+    user,
+    actor: user,
+    space: 'production',
+    canSwitchSpace: false,
+    sso: false,
+    ...overrides,
+  };
 }
 
 describe('App', () => {

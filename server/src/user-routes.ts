@@ -1,8 +1,10 @@
 import type { FastifyInstance } from 'fastify';
+import type pg from 'pg';
 import { z } from 'zod';
 import type { UserRow } from '../../shared/auth.js';
 import { hasRole, ROLES } from '../../shared/roles.js';
 import { audit } from './audit.js';
+import { exportManagers, importManagers } from './manager-import.js';
 import { requireRole } from './context.js';
 import { getRetention } from './privacy.js';
 import { findUser, listUsers, setManager, setRole, toRow } from './users.js';
@@ -14,6 +16,10 @@ const updateBody = z
     managerId: z.number().int().positive().nullable().optional(),
   })
   .refine((body) => body.role !== undefined || body.managerId !== undefined);
+const importBody = z.object({
+  contenu: z.string().max(1_000_000),
+  appliquer: z.boolean(),
+});
 
 /**
  * Gestion des rôles et des rattachements (RBAC tenu dans l'application). Réservée aux
@@ -62,6 +68,12 @@ export function registerUserRoutes(app: FastifyInstance): void {
           message: 'Le manager choisi n’a pas le rôle de manager.',
         });
       }
+      if (await isUnder(ctx.db, managerId, target.id)) {
+        return reply.code(409).send({
+          error: 'manager_cycle',
+          message: `${manager.displayName} est déjà dans l’équipe de ${target.displayName} : ce rattachement ferait une boucle.`,
+        });
+      }
     }
 
     const actor = { actorId: ctx.actor.id, actorLabel: ctx.actor.email };
@@ -84,4 +96,52 @@ export function registerUserRoutes(app: FastifyInstance): void {
     const { inactiveMonths } = await getRetention(ctx.db);
     return toRow((await findUser(ctx.db, target.id))!, inactiveMonths);
   });
+
+  /** Rattachements actuels, en CSV : sert aussi de modèle pour l'import. */
+  app.get(
+    '/api/users/rattachements.csv',
+    { preHandler: requireRole('admin') },
+    async (request, reply) => {
+      const csv = await exportManagers(request.auth!.db);
+      return reply
+        .header('content-type', 'text/csv; charset=utf-8')
+        .header('content-disposition', 'attachment; filename="rattachements.csv"')
+        .send(csv);
+    },
+  );
+
+  /** Import CSV des rattachements : vérification, puis application (tout ou rien). */
+  app.post(
+    '/api/users/rattachements',
+    { preHandler: requireRole('admin'), bodyLimit: 2 * 1024 * 1024 },
+    async (request, reply) => {
+      const body = importBody.safeParse(request.body);
+      if (!body.success) {
+        return reply
+          .code(400)
+          .send({ error: 'invalid', message: 'Fichier absent ou trop volumineux (1 Mo au plus).' });
+      }
+      const ctx = request.auth!;
+      const report = await importManagers(ctx.db, body.data.contenu, body.data.appliquer, {
+        actorId: ctx.actor.id,
+        actorLabel: ctx.actor.email,
+      });
+      return reply.code(body.data.appliquer && !report.applied ? 422 : 200).send(report);
+    },
+  );
+}
+
+/** Vrai si `id` est sous l'autorité de `bossId`, directement ou par ses managers. */
+async function isUnder(db: pg.Pool, id: number, bossId: number): Promise<boolean> {
+  const res = await db.query<{ found: boolean }>(
+    `WITH RECURSIVE chain(id, depth) AS (
+       SELECT manager_id, 1 FROM pl_users WHERE id = $1
+       UNION ALL
+       SELECT u.manager_id, c.depth + 1 FROM pl_users u JOIN chain c ON u.id = c.id
+        WHERE c.depth < 1000
+     )
+     SELECT EXISTS (SELECT 1 FROM chain WHERE id = $2) AS found`,
+    [id, bossId],
+  );
+  return res.rows[0]!.found;
 }

@@ -18,6 +18,21 @@ export interface AuthSettings {
 
 /** Page de connexion du front, et code d'erreur éventuel. */
 const LOGIN_PAGE = '/connexion';
+/** Page où revient la personne après le changement de son mot de passe chez Keycloak. */
+const PASSWORD_PAGE = '/mes-donnees';
+/** Issue d'une action Keycloak (`kc_action_status`), traduite pour le front. */
+const PASSWORD_STATUS: Record<string, string> = {
+  success: 'modifie',
+  cancelled: 'inchange',
+  error: 'erreur',
+};
+
+/** Ajoute l'issue du changement de mot de passe à l'adresse de retour. */
+function withPasswordStatus(returnTo: string, status: string | null): string {
+  const value = status ? PASSWORD_STATUS[status] : undefined;
+  if (!value) return returnTo;
+  return `${returnTo}${returnTo.includes('?') ? '&' : '?'}motdepasse=${value}`;
+}
 
 /** N'accepte qu'un chemin interne (« /… », pas « //hôte » ni une URL absolue). */
 export function safeReturnTo(value: unknown): string {
@@ -32,6 +47,7 @@ export function toMe(ctx: RequestContext): Me {
     space: ctx.space,
     actor: toSummary(ctx.actor),
     canSwitchSpace: ctx.user.role === 'admin',
+    sso: ctx.user.oidcSubject !== null,
   };
 }
 
@@ -107,12 +123,36 @@ export function registerAuthRoutes(
       const { identity, returnTo } = await settings.oidc.finish(production, callbackUrl);
       const user = await upsertSsoUser(production, identity);
       if (!user.active) return reply.redirect(`${LOGIN_PAGE}?erreur=compte-desactive`);
-      await openSession(request, reply, user, 'sso');
-      return reply.redirect(returnTo);
+      // Retour d'une action Keycloak (mot de passe) : la session en cours de la même
+      // personne est gardée, avec son espace et son compte joué.
+      if (request.auth?.user.id !== user.id) await openSession(request, reply, user, 'sso');
+      return reply.redirect(
+        withPasswordStatus(returnTo, callbackUrl.searchParams.get('kc_action_status')),
+      );
     } catch (err) {
       request.log.warn({ err }, 'Échec de la connexion SSO');
       const code = err instanceof OidcError ? 'sso-refuse' : 'sso-echec';
       return reply.redirect(`${LOGIN_PAGE}?erreur=${code}`);
+    }
+  });
+
+  /**
+   * Changement du mot de passe : il est tenu par Keycloak, qui affiche son propre
+   * formulaire puis ramène la personne sur « Mes données personnelles ».
+   */
+  app.get('/api/auth/mot-de-passe', { preHandler: requireAuth }, async (request, reply) => {
+    const ctx = request.auth!;
+    if (!settings.oidc || ctx.user.oidcSubject === null) {
+      return reply.redirect(`${PASSWORD_PAGE}?motdepasse=indisponible`);
+    }
+    try {
+      const url = await settings.oidc.start(production, PASSWORD_PAGE, {
+        action: 'UPDATE_PASSWORD',
+      });
+      return reply.redirect(url.href);
+    } catch (err) {
+      request.log.error({ err }, 'Keycloak injoignable');
+      return reply.redirect(`${PASSWORD_PAGE}?motdepasse=erreur`);
     }
   });
 

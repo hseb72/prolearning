@@ -7,6 +7,7 @@ export type AuditAction =
   | 'demo.reset'
   | 'user.role'
   | 'user.manager'
+  | 'user.import'
   | 'user.bootstrap_admin'
   | 'user.delete'
   | 'settings.retention'

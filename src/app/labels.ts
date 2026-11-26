@@ -69,6 +69,7 @@ export const LABELS = {
       'demo.reset': 'Réinitialisation de la démonstration',
       'user.role': 'Changement de rôle',
       'user.manager': 'Rattachement à un manager',
+      'user.import': 'Import des rattachements',
       'user.bootstrap_admin': 'Administrateur d’amorçage',
       'user.delete': 'Suppression d’un compte et de ses données',
       'settings.retention': 'Durées de conservation',
@@ -99,6 +100,10 @@ export const LABELS = {
       surMesure: 'sur mesure',
       journal: 'journal',
       parLuiMeme: 'par la personne elle-même',
+      lignes: 'lignes',
+      crees: 'comptes créés',
+      modifies: 'rattachements modifiés',
+      promus: 'managers promus',
     } as Record<string, string>,
   },
   /** Composants communs de l'interface (SPEC-UI § 4), libellés du prototype. */
@@ -250,6 +255,43 @@ export const LABELS = {
     deleteConfirm: 'Supprimer définitivement',
     deleted: (name: string) => `Compte de ${name} supprimé avec ses données.`,
     deleteFailed: 'La suppression n’a pas abouti.',
+    importTitle: 'Importer les rattachements',
+    importIntro:
+      'Un fichier CSV avec une ligne d’en-tête : collaborateur ; nom (facultatif) ; manager, une adresse e-mail par case. Un collaborateur inconnu reçoit un compte, relié à sa première connexion. Une case manager vide retire le rattachement ; les comptes absents du fichier ne changent pas.',
+    importTemplate: 'Télécharger les rattachements actuels (modèle)',
+    importHint: 'Fichier .csv, séparateur « ; » ou « , », 1 Mo au plus.',
+    importCheck: (name: string) => `Vérification de ${name}…`,
+    importApply: 'Appliquer l’import',
+    importCancel: 'Abandonner',
+    importReadFailed: 'Le fichier n’a pas pu être lu.',
+    importFailed: 'L’import n’a pas abouti.',
+    importSummary: (c: { created: number; updated: number; unchanged: number; error: number }) =>
+      [
+        `${c.created} compte${c.created > 1 ? 's' : ''} à créer`,
+        `${c.updated} rattachement${c.updated > 1 ? 's' : ''} à modifier`,
+        `${c.unchanged} inchangé${c.unchanged > 1 ? 's' : ''}`,
+        `${c.error} erreur${c.error > 1 ? 's' : ''}`,
+      ].join(' · '),
+    importErrorsBlock:
+      'Corrigez les erreurs puis déposez à nouveau le fichier : rien n’est appliqué tant qu’il en reste.',
+    importNothing: 'Le fichier ne change rien.',
+    importPromoted: (names: string) => `Deviendront managers : ${names}.`,
+    importDone: (c: { created: number; updated: number }) =>
+      `Import appliqué : ${c.created} compte${c.created > 1 ? 's' : ''} créé${c.created > 1 ? 's' : ''}, ${c.updated} rattachement${c.updated > 1 ? 's' : ''} modifié${c.updated > 1 ? 's' : ''}.`,
+    importColumns: {
+      line: 'Ligne',
+      member: 'Collaborateur',
+      manager: 'Manager',
+      result: 'Résultat',
+    },
+    importStatus: {
+      created: 'Compte à créer',
+      updated: 'Rattachement à modifier',
+      unchanged: 'Inchangé',
+      error: 'Erreur',
+    } as Record<string, string>,
+    importFrom: (previous: string | null) => `avant : ${previous ?? 'aucun'}`,
+    importNone: 'aucun',
   },
   /** Publication des réussites (décision 5) : choix de l'apprenant, équipe, communauté. */
   shares: {
@@ -287,6 +329,17 @@ export const LABELS = {
   },
   /** Données personnelles : page « Mes données » et réglages de conservation. */
   privacy: {
+    passwordTitle: 'Mot de passe',
+    passwordText:
+      'Votre mot de passe est celui de votre compte Soredi. Vous le changez sur la page sécurisée du service de connexion, qui vous ramène ensuite ici.',
+    passwordButton: 'Changer mon mot de passe',
+    passwordStatus: {
+      modifie: 'Votre mot de passe a été changé.',
+      inchange: 'Changement annulé : votre mot de passe reste le même.',
+      erreur: 'Le service de connexion n’a pas pu changer votre mot de passe. Réessayez plus tard.',
+      indisponible:
+        'Votre compte n’utilise pas le service de connexion : il n’a pas de mot de passe à changer ici.',
+    } as Record<string, string>,
     footerLink: 'Mes données personnelles',
     title: 'Mes données personnelles',
     intro:

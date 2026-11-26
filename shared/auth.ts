@@ -25,6 +25,8 @@ export interface Me {
   actor: AccountSummary;
   /** Vrai si la personne peut basculer d'espace (administrateur en production). */
   canSwitchSpace: boolean;
+  /** Vrai si la personne s'est connectée par Keycloak : elle peut y changer son mot de passe. */
+  sso: boolean;
 }
 
 /** Corps de POST /api/space. */
@@ -47,4 +49,37 @@ export interface UserRow extends AccountSummary {
 export interface UserUpdate {
   role?: Role;
   managerId?: number | null;
+}
+
+/** Corps de POST /api/users/rattachements : fichier CSV à vérifier ou à appliquer. */
+export interface ManagerImportRequest {
+  /** Texte du fichier (séparateur « ; », « , » ou tabulation, avec une ligne d'en-tête). */
+  contenu: string;
+  /** Faux : vérification seule. Vrai : application, refusée s'il reste une erreur. */
+  appliquer: boolean;
+}
+
+/** Issue d'une ligne du fichier de rattachements. */
+export type ManagerImportStatus = 'created' | 'updated' | 'unchanged' | 'error';
+
+export interface ManagerImportLine {
+  /** Numéro de ligne dans le fichier (l'en-tête est la ligne 1). */
+  line: number;
+  member: string;
+  manager: string | null;
+  status: ManagerImportStatus;
+  /** Manager avant l'import (adresse), pour une ligne modifiée. */
+  previousManager?: string | null;
+  message?: string;
+}
+
+/** Rapport de l'import : rien n'est appliqué tant qu'une ligne est en erreur. */
+export interface ManagerImportReport {
+  applied: boolean;
+  lines: ManagerImportLine[];
+  /** Comptes promus manager parce qu'un collaborateur leur est rattaché. */
+  promoted: string[];
+  counts: Record<ManagerImportStatus, number>;
+  /** Erreur qui porte sur tout le fichier (en-tête, taille). */
+  fileError?: string;
 }
