@@ -9,12 +9,13 @@ import { AdminNav } from '../../layout/admin-nav';
 import { LABELS } from '../../labels';
 import { ConfirmService } from '../../ui/confirm';
 import { ToastService } from '../../ui/toast';
+import { ManagerImport } from './manager-import';
 import type { RetentionSettings } from '@shared/privacy';
 
 /** Comptes et rôles de l'espace actif (RBAC tenu dans l'application). */
 @Component({
   selector: 'app-users',
-  imports: [DatePipe, AdminNav],
+  imports: [DatePipe, AdminNav, ManagerImport],
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })

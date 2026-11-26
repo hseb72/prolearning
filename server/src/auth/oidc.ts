@@ -41,8 +41,16 @@ export class OidcLogin {
     return this.configuration;
   }
 
-  /** Prépare une connexion et renvoie l'adresse Keycloak vers laquelle rediriger. */
-  async start(production: pg.Pool, returnTo: string): Promise<URL> {
+  /**
+   * Prépare une connexion et renvoie l'adresse Keycloak vers laquelle rediriger. Avec
+   * `action`, Keycloak fait d'abord faire cette action à la personne (« application
+   * initiated action », par exemple UPDATE_PASSWORD), puis revient comme pour une connexion.
+   */
+  async start(
+    production: pg.Pool,
+    returnTo: string,
+    options: { action?: 'UPDATE_PASSWORD' } = {},
+  ): Promise<URL> {
     const config = await this.config();
     const codeVerifier = client.randomPKCECodeVerifier();
     const state = client.randomState();
@@ -59,6 +67,7 @@ export class OidcLogin {
       code_challenge_method: 'S256',
       state,
       nonce,
+      ...(options.action ? { kc_action: options.action } : {}),
     });
   }
 

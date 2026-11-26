@@ -14,6 +14,8 @@
   }
 </div>
 
+<app-manager-import (imported)="users.reload()" />
+
 @if (users.isLoading() && !users.hasValue()) {
   <p role="status">{{ labels.loading }}</p>
 } @else if (users.error()) {

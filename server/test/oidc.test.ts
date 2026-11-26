@@ -102,6 +102,75 @@ describe.skipIf(!databasesAvailable)('connexion SSO', () => {
     expect(users.rows).toEqual([{ oidc_subject: 'kc-123', role: 'manager' }]);
   });
 
+  it('fait changer le mot de passe par Keycloak et garde la session en cours', async () => {
+    const app = testApp(databases, { oidc });
+    const login = await app.inject({ method: 'GET', url: '/api/auth/login' });
+    const first = await app.inject({
+      method: 'GET',
+      url: await authorize(login.headers.location as string),
+    });
+    const cookie = `pl_session=${first.cookies.find((c) => c.name === 'pl_session')!.value}`;
+    const me = await app.inject({ method: 'GET', url: '/api/auth/me', headers: { cookie } });
+    expect(me.json()).toMatchObject({ sso: true });
+
+    const start = await app.inject({
+      method: 'GET',
+      url: '/api/auth/mot-de-passe',
+      headers: { cookie },
+    });
+    expect(start.statusCode).toBe(302);
+    const location = new URL(start.headers.location as string);
+    expect(location.searchParams.get('kc_action')).toBe('UPDATE_PASSWORD');
+
+    // Keycloak ajoute l'issue de l'action à son retour.
+    const back = await app.inject({
+      method: 'GET',
+      url: `${await authorize(location.href)}&kc_action_status=success`,
+      headers: { cookie },
+    });
+    expect(back.headers.location).toBe('/mes-donnees?motdepasse=modifie');
+    expect(back.cookies.find((c) => c.name === 'pl_session')).toBeUndefined();
+    const sessions = await databases.production.query('SELECT count(*)::int AS n FROM pl_sessions');
+    expect(sessions.rows[0].n).toBe(1);
+  });
+
+  it('signale un changement de mot de passe abandonné', async () => {
+    const app = testApp(databases, { oidc });
+    const login = await app.inject({ method: 'GET', url: '/api/auth/login' });
+    const first = await app.inject({
+      method: 'GET',
+      url: await authorize(login.headers.location as string),
+    });
+    const cookie = `pl_session=${first.cookies.find((c) => c.name === 'pl_session')!.value}`;
+    const start = await app.inject({
+      method: 'GET',
+      url: '/api/auth/mot-de-passe',
+      headers: { cookie },
+    });
+    const back = await app.inject({
+      method: 'GET',
+      url: `${await authorize(start.headers.location as string)}&kc_action_status=cancelled`,
+      headers: { cookie },
+    });
+    expect(back.headers.location).toBe('/mes-donnees?motdepasse=inchange');
+  });
+
+  it('ne propose pas Keycloak à un compte sans identité Keycloak', async () => {
+    const app = testApp(databases, { oidc, devLogin: true });
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/dev-login',
+      payload: { email: 'dev@soredi.example' },
+    });
+    const cookie = `pl_session=${login.cookies.find((c) => c.name === 'pl_session')!.value}`;
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/auth/mot-de-passe',
+      headers: { cookie },
+    });
+    expect(res.headers.location).toBe('/mes-donnees?motdepasse=indisponible');
+  });
+
   it('propose la déconnexion Keycloak', async () => {
     const url = await oidc.logoutUrl(`${APP_URL}/connexion`);
     expect(url?.searchParams.get('client_id')).toBe('prolearning');

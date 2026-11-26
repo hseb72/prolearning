@@ -69,4 +69,33 @@ test.describe('espaces production et démonstration', () => {
       page.getByLabel(`Manager de ${employeeName}`).locator('option:checked'),
     ).toHaveText(managerName);
   });
+
+  test('l’administrateur importe les rattachements d’un fichier CSV', async ({ page }, info) => {
+    const chef = uniqueEmail('chefcsv', info);
+    const collab = uniqueEmail('collabcsv', info);
+    const csv = `collaborateur;nom;manager\n${chef};;\n${collab};;${chef}\n`;
+    await login(page, ADMIN);
+    await openAdmin(page, 'Comptes et rôles');
+
+    await page.locator('app-manager-import input[type=file]').setInputFiles({
+      name: 'equipe.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(csv),
+    });
+    await expect(
+      page.getByText('2 comptes à créer · 0 rattachement à modifier · 0 inchangé · 0 erreur'),
+    ).toBeVisible();
+    await expect(page.getByText(`Deviendront managers : ${chef}.`)).toBeVisible();
+    await page.getByRole('button', { name: 'Appliquer l’import' }).click();
+    await expect(page.getByText('Import appliqué : 2 comptes créés')).toBeVisible();
+
+    const chefName = chef.split('@')[0]!;
+    const collabName = collab.split('@')[0]!;
+    await expect(page.getByLabel(`Rôle de ${chefName}`).locator('option:checked')).toHaveText(
+      'Manager',
+    );
+    await expect(page.getByLabel(`Manager de ${collabName}`).locator('option:checked')).toHaveText(
+      chefName,
+    );
+  });
 });

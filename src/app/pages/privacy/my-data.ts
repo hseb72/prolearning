@@ -1,5 +1,5 @@
 import { HttpClient, httpResource } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import type { PlatformSettings, RetentionSettings } from '@shared/privacy';
 import { firstValueFrom } from 'rxjs';
@@ -16,6 +16,23 @@ import { ToastService } from '../../ui/toast';
     <p class="eyebrow">{{ labels.footerLink }}</p>
     <h1>{{ labels.title }}</h1>
     <p class="lead">{{ labels.intro }}</p>
+
+    <div aria-live="polite">
+      @if (passwordMessage(); as m) {
+        <p class="fb" [class.good]="passwordChanged()" role="status">
+          <strong>{{ m }}</strong>
+        </p>
+      }
+    </div>
+
+    <!-- Le mot de passe est tenu par Keycloak : seule une personne connectée par lui en a un. -->
+    @if (canChangePassword()) {
+      <section class="card block" aria-labelledby="password-title">
+        <h2 id="password-title">{{ labels.passwordTitle }}</h2>
+        <p>{{ labels.passwordText }}</p>
+        <a class="btn ghost" href="/api/auth/mot-de-passe">{{ labels.passwordButton }}</a>
+      </section>
+    }
 
     <section class="card block" aria-labelledby="kept-title">
       <h2 id="kept-title">{{ labels.kept }}</h2>
@@ -97,6 +114,28 @@ export class MyDataPage {
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   protected readonly busy = signal(false);
+  /** Issue du changement de mot de passe, dans l'adresse de retour de Keycloak. */
+  readonly motdepasse = input<string>();
+  protected readonly passwordMessage = signal<string | null>(null);
+  protected readonly passwordChanged = signal(false);
+  // En démonstration, la page montre le compte joué : le mot de passe n'a pas de sens.
+  protected readonly canChangePassword = computed(() => {
+    const me = this.auth.me();
+    return !!me && me.sso && me.space === 'production';
+  });
+
+  constructor() {
+    // Le message est montré une fois ; l'adresse redevient celle de la page.
+    effect(() => {
+      const status = this.motdepasse();
+      if (!status) return;
+      untracked(() => {
+        this.passwordMessage.set(this.labels.passwordStatus[status] ?? null);
+        this.passwordChanged.set(status === 'modifie');
+        void this.router.navigate([], { queryParams: {}, replaceUrl: true });
+      });
+    });
+  }
   protected readonly platform = httpResource<PlatformSettings>(() => {
     const me = this.auth.me();
     return me

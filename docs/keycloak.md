@@ -46,3 +46,21 @@ attribuent ensuite les autres rôles depuis l'application. La connexion de déve
    collaborateur. Une session est ouverte : cookie `pl_session` `HttpOnly`, `Secure`,
    `SameSite=Lax` ; seule l'empreinte SHA-256 du jeton est stockée.
 4. La déconnexion ferme la session de l'application puis celle de Keycloak.
+
+## Changement du mot de passe
+
+Le mot de passe appartient au compte Soredi : l'application ne le voit jamais. « Mes
+données personnelles » propose « Changer mon mot de passe » à une personne connectée par
+Keycloak (pas aux comptes de développement ni aux comptes fictifs de la démonstration).
+
+1. Le lien mène à `GET /api/auth/mot-de-passe`, qui démarre une connexion comme au § Parcours
+   avec, en plus, `kc_action=UPDATE_PASSWORD` (« application initiated action » de Keycloak).
+2. Keycloak affiche son formulaire de changement de mot de passe, puis revient sur
+   `/api/auth/callback` avec `kc_action_status` (`success`, `cancelled` ou `error`).
+3. La session en cours de la même personne est gardée (espace et compte joué compris) ;
+   elle revient sur `/mes-donnees?motdepasse=modifie|inchange|erreur`, où un message le dit.
+
+Côté Keycloak : rien à déclarer pour le client. L'action requise « Update Password » doit
+rester activée dans le realm (c'est le cas par défaut). Si le realm délègue les mots de
+passe à un annuaire en lecture seule ou à un fournisseur externe, Keycloak ne pourra pas
+les changer : il faudra renvoyer vers l'outil de cet annuaire.
