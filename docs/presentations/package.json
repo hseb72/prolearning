@@ -1,11 +1,12 @@
 {
   "name": "prolearning-presentations",
   "private": true,
-  "description": "Présentations PowerPoint des parcours en ligne",
+  "description": "Présentations PowerPoint : parcours en ligne et socle d’hébergement",
   "scripts": {
     "llm-comprendre-utiliser": "node generer-presentation.js ../../fixtures/formations/llm-comprendre-utiliser.formation.json llm-comprendre-utiliser.pptx \"Développer avec les LLM\"",
     "llm-developper": "node generer-presentation.js ../../fixtures/formations/llm-developper.formation.json llm-developper.pptx",
-    "build": "npm run llm-comprendre-utiliser && npm run llm-developper"
+    "socle": "node generer-socle.js socle-et-patterns.pptx",
+    "build": "npm run llm-comprendre-utiliser && npm run llm-developper && npm run socle"
   },
   "dependencies": {
     "jszip": "3.10.2",
