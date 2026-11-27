@@ -19,6 +19,7 @@ Une plateforme interne de formation : catalogue, sessions à distance et sur sit
 | Formation exemple (Kubernetes, 9 modules avec travaux pratiques, format 1.1) | `fixtures/formations/kubernetes-fondamentaux.formation.json` | Jeu de test de l'activité `pratique` et contenu de démonstration |
 | Formation exemple (LLM : comprendre et utiliser, 4 modules, format 1.1) | `fixtures/formations/llm-comprendre-utiliser.formation.json` | Jeu de test riche en exemples de balises dans du code ; doit s'importer sans aucun avertissement |
 | Formation exemple (LLM : développer, 5 modules, format 1.1) | `fixtures/formations/llm-developper.formation.json` | Idem, avec travaux pratiques ; doit s'importer sans aucun avertissement |
+| Formation exemple (socle et patterns : « Du dépôt à la production en une semaine », 4 modules, format 1.0) | `fixtures/formations/socle-et-patterns.formation.json` | Parcours sans manipulation qui reprend la présentation du socle ; doit s'importer sans aucun avertissement |
 | Formation exemple courte (TOGAF 10, module 1, format 1.0) | `fixtures/formations/togaf10-m1.formation.json` | Exemple de référence de la spécification ; jeu de test rapide (parité du validateur, parcours complet dans le navigateur) |
 | Présentations | `docs/presentations/` | Diaporamas PowerPoint générés par script : parcours LLM (depuis les formations exemples) et « Du dépôt à la production en une semaine » (standards, patterns, socle) ; `npm run build` dans le dossier pour les régénérer |
 
