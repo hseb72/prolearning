@@ -1255,7 +1255,7 @@ async function build() {
         'Son deploy/ sert de modèle aux suivantes',
         'Ses écarts avec le chart ont nourri le réalignement',
       ],
-      'Leçon : un composant partagé qui vit chez une application finit par lui appartenir. Le stockage objet, né chez une application, a été rapatrié dans le socle.',
+      'Leçon : un écart constaté (Ingress et provisionnement posés à la main) doit remonter aux patterns, pas rester une exception locale.',
     ],
   ];
   for (const [i, [name, sub, color, items, lesson]] of pilots.entries()) {
@@ -1300,7 +1300,7 @@ async function build() {
   }
   s.addNotes(
     "Une pilote ne sert pas qu'à être déployée : elle sert à trouver ce que les patterns ne disent pas encore.\n\n" +
-      "Les deux leçons ont donné les principes du socle : un composant partagé ne vit pas chez une application, et l'outillage a son propre cycle de vie.",
+      "Les deux leçons ont donné des principes du socle : l'outillage a son propre cycle de vie, et un écart constaté remonte aux patterns au lieu de rester une exception locale.",
   );
 
   // ===== Acte 7 : reproduction =====

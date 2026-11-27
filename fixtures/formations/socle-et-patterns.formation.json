@@ -1,0 +1,2363 @@
+{
+  "format": "3s-formation",
+  "formatVersion": "1.0",
+  "id": "socle-et-patterns",
+  "version": "1.0.0",
+  "langue": "fr",
+  "titre": "Du dépôt à la production en une semaine",
+  "sousTitre": "Standards, patterns d'architecture et socle d'hébergement des applications",
+  "theme": "Architecture et SI",
+  "resume": "Comment des standards technologiques, des patterns d'architecture et d'implémentation et un socle d'hébergement permettent aujourd'hui à une petite application d'aller du développement à la production en une semaine. Quatre modules, sans manipulation : la démarche, les patterns, le socle et la chaîne de livraison, puis les pilotes et la reproduction, avec l'histoire réelle de la mise en production de ProLearning.",
+  "public": "Équipes applicatives, administrateurs du socle, chefs de projet et décideurs techniques qui déploient ou font déployer des applications sur le socle",
+  "prerequis": "Notions de base sur les applications web (front, API, base de données). Connaître les principes de Kubernetes aide pour les modules 2 et 3, sans être indispensable.",
+  "objectifs": [
+    "Expliquer la démarche : trois exigences de départ, sept étapes et les dépôts qui les portent",
+    "Choisir entre les patterns dedicated et shared et expliquer ce que chacun mutualise",
+    "Décrire le contrat du chart app et la sécurité et la supervision qu'il apporte",
+    "Décrire le trajet d'une requête sur le socle et le partage des rôles entre socle et applications",
+    "Décrire la chaîne de la pull request à la production et comment revenir en arrière",
+    "Raconter la mise en production de ProLearning et ce qu'elle prouve, avec ses limites",
+    "Expliquer comment la démarche se corrige elle-même par la reproduction"
+  ],
+  "dureeEstimeeMinutes": 186,
+  "niveau": "intermediaire",
+  "motsCles": [
+    "Kubernetes",
+    "patterns",
+    "socle",
+    "GitOps",
+    "Argo CD",
+    "Helm",
+    "sécurité",
+    "déploiement"
+  ],
+  "auteurs": [
+    {
+      "nom": "3S - Pro Learning",
+      "role": "Conception pédagogique, à partir des dépôts platform-patterns, homelab-platform et prolearning"
+    }
+  ],
+  "dateRevision": "2026-11-27",
+  "prochaineRevision": "2027-05-27",
+  "droits": "Contenu interne 3S. Il décrit l'état des dépôts `platform-patterns`, `homelab-platform` et `prolearning` au 27 novembre 2026 ; les dépôts font foi en cas d'écart. Kubernetes, Helm, Argo CD, CloudNativePG, Vault, Kong, VictoriaMetrics, Grafana, Keycloak et Matomo sont des marques de leurs détenteurs respectifs, citées à titre d'information.",
+  "progression": {
+    "deblocage": "sequentiel",
+    "seuilReussite": 0.75
+  },
+  "references": [
+    {
+      "id": "pp-readme",
+      "titre": "platform-patterns : présentation et catalogue des patterns",
+      "source": "Dépôt platform-patterns (README.md, docs/README.md)",
+      "url": "https://github.com/hseb72/platform-patterns",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "en",
+      "note": "Les deux patterns, leurs compromis, la règle « App → Pattern » et la feuille de route.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "pp-adr-0001",
+      "titre": "ADR 0001 — Shared pattern: topology, gateway, secrets",
+      "source": "Dépôt platform-patterns (docs/adr/0001-shared-model.md)",
+      "url": "https://github.com/hseb72/platform-patterns/blob/main/docs/adr/0001-shared-model.md",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "en",
+      "note": "La décision qui réaligne le pattern shared : deux namespaces par application, Kong pour /api seulement, Vault.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "pp-shared",
+      "titre": "Pattern shared",
+      "source": "Dépôt platform-patterns (docs/patterns/shared.md)",
+      "url": "https://github.com/hseb72/platform-patterns/blob/main/docs/patterns/shared.md",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "en",
+      "note": "Lecture opérationnelle du pattern : topologie, étiquettes de client, NetworkPolicies, Vault.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "pp-releasing",
+      "titre": "Releasing charts (OCI / GHCR, signed)",
+      "source": "Dépôt platform-patterns (docs/releasing.md, CONTRIBUTING.md)",
+      "url": "https://github.com/hseb72/platform-patterns/blob/main/docs/releasing.md",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "en",
+      "note": "Publication des charts, signature cosign, contrat SemVer sur les valeurs.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "hp-readme",
+      "titre": "homelab-platform : composants mutualisés et principes",
+      "source": "Dépôt homelab-platform (README.md)",
+      "url": "https://github.com/hseb72/homelab-platform",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "fr",
+      "note": "Pourquoi ce dépôt, ce qu'il héberge, ses principes.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "hp-consuming",
+      "titre": "Protocole de consommation du socle",
+      "source": "Dépôt homelab-platform (CONSUMING.md)",
+      "url": "https://github.com/hseb72/homelab-platform/blob/main/CONSUMING.md",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "fr",
+      "note": "Les deux rôles, l'exposition d'API, ce que l'application doit respecter et ce dont elle n'a pas à s'occuper.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "hp-alignement",
+      "titre": "Alignement du socle sur platform-patterns 1.0.0",
+      "source": "Dépôt homelab-platform (docs/alignement-patterns-1.0.0.md)",
+      "url": "https://github.com/hseb72/homelab-platform/blob/main/docs/alignement-patterns-1.0.0.md",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "fr",
+      "note": "Le plan de réalignement par phases et la migration des applications.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "hp-agents",
+      "titre": "Agents du socle",
+      "source": "Dépôt homelab-platform (AGENTS.md)",
+      "url": "https://github.com/hseb72/homelab-platform/blob/main/AGENTS.md",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "fr",
+      "note": "Veille de versions, dérive, dépouillement du WAF : le script d'abord, l'IA en exception.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "hp-platform",
+      "titre": "Instance du socle partagé et runbooks",
+      "source": "Dépôt homelab-platform (platform/README.md, edge/README.md)",
+      "url": "https://github.com/hseb72/homelab-platform/blob/main/platform/README.md",
+      "type": "interne",
+      "acces": "interne",
+      "langue": "fr",
+      "note": "Bootstraps, sauvegarde CloudNativePG, bascule de l'edge et pièges vécus.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "k8s-netpol",
+      "titre": "Network Policies",
+      "source": "Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/services-networking/network-policies/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Comment une NetworkPolicy sélectionne les pods et autorise le trafic entrant.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "k8s-pss",
+      "titre": "Pod Security Standards",
+      "source": "Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/security/pod-security-standards/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Les profils privileged, baseline et restricted.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "helm-oci",
+      "titre": "Use OCI-based registries",
+      "source": "Helm",
+      "url": "https://helm.sh/docs/topics/registries/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Publier et consommer des charts comme artefacts OCI.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "sigstore-cosign",
+      "titre": "Signing containers and artifacts with Cosign",
+      "source": "Sigstore",
+      "url": "https://docs.sigstore.dev/cosign/signing/overview/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Signature sans clé, liée à une identité OIDC, et journal de transparence.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "semver",
+      "titre": "Gestion sémantique de version 2.0.0",
+      "source": "semver.org",
+      "url": "https://semver.org/lang/fr/",
+      "type": "norme",
+      "acces": "libre",
+      "langue": "fr",
+      "note": "Les règles MAJEUR.MINEUR.CORRECTIF.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "argocd-docs",
+      "titre": "Argo CD — Declarative GitOps CD for Kubernetes",
+      "source": "Argo Project",
+      "url": "https://argo-cd.readthedocs.io/en/stable/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Applications, projets, synchronisation automatique, modèle app-of-apps.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "cnpg-docs",
+      "titre": "CloudNativePG documentation",
+      "source": "CloudNativePG",
+      "url": "https://cloudnative-pg.io/documentation/current/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Opérateur PostgreSQL : réplicas, bascule, sauvegarde et restauration à un instant donné.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "vault-db",
+      "titre": "Database secrets engine",
+      "source": "HashiCorp",
+      "url": "https://developer.hashicorp.com/vault/docs/secrets/databases",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Identifiants de base de données générés à la demande, avec bail et révocation.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "owasp-crs",
+      "titre": "OWASP CRS (Core Rule Set)",
+      "source": "OWASP",
+      "url": "https://coreruleset.org/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Les règles génériques du pare-feu applicatif, avec ModSecurity.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "kong-kic",
+      "titre": "Kong Ingress Controller",
+      "source": "Kong",
+      "url": "https://docs.konghq.com/kubernetes-ingress-controller/latest/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Router vers des services Kubernetes à partir d'objets Ingress de classe kong.",
+      "consulteLe": "2026-11-27"
+    },
+    {
+      "id": "victoriametrics",
+      "titre": "VictoriaMetrics Kubernetes monitoring stack",
+      "source": "VictoriaMetrics",
+      "url": "https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/",
+      "type": "officiel",
+      "acces": "libre",
+      "langue": "en",
+      "note": "Collecte, stockage, alertes et Grafana, compatibles avec les ServiceMonitor.",
+      "consulteLe": "2026-11-27"
+    }
+  ],
+  "glossaire": [
+    {
+      "terme": "pattern",
+      "definition": "Modèle d'architecture et de déploiement décrit une fois, puis réutilisé par chaque application qui le choisit (ici `dedicated` ou `shared`).",
+      "references": [
+        "pp-readme"
+      ]
+    },
+    {
+      "terme": "socle",
+      "definition": "L'infrastructure d'accueil mutualisée : edge, gateway, moteurs de données, secrets et outillage, livrés et maintenus une fois pour toutes les applications.",
+      "references": [
+        "hp-readme"
+      ]
+    },
+    {
+      "terme": "edge",
+      "definition": "Le point d'entrée public du cluster : un contrôleur ingress-nginx qui termine le TLS et porte le pare-feu applicatif."
+    },
+    {
+      "terme": "GitOps",
+      "definition": "Façon d'exploiter où l'état voulu du système est décrit dans Git ; un outil (ici Argo CD) aligne le cluster sur cet état.",
+      "references": [
+        "argocd-docs"
+      ]
+    },
+    {
+      "terme": "app-of-apps",
+      "definition": "Une Application Argo CD dont le contenu est lui-même un ensemble d'Applications : c'est ainsi que le socle livre chacun de ses outils."
+    },
+    {
+      "terme": "étiquette de client",
+      "definition": "Étiquette `platform-patterns.io/‹service›-client: \"true\"` posée sur le namespace API d'une application : elle ouvre l'accès au service mutualisé correspondant.",
+      "references": [
+        "pp-shared"
+      ]
+    },
+    {
+      "terme": "OCI",
+      "definition": "Open Container Initiative : le format des registres d'images, aussi utilisé pour publier les charts Helm.",
+      "references": [
+        "helm-oci"
+      ]
+    },
+    {
+      "terme": "ADR",
+      "definition": "Architecture Decision Record : une décision d'architecture écrite, avec son contexte et ses conséquences.",
+      "references": [
+        "pp-adr-0001"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "m1-demarche",
+      "titre": "La démarche : de l'intention aux dépôts",
+      "resume": "Pourquoi un socle et des patterns, et comment la démarche s'est construite : trois exigences de départ, sept étapes qui produisent chacune un résultat concret, trois familles de dépôts qui reproduisent ces étapes, et des standards technologiques communs.",
+      "objectifs": [
+        "Expliquer les trois exigences de départ et pourquoi elles se renforcent",
+        "Citer les sept étapes de la démarche et le résultat de chacune",
+        "Dire ce que contient chaque dépôt : platform-patterns, homelab-platform, dépôt d'application",
+        "Expliquer à quoi sert une pile technologique commune"
+      ],
+      "dureeEstimeeMinutes": 38,
+      "activites": [
+        {
+          "id": "trois-exigences",
+          "type": "lecon",
+          "titre": "Trois exigences de départ",
+          "dureeEstimeeMinutes": 6,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Tout part d'une intention simple : **pouvoir déployer des applications dans une infrastructure externalisée, mais relativement simple, en appliquant la sécurité la plus stricte et en respectant un maximum de standardisation.**\n\nCes trois exigences ne sont pas une liste de souhaits indépendants : elles se tiennent entre elles.\n\n| Exigence | Ce qu'elle veut dire concrètement |\n|---|---|\n| **Externalisée, mais simple** | Un cluster k3s hors de l'entreprise, une seule adresse IP publique, tout décrit dans Git. Pas d'usine à gaz. |\n| **La sécurité la plus stricte** | Isolation réseau par défaut, aucun secret dans Git, conteneurs non privilégiés, pare-feu applicatif, artefacts signés. |\n| **Un maximum de standardisation** | Les mêmes briques et les mêmes façons de faire pour toutes les applications. |"
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "- La **simplicité** rend la sécurité vérifiable : on ne protège bien que ce qu'on comprend.\n- La **standardisation** rend la simplicité tenable : sans elle, chaque nouvelle application ajoute sa propre complexité.\n- La **sécurité** n'est pas demandée à chaque équipe : elle est intégrée une fois, dans le pattern et dans le socle."
+            },
+            {
+              "type": "texte",
+              "markdown": "### Une leçon apprise tôt\n\nAu tout début, le stockage objet (MinIO) a été déployé comme sous-chart de l'application de gestion immobilière, la première application hébergée. Quand une deuxième application a voulu s'en servir, il a fallu écrire une règle dans le namespace de la première, et toute évolution demandait un aller-retour dans un dépôt qui n'avait rien à voir.\n\nD'où un principe fondateur du [[socle]] : **un composant partagé qui vit chez une application finit par lui appartenir.** Ce qui est partagé doit vivre à part."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Pourquoi « externalisée mais simple » ?",
+              "markdown": "Externaliser l'hébergement évite de dépendre de l'infrastructure de l'entreprise pour des applications qui n'en ont pas besoin. Mais une infrastructure externalisée complexe coûte cher à comprendre et à sécuriser.\n\nLe choix d'un cluster k3s sur un seul nœud, avec une seule IP publique, est assumé : il impose des contraintes (par exemple, une seule entrée publique, donc un seul [[edge]]), mais il rend chaque élément vérifiable par une petite équipe. On le retrouvera au module 4 : cette contrainte a aussi façonné la façon de faire évoluer l'edge.",
+              "references": [
+                "hp-readme"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sept-etapes",
+          "type": "lecon",
+          "titre": "Sept étapes, sept résultats",
+          "dureeEstimeeMinutes": 7,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "La démarche s'est déroulée en sept étapes. Chacune a produit un résultat concret, qu'on retrouve aujourd'hui dans les dépôts.\n\n| # | Étape | Ce qu'on a fait | Ce que ça a produit |\n|---|---|---|---|\n| 1 | Standards technologiques | Choisir une pile commune | TypeScript, Angular servi par nginx, API Node.js, PostgreSQL, images sur GHCR, Argo CD |\n| 2 | Patterns d'architecture | Définir des architectures reproductibles | Les patterns `dedicated` et `shared`, avec leurs compromis |\n| 3 | Patterns d'implémentation | Décrire ce qu'on maîtrise : déploiement, sécurité, supervision, observabilité | Le chart Helm `app`, son contrat, ses règles de sécurité et de supervision |\n| 4 | Socle d'infrastructure | Construire l'accueil de ces architectures | `homelab-platform` : edge, Kong, PostgreSQL, MinIO, Redis, Vault, SSO, supervision |\n| 5 | Du dépôt à la production | Automatiser le chemin | CI, chart publié et signé, promotion GitOps, Argo CD |\n| 6 | Applications pilotes | Prouver que la chaîne fonctionne | xpms pour `dedicated`, TreasureHunters pour `shared` |\n| 7 | Reproduction | Démontrer l'efficacité | Les applications suivantes, chacune en quelques jours |"
+            },
+            {
+              "type": "encadre",
+              "variante": "exemple",
+              "markdown": "Aujourd'hui, une petite application va du développement à la production **en une semaine**. ProLearning, la plateforme sur laquelle vous suivez ce parcours, a été mise en production environ 18 heures après son premier commit. Le module 4 raconte comment.",
+              "titre": "La promesse"
+            },
+            {
+              "type": "texte",
+              "markdown": "### L'ordre compte\n\nOn n'a pas construit le socle d'abord pour y ranger les applications ensuite. On a d'abord **défini** ce qu'on voulait déployer (étapes 2 et 3), puis **construit** de quoi l'accueillir (étapes 4 et 5), puis **éprouvé** le tout sur de vraies applications (étapes 6 et 7).\n\nC'est ce qui permet au socle de rester générique : il héberge des patterns, pas des cas particuliers."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Pourquoi des pilotes avant la reproduction ?",
+              "markdown": "Un pattern décrit sur le papier a toujours des trous : un cas non prévu, une valeur qu'on ne peut pas régler, une hypothèse fausse sur le socle. Une application pilote sert à **trouver ces trous** avant qu'ils ne coûtent à toutes les applications suivantes.\n\nLes deux pilotes ont joué ce rôle : xpms a révélé que l'outillage ne devait pas vivre dans une application ; TreasureHunters a révélé les écarts entre le chart et le socle qui ont conduit au réalignement (module 4).",
+              "references": [
+                "hp-alignement"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trois-depots",
+          "type": "lecon",
+          "titre": "Des dépôts qui reproduisent la démarche",
+          "dureeEstimeeMinutes": 6,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "La séparation en dépôts n'est pas une commodité d'organisation : elle **matérialise** la démarche.\n\n| Dépôt | Rôle dans la démarche | Ce qu'il contient |\n|---|---|---|\n| `platform-patterns` | **La définition** (étapes 2 et 3) | Le chart `app` (modes `dedicated` et `shared`), le chart `platform` (gabarit du socle partagé), le catalogue des patterns, les décisions d'architecture. Aucune application. |\n| `homelab-platform` | **L'implémentation** (étapes 4 et 5) | L'instance du socle (valeurs de `charts/platform`), l'outillage (SSO, Argo CD, supervision, mesure d'audience), les hôtes d'API, les runbooks et les agents. |\n| Dépôt de chaque application | **La consommation** (étapes 6 et 7) | Son code, et son dossier `deploy/` : un fichier de valeurs du chart `app` et une Application Argo CD qui pointe une version précise du chart. |"
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "**App → Pattern, jamais l'inverse.** Le dépôt des patterns ne sait rien des applications ; le socle les accueille sans les énumérer ; chaque application déclare ce dont elle a besoin, chez elle.",
+              "titre": "La règle qui rend la reproduction possible"
+            },
+            {
+              "type": "texte",
+              "markdown": "### Ce que ça change au quotidien\n\n- Une application qui arrive **n'ouvre pas de pull request** dans `platform-patterns`.\n- Elle ne demande presque rien au socle : des identifiants de provisionnement et un nom d'hôte d'API.\n- Une correction du chart se propage à toutes les applications **par une montée de version**, pas par copier-coller."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Le chart `platform` est un gabarit, pas le socle",
+              "markdown": "`platform-patterns` publie aussi un chart `platform`, qui décrit le socle partagé (edge, Kong, Vault, PostgreSQL, MinIO, Redis) sous forme d'[[app-of-apps]]. Mais ce chart ne contient aucune valeur réelle : c'est `homelab-platform` qui l'**instancie**, avec ses propres valeurs et une version épinglée.\n\nLe catalogue des patterns le dit explicitement : une instance du socle peut être construite avec `charts/platform`, ou par tout autre moyen qui honore le contrat.",
+              "references": [
+                "pp-readme"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "standards",
+          "type": "lecon",
+          "titre": "Des standards technologiques",
+          "dureeEstimeeMinutes": 5,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "La première étape a été de **choisir une fois** les briques communes, pour que chaque savoir-faire acquis sur une application profite à toutes les autres.\n\n| Domaine | Standard |\n|---|---|\n| Langage | TypeScript de bout en bout, avec un paquet de code partagé entre front et API |\n| Front | Angular, servi par nginx non privilégié |\n| API | Node.js (Fastify), validation des entrées par schéma (zod) |\n| Données | PostgreSQL avec migrations SQL versionnées ; MinIO pour les fichiers ; Redis pour le cache |\n| Qualité | Tests unitaires (Vitest), tests de bout en bout (Playwright), audit d'accessibilité, CI à chaque pull request |\n| Livraison | Images sur GHCR, chart Helm publié en [[OCI]], déploiement par Argo CD |"
+            },
+            {
+              "type": "encadre",
+              "variante": "exemple",
+              "markdown": "Quand ProLearning a rejoint le socle, ses workflows de construction d'images et de promotion ont été repris « tels quels » de TreasureHunters, la pilote `shared`. Même pile, mêmes images de base, mêmes conventions : le travail était déjà fait.",
+              "titre": "La mutualisation, concrètement"
+            },
+            {
+              "type": "texte",
+              "markdown": "### Un standard n'est pas une prison\n\nUne application peut s'écarter d'un standard. Elle perd alors le bénéfice de la mutualisation : workflows à écrire, images à durcir, supervision à brancher. C'est un **choix à justifier**, pas un défaut à cacher."
+            }
+          ]
+        },
+        {
+          "id": "ordre-demarche",
+          "type": "ordre",
+          "titre": "Les sept étapes, dans l'ordre",
+          "dureeEstimeeMinutes": 3,
+          "consigne": "Remettez dans l'ordre les étapes de la démarche.",
+          "elements": [
+            {
+              "id": "e1",
+              "texte": "Choisir des standards technologiques communs"
+            },
+            {
+              "id": "e2",
+              "texte": "Définir des patterns d'architecture reproductibles"
+            },
+            {
+              "id": "e3",
+              "texte": "Décrire les patterns d'implémentation : déploiement, sécurité, supervision"
+            },
+            {
+              "id": "e4",
+              "texte": "Construire le socle d'infrastructure qui accueille ces architectures"
+            },
+            {
+              "id": "e5",
+              "texte": "Automatiser le chemin du dépôt à la production"
+            },
+            {
+              "id": "e6",
+              "texte": "Déployer une application pilote par pattern"
+            },
+            {
+              "id": "e7",
+              "texte": "Reproduire avec d'autres applications pour démontrer l'efficacité"
+            }
+          ],
+          "explication": "On définit d'abord (standards, patterns), on construit ensuite (socle, chaîne), on éprouve enfin (pilotes, reproduction). Construire le socle avant d'avoir défini les patterns l'aurait rendu spécifique aux premières applications."
+        },
+        {
+          "id": "depots-et-roles",
+          "type": "association",
+          "titre": "Qui contient quoi ?",
+          "dureeEstimeeMinutes": 3,
+          "consigne": "Associez chaque élément à ce qu'il contient ou à son rôle.",
+          "paires": [
+            {
+              "id": "p1",
+              "gauche": "platform-patterns",
+              "droite": "Les patterns et le chart app, sans aucune application"
+            },
+            {
+              "id": "p2",
+              "gauche": "homelab-platform",
+              "droite": "L'instance du socle, l'outillage et les runbooks"
+            },
+            {
+              "id": "p3",
+              "gauche": "Le dossier deploy/ d'une application",
+              "droite": "Ses valeurs du chart app et son Application Argo CD"
+            },
+            {
+              "id": "p4",
+              "gauche": "charts/platform",
+              "droite": "Le gabarit du socle partagé, sous forme d'app-of-apps"
+            },
+            {
+              "id": "p5",
+              "gauche": "La branche deploy-state",
+              "droite": "L'historique des mises en production d'une application"
+            }
+          ],
+          "explication": "Chaque dépôt correspond à une partie de la démarche : définition, implémentation, consommation. La branche deploy-state sera détaillée au module 3."
+        },
+        {
+          "id": "fiches-m1",
+          "type": "fiches",
+          "titre": "Fiches de révision",
+          "obligatoire": false,
+          "dureeEstimeeMinutes": 3,
+          "cartes": [
+            {
+              "recto": "Les trois exigences de départ",
+              "verso": "Infrastructure **externalisée mais simple**, **sécurité la plus stricte**, **maximum de standardisation**."
+            },
+            {
+              "recto": "Pourquoi elles se tiennent",
+              "verso": "La simplicité rend la sécurité vérifiable ; la standardisation rend la simplicité tenable quand les applications se multiplient."
+            },
+            {
+              "recto": "Les sept étapes",
+              "verso": "Standards → patterns d'architecture → patterns d'implémentation → socle → chaîne du dépôt à la production → pilotes → reproduction."
+            },
+            {
+              "recto": "La règle des dépôts",
+              "verso": "**App → Pattern, jamais l'inverse** : les patterns ne savent rien des applications ; chacune déclare son besoin chez elle."
+            },
+            {
+              "recto": "Leçon fondatrice",
+              "verso": "Un composant partagé qui vit chez une application finit par lui appartenir."
+            }
+          ]
+        },
+        {
+          "id": "quiz-m1",
+          "type": "quiz",
+          "titre": "Quiz du module 1",
+          "seuil": 0.75,
+          "dureeEstimeeMinutes": 6,
+          "questions": [
+            {
+              "id": "q1",
+              "type": "choix_unique",
+              "enonce": "Quelle est l'intention de départ de la démarche ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Déployer des applications sur une infrastructure externalisée mais simple, avec la sécurité la plus stricte et un maximum de standardisation"
+                },
+                {
+                  "id": "b",
+                  "texte": "Construire le cluster le plus puissant possible pour héberger toutes les applications de l'entreprise"
+                },
+                {
+                  "id": "c",
+                  "texte": "Remplacer le système d'information de l'entreprise par un cluster Kubernetes"
+                },
+                {
+                  "id": "d",
+                  "texte": "Permettre à chaque équipe de choisir librement ses outils de déploiement"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Les trois exigences — externalisée mais simple, sécurité stricte, standardisation — sont le point de départ de tout le reste."
+            },
+            {
+              "id": "q2",
+              "type": "choix_unique",
+              "enonce": "Pourquoi la standardisation sert-elle aussi la simplicité ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Sans elle, chaque nouvelle application ajouterait sa propre complexité au socle"
+                },
+                {
+                  "id": "b",
+                  "texte": "Parce qu'un standard réduit le nombre de serveurs nécessaires"
+                },
+                {
+                  "id": "c",
+                  "texte": "Parce que les outils standards n'ont jamais de faille de sécurité"
+                },
+                {
+                  "id": "d",
+                  "texte": "Parce qu'elle permet de se passer de tests automatisés"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Une infrastructure reste simple tant que les applications qu'elle accueille se ressemblent : c'est le rôle des standards et des patterns."
+            },
+            {
+              "id": "q3",
+              "type": "choix_unique",
+              "enonce": "Que contient le dépôt platform-patterns ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Les patterns et les charts réutilisables, sans aucune information sur les applications"
+                },
+                {
+                  "id": "b",
+                  "texte": "La liste des applications hébergées et leurs valeurs de déploiement"
+                },
+                {
+                  "id": "c",
+                  "texte": "Les secrets chiffrés de toutes les applications"
+                },
+                {
+                  "id": "d",
+                  "texte": "Le code source des applications pilotes"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "La règle « App → Pattern, jamais l'inverse » interdit toute information d'application dans ce dépôt : ni liste, ni nom d'hôte réel, ni secret."
+            },
+            {
+              "id": "q4",
+              "type": "choix_unique",
+              "enonce": "Où vit la configuration de déploiement d'une application ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Dans le dossier deploy/ de son propre dépôt"
+                },
+                {
+                  "id": "b",
+                  "texte": "Dans le dépôt platform-patterns, dans un dossier par application"
+                },
+                {
+                  "id": "c",
+                  "texte": "Dans homelab-platform, dans une liste des applications"
+                },
+                {
+                  "id": "d",
+                  "texte": "Uniquement dans l'interface d'Argo CD"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Chaque application porte son fichier de valeurs et son Application Argo CD chez elle : c'est ce qui rend son arrivée indépendante du socle."
+            },
+            {
+              "id": "q5",
+              "type": "choix_multiple",
+              "enonce": "Lesquelles de ces étapes viennent **avant** la construction du socle ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Choisir les standards technologiques"
+                },
+                {
+                  "id": "b",
+                  "texte": "Définir les patterns d'architecture"
+                },
+                {
+                  "id": "c",
+                  "texte": "Décrire les patterns d'implémentation"
+                },
+                {
+                  "id": "d",
+                  "texte": "Déployer les applications pilotes"
+                }
+              ],
+              "bonnes": [
+                "a",
+                "b",
+                "c"
+              ],
+              "explication": "On définit d'abord ce qu'on veut héberger (standards et patterns), puis on construit le socle, puis on l'éprouve avec les pilotes."
+            },
+            {
+              "id": "q6",
+              "type": "vrai_faux",
+              "enonce": "Une application qui s'écarte d'un standard technologique est refusée sur le socle.",
+              "options": [
+                {
+                  "id": "v",
+                  "texte": "Vrai"
+                },
+                {
+                  "id": "f",
+                  "texte": "Faux"
+                }
+              ],
+              "bonnes": [
+                "f"
+              ],
+              "explication": "Ce n'est pas interdit, mais l'application perd le bénéfice de la mutualisation : c'est un choix à justifier."
+            },
+            {
+              "id": "q7",
+              "type": "choix_unique",
+              "enonce": "Quelle leçon a-t-on tirée du stockage objet déployé au départ chez une application ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Un composant partagé qui vit chez une application finit par lui appartenir"
+                },
+                {
+                  "id": "b",
+                  "texte": "Le stockage objet ne doit jamais être mutualisé"
+                },
+                {
+                  "id": "c",
+                  "texte": "Chaque application doit avoir son propre MinIO"
+                },
+                {
+                  "id": "d",
+                  "texte": "Les sous-charts Helm sont à proscrire"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Quand une deuxième application a voulu s'en servir, il a fallu écrire chez la première : ce qui est partagé doit vivre à part, dans le socle."
+            },
+            {
+              "id": "q8",
+              "type": "choix_unique",
+              "enonce": "Comment une correction du chart app atteint-elle les applications ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Chaque application monte sa version épinglée du chart"
+                },
+                {
+                  "id": "b",
+                  "texte": "Le socle modifie directement les déploiements de toutes les applications"
+                },
+                {
+                  "id": "c",
+                  "texte": "On copie la correction dans le dépôt de chaque application"
+                },
+                {
+                  "id": "d",
+                  "texte": "Elle s'applique automatiquement à toutes les applications à la publication"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Les versions sont choisies par chaque application : la correction se propage par montée de version, pas par copier-coller ni par action du socle."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m2-patterns",
+      "titre": "Les patterns d'architecture et d'implémentation",
+      "resume": "Les deux patterns d'architecture, `dedicated` et `shared`, et quand choisir l'un ou l'autre ; la règle « App → Pattern » et les étiquettes de client ; le contrat du chart `app` (schéma, SemVer, publication OCI signée, version épinglée) ; la sécurité et la supervision intégrées au pattern.",
+      "objectifs": [
+        "Comparer les patterns dedicated et shared et choisir selon le besoin",
+        "Expliquer comment une application déclare les services mutualisés qu'elle utilise",
+        "Décrire le contrat du chart app : schéma, SemVer, publication OCI, signature, épinglage",
+        "Citer les protections de sécurité et de supervision qu'une application reçoit du pattern"
+      ],
+      "dureeEstimeeMinutes": 50,
+      "activites": [
+        {
+          "id": "dedicated-ou-shared",
+          "type": "lecon",
+          "titre": "Deux patterns, un même chart",
+          "dureeEstimeeMinutes": 7,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Deux patterns d'architecture couvrent les besoins des applications ; chaque [[pattern]] est décrit une fois et réutilisé. Un **seul chart Helm**, `app`, les sert tous les deux, par une bascule `mode: dedicated | shared`.\n\n| | `dedicated` | `shared` |\n|---|---|---|\n| Namespaces | Trois par application : frontend, gateway, backend | Deux par application : `ui-‹app›` et `api-‹app›` |\n| Gateway | Sa propre Kong | Kong partagée, pour `/api` seulement |\n| Données | Ses propres PostgreSQL, MinIO, Redis | Une base, un seau, un préfixe Redis dans les moteurs mutualisés |\n| Isolation | Physique | Namespaces, réseau, base, seau, préfixe et routes à soi ; seuls les moteurs sont partagés |\n| Rayon d'impact | L'application seule | L'application côté réseau ; une panne d'un moteur partagé touche tout le monde |\n| Coût | Élevé : une pile complète par application | Faible : un socle, des applications légères |\n| Mise en route | Déployer une pile complète | Déclarer les services utilisés, recevoir sa part |"
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "- **`dedicated`** quand une base dédiée, la localisation des données ou un rayon d'impact isolé dominent.\n- **`shared`** quand le coût et la vitesse de mise en route dominent.\n- Le pattern `shared` garde l'isolation du `dedicated` au niveau des namespaces et du réseau : **on ne mutualise que les moteurs avec état.**"
+            },
+            {
+              "type": "encadre",
+              "variante": "exemple",
+              "markdown": "xpms, l'application de gestion locative, est en `dedicated` : elle embarque ses propres PostgreSQL, Redis et MinIO dans sa release. Les autres applications hébergées sont en `shared`."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Pourquoi ne mutualiser que les moteurs ?",
+              "markdown": "Ce qui coûte cher dans une pile, ce sont les moteurs avec état : un PostgreSQL avec ses réplicas et ses sauvegardes, un MinIO, un Redis. Les fronts et les API, eux, sont légers.\n\nEn ne partageant que les moteurs — une instance chacun, dans son propre namespace — et en gardant à chaque application ses namespaces, ses règles réseau et ses routes, le pattern `shared` obtient l'essentiel de l'économie sans renoncer à l'isolation entre applications.",
+              "references": [
+                "pp-readme",
+                "pp-adr-0001"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "app-vers-pattern",
+          "type": "lecon",
+          "titre": "App → Pattern : déclarer son besoin chez soi",
+          "dureeEstimeeMinutes": 6,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Dans le pattern `shared`, aucune liste ne dit « quelles applications utilisent PostgreSQL ». C'est **chaque application** qui le déclare, par une [[étiquette de client]] sur son namespace API :\n\n```yaml\nmetadata:\n  labels:\n    platform-patterns.io/postgres-client: \"true\"\n    platform-patterns.io/minio-client: \"true\"\n```\n\nLa règle réseau de chaque service mutualisé n'admet que les namespaces qui portent **son** étiquette. Une application n'ouvre donc que les portes qu'elle a déclarées, et retirer l'étiquette referme la porte.\n\nCes étiquettes sont posées par le chart lui-même, à partir de ce que l'application déclare dans ses valeurs (`shared.clients`)."
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "- **Pas de registre central** : ni liste d'applications, ni ApplicationSet qui les énumère.\n- La tenance est **déclarée chez l'application** et **réversible**.\n- En lisant les patterns, une application ne peut rien déduire du déploiement d'une autre."
+            },
+            {
+              "type": "texte",
+              "markdown": "### L'exception assumée : les hôtes d'API\n\nIl y a une seule ressource centralisée : le **nom d'hôte d'API** de chaque application (`api.‹app›.crealcs.com`). Il est déclaré dans le namespace `kong` du socle, dans un fichier qui grandit d'une entrée par application.\n\nLa raison est technique : un Ingress Kubernetes ne peut viser qu'un Service de **son propre** namespace, et le proxy Kong vit dans le namespace du socle. Les **routes**, elles, restent chez l'application."
+            },
+            {
+              "type": "references",
+              "ids": [
+                "pp-shared",
+                "hp-consuming"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "contrat-du-chart",
+          "type": "lecon",
+          "titre": "Le contrat du chart : versionné, publié, signé",
+          "dureeEstimeeMinutes": 7,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Ce qu'une application peut régler est défini par un **contrat** : le fichier `values.schema.json` du chart `app`. La CI des patterns vérifie chaque rendu contre ce schéma ; une valeur inconnue ou mal typée est refusée avant tout déploiement.\n\n### Des versions qui ont un sens\n\nChaque chart suit la [gestion sémantique de version](https://semver.org/lang/fr/), appliquée à **l'interface des valeurs** :\n\n| Montée | Signification pour l'application |\n|---|---|\n| **MAJEURE** | Une valeur disparaît, change de nom ou de sens : l'application doit agir |\n| **MINEURE** | Ajout facultatif, désactivé par défaut : rien à faire |\n| **CORRECTIF** | Correction sans changement de valeurs : rien à faire |\n\n### Publié en OCI, signé\n\nÀ chaque étiquette `app-x.y.z`, un workflow vérifie que la version correspond, empaquette le chart, le pousse comme artefact [[OCI]] sur GHCR et le **signe avec cosign**, sans clé : la signature est liée à l'identité du workflow et inscrite dans un journal de transparence."
+            },
+            {
+              "type": "texte",
+              "markdown": "### Épinglé par chaque application\n\nL'application choisit sa version, dans son Application Argo CD :\n\n```yaml\nsource:\n  repoURL: ghcr.io/hseb72/platform-patterns\n  chart: app\n  targetRevision: 1.0.0\n```\n\nL'application A peut rester en 1.2 pendant que B passe en 1.3. Une correction se propage par **montée de version**, jamais par une modification silencieuse."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Vérifier une signature",
+              "markdown": "La signature se vérifie avec `cosign verify`, en contrôlant que l'identité du certificat est bien celle du workflow de publication du dépôt des patterns, émise par le fournisseur OIDC de GitHub Actions. Un artefact poussé par une autre voie ne passerait pas cette vérification.",
+              "references": [
+                "pp-releasing",
+                "sigstore-cosign",
+                "helm-oci",
+                "semver"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "securite-integree",
+          "type": "lecon",
+          "titre": "La sécurité intégrée au pattern",
+          "dureeEstimeeMinutes": 8,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "La sécurité la plus stricte n'est pas demandée à chaque équipe : elle est **rendue par le chart et par le socle**. Une application qui suit le pattern la reçoit sans y penser.\n\n| Protection | Comment elle s'applique |\n|---|---|\n| **Isolation réseau** | NetworkPolicies refusées par défaut : seul l'[[edge]] atteint l'interface, seul Kong atteint l'API, l'API n'atteint que les services déclarés et Vault. |\n| **Conteneurs restreints** | Profil Pod Security `restricted` : utilisateur non root (numérique), pas d'élévation de privilèges, toutes les capacités retirées, profil seccomp par défaut. |\n| **Secrets hors Git** | Le chart ne référence que des **noms** de secrets ; le contenu est créé à part. |\n| **Identifiants dynamiques** | Vault génère des identifiants PostgreSQL de courte durée, propres à chaque pod ; l'application les relit et se reconnecte. |\n| **Pare-feu applicatif** | ModSecurity et les règles OWASP sur l'edge, avec TLS. |\n| **Un seul point de contrôle** | L'interface ne traverse jamais Kong ; une API n'est jamais appelée en direct, toujours par Kong. |"
+            },
+            {
+              "type": "encadre",
+              "variante": "attention",
+              "markdown": "Une règle réseau sans aucune source autorisée **refuse tout**. Le chart n'écrit jamais de règle avec une liste `from` vide, qui voudrait dire l'inverse : tout autoriser.",
+              "titre": "Le piège de la règle vide"
+            },
+            {
+              "type": "texte",
+              "markdown": "### Quand le dynamique n'est pas possible\n\nMinIO n'a pas de moteur de secrets dans Vault, et certains composants ne savent pas se reconnecter à chaud. Pour eux, le repli est un identifiant **statique à rotation planifiée**, avec un redémarrage automatique du pod à chaque changement.\n\n### Un pare-feu mis en service avec méthode\n\nLe pare-feu applicatif a d'abord tourné **en observation** (il journalise sans bloquer) pendant une à deux semaines, le temps de trier les faux positifs, avant de passer en blocage."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Pourquoi des identifiants par pod ?",
+              "markdown": "Un identifiant partagé par tous les pods d'une application, valable indéfiniment, est un secret de grande valeur : s'il fuit, il ouvre la base jusqu'à ce qu'on pense à le changer. Un identifiant généré par Vault pour un pod, avec un bail court et une révocation automatique, limite fortement ce risque.",
+              "references": [
+                "vault-db",
+                "k8s-netpol",
+                "k8s-pss",
+                "owasp-crs"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supervision",
+          "type": "lecon",
+          "titre": "Supervision et observabilité intégrées",
+          "dureeEstimeeMinutes": 5,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Le pattern intègre aussi ce qu'il faut pour **mesurer** une application, sans rien réinventer.\n\n- L'application déclare ce qui doit être collecté (un `ServiceMonitor`) et ses propres alertes (une `PrometheusRule`) ; le chart les rend.\n- Le socle collecte (vmagent), stocke (VictoriaMetrics) et affiche (Grafana) ; les alertes passent par vmalert et arrivent sur Slack.\n- Un **rapport des routes Kong** est généré chaque jour, en lecture seule.\n- La **mesure d'audience** est mutualisée (Matomo), avec un site par application."
+            },
+            {
+              "type": "encadre",
+              "variante": "exemple",
+              "markdown": "La pile de supervision du cluster tient en 300 à 500 Mo de mémoire : VictoriaMetrics plutôt qu'une pile Prometheus complète. Un choix cohérent avec l'exigence de simplicité.",
+              "titre": "La sobriété, aussi pour la supervision"
+            },
+            {
+              "type": "references",
+              "ids": [
+                "victoriametrics"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "notions-patterns",
+          "type": "association",
+          "titre": "Le vocabulaire des patterns",
+          "dureeEstimeeMinutes": 3,
+          "consigne": "Associez chaque notion à sa description.",
+          "paires": [
+            {
+              "id": "p1",
+              "gauche": "Pattern dedicated",
+              "droite": "Chaque application a ses propres moteurs de données et sa propre gateway"
+            },
+            {
+              "id": "p2",
+              "gauche": "Pattern shared",
+              "droite": "Les moteurs sont mutualisés, chaque application garde ses namespaces et ses routes"
+            },
+            {
+              "id": "p3",
+              "gauche": "Étiquette de client",
+              "droite": "Ouvre à un namespace l'accès à un service mutualisé"
+            },
+            {
+              "id": "p4",
+              "gauche": "values.schema.json",
+              "droite": "Le contrat vérifiable de ce qu'une application peut régler"
+            },
+            {
+              "id": "p5",
+              "gauche": "Montée MAJEURE",
+              "droite": "L'interface des valeurs change : l'application doit agir"
+            },
+            {
+              "id": "p6",
+              "gauche": "Cosign",
+              "droite": "Signe le chart publié et permet de vérifier sa provenance"
+            },
+            {
+              "id": "p7",
+              "gauche": "Pod Security restricted",
+              "droite": "Conteneurs non root, sans élévation de privilèges ni capacités"
+            }
+          ],
+          "explication": "Ces notions forment le contrat entre une application et le socle : ce qu'elle déclare, ce qu'elle reçoit, et comment on vérifie qu'elle reçoit bien ce qui a été publié."
+        },
+        {
+          "id": "reservo-choisir-pattern",
+          "type": "scenario",
+          "titre": "Réservo choisit son pattern",
+          "dureeEstimeeMinutes": 6,
+          "contexte": "**Réservo** est une petite application interne de réservation de salles : un front Angular, une API Node.js, une base PostgreSQL et quelques pièces jointes. **Camille**, développeuse, la porte ; **Hugo** administre le socle d'hébergement ; **Nadia**, cheffe de projet, veut la voir en production avant la fin du mois. Vous conseillez l'équipe.",
+          "debut": "n1",
+          "noeuds": {
+            "n1": {
+              "texte": "Camille demande : « Quel pattern pour Réservo ? Nadia voudrait qu'on soit tranquilles, avec notre propre PostgreSQL. »",
+              "choix": [
+                {
+                  "texte": "Le pattern shared : une petite application sans contrainte particulière sur ses données, qui gagne en coût et en vitesse",
+                  "points": 2,
+                  "retour": "Exact : rien ne justifie une pile complète. Le pattern shared garde l'isolation réseau et donne à Réservo sa propre base dans le PostgreSQL mutualisé.",
+                  "suivant": "n2"
+                },
+                {
+                  "texte": "Le pattern dedicated, pour avoir sa propre base",
+                  "points": 0,
+                  "retour": "Une base à soi existe aussi en shared (une base par application). Le dedicated coûte une pile complète ; il se justifie par la localisation des données ou un rayon d'impact isolé, pas ici.",
+                  "suivant": "n2"
+                }
+              ]
+            },
+            "n2": {
+              "texte": "Camille prépare ses valeurs. Réservo a besoin de PostgreSQL et de MinIO pour les pièces jointes. Que déclare-t-elle ?",
+              "choix": [
+                {
+                  "texte": "shared.clients avec postgres et minio, ce qui posera les étiquettes de client sur son namespace API",
+                  "points": 2,
+                  "retour": "C'est le contrat : elle n'ouvre que les deux portes dont elle a besoin. Redis reste fermé.",
+                  "suivant": "n3"
+                },
+                {
+                  "texte": "Une demande à Hugo pour ajouter Réservo à la liste des applications du socle",
+                  "points": 0,
+                  "retour": "Il n'y a pas de liste : l'application déclare son besoin chez elle. Hugo n'émet que les identifiants de provisionnement et l'hôte d'API.",
+                  "suivant": "n3"
+                },
+                {
+                  "texte": "Tous les services, au cas où",
+                  "points": 1,
+                  "retour": "Ça marcherait, mais c'est ouvrir des portes inutiles : on ne déclare que ce qu'on utilise.",
+                  "suivant": "n3"
+                }
+              ]
+            },
+            "n3": {
+              "texte": "Quelle version du chart app mettre dans l'Application Argo CD ?",
+              "choix": [
+                {
+                  "texte": "La dernière version publiée, épinglée exactement (par exemple 1.0.0)",
+                  "points": 2,
+                  "retour": "Une version exacte rend le déploiement reproductible ; Réservo montera de version quand elle le décidera.",
+                  "suivant": "fin"
+                },
+                {
+                  "texte": "Une plage large, pour suivre automatiquement les nouvelles versions",
+                  "points": 0,
+                  "retour": "Les versions sont choisies, pas subies : une montée majeure pourrait casser Réservo sans prévenir.",
+                  "suivant": "fin"
+                }
+              ]
+            }
+          },
+          "paliers": [
+            {
+              "minPoints": 5,
+              "etoiles": 3,
+              "message": "Excellent : vous avez suivi le chemin prévu par les patterns et le socle."
+            },
+            {
+              "minPoints": 3,
+              "etoiles": 2,
+              "message": "Bien : quelques détours, mais l'essentiel est là. Relisez les retours des choix moins bons."
+            },
+            {
+              "minPoints": 0,
+              "etoiles": 1,
+              "message": "À reprendre : relisez les leçons du module, puis rejouez le cas."
+            }
+          ]
+        },
+        {
+          "id": "fiches-m2",
+          "type": "fiches",
+          "titre": "Fiches de révision",
+          "obligatoire": false,
+          "dureeEstimeeMinutes": 3,
+          "cartes": [
+            {
+              "recto": "dedicated ou shared ?",
+              "verso": "**dedicated** : données ou rayon d'impact à isoler. **shared** : coût et vitesse de mise en route. Un seul chart, `mode: dedicated | shared`."
+            },
+            {
+              "recto": "Ce que shared mutualise",
+              "verso": "Seulement les **moteurs avec état** (PostgreSQL, MinIO, Redis) ; chaque application garde ses namespaces `ui-` et `api-`, ses règles réseau et ses routes."
+            },
+            {
+              "recto": "Déclarer un service",
+              "verso": "Étiquette `platform-patterns.io/‹service›-client: \"true\"` sur le namespace API, posée par le chart d'après `shared.clients`."
+            },
+            {
+              "recto": "SemVer des valeurs",
+              "verso": "MAJEUR : l'application doit agir ; MINEUR : ajout facultatif ; CORRECTIF : rien à faire."
+            },
+            {
+              "recto": "Identifiants PostgreSQL",
+              "verso": "Générés par Vault, **par pod**, de courte durée ; repli statique à rotation planifiée pour MinIO."
+            },
+            {
+              "recto": "Le seul élément centralisé",
+              "verso": "Le nom d'hôte d'API, dans le namespace `kong` du socle : un Ingress ne vise qu'un Service de son namespace."
+            }
+          ]
+        },
+        {
+          "id": "quiz-m2",
+          "type": "quiz",
+          "titre": "Quiz du module 2",
+          "seuil": 0.75,
+          "dureeEstimeeMinutes": 6,
+          "questions": [
+            {
+              "id": "q1",
+              "type": "choix_unique",
+              "enonce": "Qu'est-ce que le pattern shared mutualise ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Uniquement les moteurs avec état : PostgreSQL, MinIO, Redis"
+                },
+                {
+                  "id": "b",
+                  "texte": "Tout, y compris les namespaces des applications"
+                },
+                {
+                  "id": "c",
+                  "texte": "Uniquement le front des applications"
+                },
+                {
+                  "id": "d",
+                  "texte": "Les bases de données, qui sont communes à toutes les applications"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Chaque application garde ses namespaces, ses règles réseau, sa base, son seau et son préfixe ; seuls les moteurs sont partagés."
+            },
+            {
+              "id": "q2",
+              "type": "choix_unique",
+              "enonce": "Quand préférer le pattern dedicated ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Quand une base dédiée, la localisation des données ou un rayon d'impact isolé dominent"
+                },
+                {
+                  "id": "b",
+                  "texte": "Pour toute application qui utilise PostgreSQL"
+                },
+                {
+                  "id": "c",
+                  "texte": "Quand l'application doit être en production rapidement"
+                },
+                {
+                  "id": "d",
+                  "texte": "Quand l'application a peu d'utilisateurs"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Le dedicated coûte une pile complète : il se justifie par un besoin d'isolation physique, pas par l'usage d'une base."
+            },
+            {
+              "id": "q3",
+              "type": "choix_unique",
+              "enonce": "Comment une application obtient-elle l'accès à MinIO en pattern shared ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Elle déclare minio dans ses valeurs ; le chart pose l'étiquette de client sur son namespace API"
+                },
+                {
+                  "id": "b",
+                  "texte": "L'administrateur du socle l'ajoute à la liste des clients de MinIO"
+                },
+                {
+                  "id": "c",
+                  "texte": "Elle demande une règle réseau dans le dépôt des patterns"
+                },
+                {
+                  "id": "d",
+                  "texte": "Tous les namespaces accèdent à MinIO par défaut"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "La règle réseau de MinIO n'admet que les namespaces qui portent son étiquette ; c'est l'application qui la déclare, chez elle."
+            },
+            {
+              "id": "q4",
+              "type": "choix_unique",
+              "enonce": "Pourquoi le nom d'hôte d'API est-il déclaré dans le namespace du socle ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Parce qu'un Ingress ne peut viser qu'un Service de son propre namespace, et que le proxy Kong vit chez le socle"
+                },
+                {
+                  "id": "b",
+                  "texte": "Pour que le socle puisse refuser une application"
+                },
+                {
+                  "id": "c",
+                  "texte": "Parce que les applications n'ont pas le droit de créer d'Ingress"
+                },
+                {
+                  "id": "d",
+                  "texte": "Pour des raisons de performance"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "C'est la seule exception assumée à la règle « chacun chez soi » ; les routes, elles, restent chez l'application."
+            },
+            {
+              "id": "q5",
+              "type": "choix_unique",
+              "enonce": "Une nouvelle version du chart app retire une valeur. Comment est-elle numérotée ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Montée majeure"
+                },
+                {
+                  "id": "b",
+                  "texte": "Montée mineure"
+                },
+                {
+                  "id": "c",
+                  "texte": "Correctif"
+                },
+                {
+                  "id": "d",
+                  "texte": "Peu importe, les applications suivent automatiquement"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Retirer, renommer ou changer le sens d'une valeur casse le contrat : c'est une version majeure, et l'application doit agir."
+            },
+            {
+              "id": "q6",
+              "type": "choix_multiple",
+              "enonce": "Lesquelles de ces protections une application reçoit-elle du pattern et du socle ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Règles réseau refusées par défaut"
+                },
+                {
+                  "id": "b",
+                  "texte": "Conteneurs non root sans élévation de privilèges"
+                },
+                {
+                  "id": "c",
+                  "texte": "Pare-feu applicatif sur l'edge"
+                },
+                {
+                  "id": "d",
+                  "texte": "Relecture de son code par l'équipe du socle"
+                }
+              ],
+              "bonnes": [
+                "a",
+                "b",
+                "c"
+              ],
+              "explication": "Réseau, durcissement des conteneurs et pare-feu sont intégrés ; la qualité du code reste la responsabilité de l'équipe."
+            },
+            {
+              "id": "q7",
+              "type": "vrai_faux",
+              "enonce": "L'interface d'une application en pattern shared passe par Kong.",
+              "options": [
+                {
+                  "id": "v",
+                  "texte": "Vrai"
+                },
+                {
+                  "id": "f",
+                  "texte": "Faux"
+                }
+              ],
+              "bonnes": [
+                "f"
+              ],
+              "explication": "L'interface est servie directement par l'edge ; seul `/api` traverse Kong."
+            },
+            {
+              "id": "q8",
+              "type": "choix_unique",
+              "enonce": "Que garantit la signature cosign du chart ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Que l'artefact a bien été publié par le workflow du dépôt des patterns"
+                },
+                {
+                  "id": "b",
+                  "texte": "Que le chart ne contient aucun bogue"
+                },
+                {
+                  "id": "c",
+                  "texte": "Que l'application qui l'utilise est sécurisée"
+                },
+                {
+                  "id": "d",
+                  "texte": "Que le chart est compatible avec toutes les versions de Kubernetes"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "La signature prouve la provenance : elle est liée à l'identité du workflow de publication."
+            },
+            {
+              "id": "q9",
+              "type": "vrai_faux",
+              "enonce": "Une règle réseau dont la liste des sources autorisées est vide refuse tout le trafic.",
+              "options": [
+                {
+                  "id": "v",
+                  "texte": "Vrai"
+                },
+                {
+                  "id": "f",
+                  "texte": "Faux"
+                }
+              ],
+              "bonnes": [
+                "f"
+              ],
+              "explication": "C'est l'inverse : un `from` vide autorise tout. Le chart ne l'écrit jamais ; sans source autorisée, il rend une règle qui refuse tout."
+            }
+          ],
+          "tirage": 8
+        }
+      ]
+    },
+    {
+      "id": "m3-socle-et-chaine",
+      "titre": "Le socle et la chaîne du dépôt à la production",
+      "resume": "Le pattern `shared` tel qu'il tourne sur le socle, ce que le socle livre et maintient, le partage des rôles entre l'administrateur du socle et les équipes applicatives, la chaîne automatisée de la pull request à la production, et les agents qui automatisent sans endetter.",
+      "objectifs": [
+        "Décrire le trajet d'une requête de l'edge jusqu'aux moteurs de données",
+        "Citer ce que le socle livre et maintient pour toutes les applications",
+        "Distinguer ce que fait l'administrateur du socle et ce que fait l'équipe applicative",
+        "Décrire la chaîne de la pull request à la production et comment revenir en arrière",
+        "Expliquer le principe « le script d'abord, l'IA en exception »"
+      ],
+      "dureeEstimeeMinutes": 50,
+      "activites": [
+        {
+          "id": "architecture-shared",
+          "type": "lecon",
+          "titre": "Le pattern shared, tel qu'il tourne",
+          "dureeEstimeeMinutes": 7,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Voici le trajet d'une requête vers une application en pattern `shared` :\n\n```text\n                ┌──── ns ingress (edge : ingress-nginx, TLS, pare-feu) ────┐\nnavigateur ───▶ │  \"/\"     ───────────────────────────────▶  ui-<app>       │\n                │  \"/api\"  ─▶ ns kong (Kong) ─────────────▶  api-<app>      │\n                └──────────────────────────────────────────────────────────┘\napi-<app> ─▶ postgres (CNPG) | minio | redis   (chacun son namespace)\n          ─▶ vault (identifiants)\n```\n\n1. L'[[edge]] reçoit tout le trafic public sur l'unique IP du cluster, termine le TLS et passe la requête au pare-feu.\n2. **« / »** est servi directement par le front, dans le namespace `ui-‹app›`.\n3. **« /api »** passe par Kong, qui route vers le namespace `api-‹app›`. Kong est le seul point de contrôle des API.\n4. L'API n'atteint que les moteurs qu'elle a déclarés, et Vault pour ses identifiants."
+            },
+            {
+              "type": "encadre",
+              "variante": "attention",
+              "markdown": "Ne **jamais réécrire l'en-tête `Host`** sur l'edge (pas d'annotation `upstream-vhost`, pas de normalisation) : Kong s'en sert pour retrouver l'application. Une réécriture fait répondre 404 à **tous** les sites.",
+              "titre": "L'invariant de l'edge"
+            },
+            {
+              "type": "texte",
+              "markdown": "### Les routes, chez l'application\n\nChaque application pose ses routes comme des objets Kubernetes **dans ses propres namespaces** : un Ingress de classe `nginx` pour le front, un Ingress de classe `kong` pour `/api`. Le contrôleur Kong les prend en compte tout seul ; aucune configuration centrale n'est modifiée.\n\nUn front qui appelle l'API côté serveur (BFF) passe lui aussi par l'adresse interne de Kong, jamais en direct."
+            },
+            {
+              "type": "references",
+              "ids": [
+                "pp-shared",
+                "kong-kic"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ce-que-livre-le-socle",
+          "type": "lecon",
+          "titre": "Ce que le socle livre et maintient",
+          "dureeEstimeeMinutes": 7,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Le socle (`homelab-platform`) livre deux familles d'outils, chacun dans **son namespace**, avec **son Application Argo CD** et **ses propres données** : aucun cycle de vie n'est accroché à celui d'une application.\n\n| Famille | Outils | Comment ils sont livrés |\n|---|---|---|\n| **Socle mutualisé** | Edge (ingress-nginx + pare-feu), Kong, Vault, PostgreSQL CloudNativePG, MinIO, Redis | Le chart `platform` des patterns, en [[app-of-apps]], version épinglée |\n| **Outillage transverse** | SSO Keycloak (`sso.crealcs.com`), Argo CD, supervision (VictoriaMetrics, Grafana), mesure d'audience (Matomo) | Une Application Argo CD par outil, dans le projet `system` |\n\n### Les sauvegardes, pour tous\n\nCloudNativePG sauvegarde PostgreSQL pour toutes les applications : une sauvegarde complète chaque semaine et l'archivage continu des journaux de transactions, vers le MinIO mutualisé. Il revient à chaque application de **vérifier qu'une restauration fonctionne** avant d'en avoir besoin."
+            },
+            {
+              "type": "encadre",
+              "variante": "cas",
+              "markdown": "L'outillage (SSO, Argo CD, supervision) vivait au départ dans l'installation de xpms, la première application. Résultat : un jour, « SSO en panne faute de mise à jour de xpms ». Il a été sorti dans `homelab-platform`, chaque outil avec son namespace et son Application Argo CD.",
+              "titre": "Pourquoi l'outillage a son propre cycle de vie"
+            },
+            {
+              "type": "approfondir",
+              "titre": "Les projets Argo CD",
+              "markdown": "Argo CD sépare trois familles de projets : `platform` (le socle mutualisé), `system` (l'outillage) et les projets de chaque application. Un projet limite les namespaces et les types de ressources qu'une Application peut toucher : une application ne peut pas, même par erreur, modifier le socle.",
+              "references": [
+                "hp-platform",
+                "cnpg-docs",
+                "argocd-docs"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "qui-fait-quoi",
+          "type": "lecon",
+          "titre": "Qui fait quoi : personne n'écrit chez l'autre",
+          "dureeEstimeeMinutes": 6,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Le partage des rôles est ce qui rend le partage du socle tenable.\n\n| Administrateur du socle | Équipe applicative |\n|---|---|\n| Livre et maintient les outils mutualisés | Porte son Application Argo CD et ses valeurs |\n| Émet, **une fois par application**, les identifiants de provisionnement (rôle PostgreSQL autorisé à créer une base, compte MinIO, jeton Vault) | Déclare les services qu'elle utilise (étiquettes de client) |\n| Pose l'hôte d'API (une entrée) | **Se provisionne elle-même** : des Jobs de son chart créent sa base, son seau, son préfixe |\n| N'écrit jamais dans le namespace d'une application | Pose ses routes, ses alertes, ses tableaux de bord |"
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "Ce que l'application **doit respecter** : se connecter à **sa** base avec **son** rôle ; n'écrire que dans **ses** seaux ; préfixer **toutes** ses clés Redis ; préserver l'en-tête `Host` ; passer ses appels internes par Kong.\n\nCe dont elle **n'a pas à s'occuper** : TLS, pare-feu, gateway, sauvegardes, supervision de base, SSO."
+            },
+            {
+              "type": "references",
+              "ids": [
+                "hp-consuming"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "la-chaine",
+          "type": "lecon",
+          "titre": "La chaîne : de la pull request à la production",
+          "dureeEstimeeMinutes": 7,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Il n'existe qu'un seul chemin vers la production, et il est automatique.\n\n| Étape | Ce qui se passe |\n|---|---|\n| **Pull request** | Relue ; la CI lance tests, construction et audit d'accessibilité |\n| **Fusion** | Seul point de passage vers le cluster |\n| **Images** | Front et API construites et poussées sur GHCR, étiquetées par le SHA du commit |\n| **Promotion** | Un workflow écrit ce SHA dans la branche `deploy-state` du dépôt (un commit) |\n| **Argo CD** | Synchronise le cluster sur `deploy-state` |\n| **Production** | La nouvelle version répond, en général une à deux minutes après la fusion |"
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "- La branche `deploy-state` **est** l'historique des mises en production : chaque déploiement est un commit, tracé et réversible.\n- Revenir en arrière, c'est **promouvoir l'ancien SHA**.\n- Argo CD lit deux sources : le chart épinglé en OCI et les valeurs de l'application."
+            },
+            {
+              "type": "encadre",
+              "variante": "attention",
+              "markdown": "Une promotion prouve la **livraison**, pas la **santé** de l'application. C'est la supervision qui dit si les pods sont sains et si l'application répond correctement.",
+              "titre": "Livré n'est pas sain"
+            },
+            {
+              "type": "texte",
+              "markdown": "### Ce qui ne déclenche rien\n\nUne modification qui ne touche que la documentation ne construit pas d'image : rien n'est promu, et Argo CD n'a rien à faire. C'est voulu : seule une modification de l'application, de ses données de démonstration ou de son dossier `deploy/` doit produire une mise en production."
+            },
+            {
+              "type": "references",
+              "ids": [
+                "argocd-docs"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "agents",
+          "type": "lecon",
+          "titre": "Automatiser sans s'endetter : le script d'abord",
+          "dureeEstimeeMinutes": 5,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Le socle automatise ce qui se répète, selon un principe : **le script d'abord, l'IA en exception.** Ce qui se décide mécaniquement est un script, gratuit et reproductible. L'IA n'intervient que là où il faut lire et juger.\n\n| Agent | Le script | Le rôle de l'IA |\n|---|---|---|\n| Veille de versions | Renovate ouvre une pull request par montée de version épinglée | Un avis sur ce que la montée change pour le socle |\n| Dérive | Compare ce qui a été appliqué à la main (hôtes d'API) avec le cluster | Aucun |\n| Dépouillement du pare-feu | Condense les alertes, sans données personnelles | Trie faux positifs et requêtes suspectes |"
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "Garde-fous de l'IA : un modèle économique, un nombre de tours plafonné, **lecture seule** avec un commentaire pour seule sortie, une entrée bornée (jamais des journaux bruts), une fois par événement. **La fusion d'une pull request reste le seul passage vers le cluster.**"
+            },
+            {
+              "type": "references",
+              "ids": [
+                "hp-agents"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ordre-chaine",
+          "type": "ordre",
+          "titre": "La chaîne, dans l'ordre",
+          "dureeEstimeeMinutes": 3,
+          "consigne": "Remettez dans l'ordre les étapes d'une mise en production.",
+          "elements": [
+            {
+              "id": "e1",
+              "texte": "Ouvrir une pull request ; la CI vérifie la modification"
+            },
+            {
+              "id": "e2",
+              "texte": "Fusionner la pull request"
+            },
+            {
+              "id": "e3",
+              "texte": "Construire et pousser les images, étiquetées par le SHA"
+            },
+            {
+              "id": "e4",
+              "texte": "Écrire le SHA dans la branche deploy-state"
+            },
+            {
+              "id": "e5",
+              "texte": "Argo CD synchronise le cluster"
+            },
+            {
+              "id": "e6",
+              "texte": "Vérifier dans la supervision que la nouvelle version est saine"
+            }
+          ],
+          "explication": "La fusion est le seul point de passage ; tout le reste est automatique jusqu'à la synchronisation. La dernière étape rappelle qu'une promotion prouve la livraison, pas la santé."
+        },
+        {
+          "id": "composants-namespaces",
+          "type": "association",
+          "titre": "Chaque outil chez lui",
+          "dureeEstimeeMinutes": 3,
+          "consigne": "Associez chaque composant au namespace où il vit.",
+          "paires": [
+            {
+              "id": "p1",
+              "gauche": "Edge ingress-nginx et pare-feu",
+              "droite": "ingress"
+            },
+            {
+              "id": "p2",
+              "gauche": "Gateway Kong",
+              "droite": "kong"
+            },
+            {
+              "id": "p3",
+              "gauche": "PostgreSQL CloudNativePG",
+              "droite": "postgres"
+            },
+            {
+              "id": "p4",
+              "gauche": "Identifiants dynamiques",
+              "droite": "vault"
+            },
+            {
+              "id": "p5",
+              "gauche": "Keycloak (SSO)",
+              "droite": "sso"
+            },
+            {
+              "id": "p6",
+              "gauche": "Grafana et VictoriaMetrics",
+              "droite": "monitoring"
+            },
+            {
+              "id": "p7",
+              "gauche": "API de l'application monapp",
+              "droite": "api-monapp"
+            }
+          ],
+          "explication": "Un namespace par outil du socle, deux par application : c'est ce qui permet aux règles réseau de n'ouvrir que les passages voulus."
+        },
+        {
+          "id": "reservo-incident-404",
+          "type": "scenario",
+          "titre": "Tous les sites répondent 404",
+          "dureeEstimeeMinutes": 6,
+          "contexte": "**Réservo** est une petite application interne de réservation de salles : un front Angular, une API Node.js, une base PostgreSQL et quelques pièces jointes. **Camille**, développeuse, la porte ; **Hugo** administre le socle d'hébergement ; **Nadia**, cheffe de projet, veut la voir en production avant la fin du mois. Vous conseillez l'équipe.\n\nUn vendredi soir, pour régler un problème de Réservo, un collègue a ajouté une annotation sur l'Ingress de son hôte d'API. Depuis, **toutes** les API du cluster répondent 404.",
+          "debut": "n1",
+          "noeuds": {
+            "n1": {
+              "texte": "Hugo vous appelle. Par où commencer ?",
+              "choix": [
+                {
+                  "texte": "Regarder la dernière modification de l'edge : une annotation qui touche l'en-tête Host (upstream-vhost) ?",
+                  "points": 2,
+                  "retour": "Bon réflexe : un 404 sur tous les sites à la fois pointe vers l'edge, et la réécriture de l'en-tête Host est l'invariant connu.",
+                  "suivant": "n2"
+                },
+                {
+                  "texte": "Redémarrer les pods de toutes les API",
+                  "points": 0,
+                  "retour": "Les API ne sont pas en cause : elles ne reçoivent plus les requêtes. Redémarrer ne fait que perdre du temps.",
+                  "suivant": "n2"
+                }
+              ]
+            },
+            "n2": {
+              "texte": "C'est bien une annotation `upstream-vhost`. Comment corriger ?",
+              "choix": [
+                {
+                  "texte": "Retirer l'annotation par une pull request, puis vérifier les hôtes d'API avec le script de dérive",
+                  "points": 2,
+                  "retour": "La correction passe par Git, et la dérive confirme que le cluster correspond de nouveau au fichier versionné.",
+                  "suivant": "n3"
+                },
+                {
+                  "texte": "Retirer l'annotation directement sur le cluster avec kubectl et en rester là",
+                  "points": 1,
+                  "retour": "Le service revient, mais le fichier versionné et le cluster divergent : la dérive le signalera, et le prochain apply réintroduira peut-être le problème.",
+                  "suivant": "n3"
+                }
+              ]
+            },
+            "n3": {
+              "texte": "Le problème de départ de Réservo demandait une limite de taille de corps plus grande. Que faire ?",
+              "choix": [
+                {
+                  "texte": "Régler la taille de corps pour l'hôte de Réservo seulement, sans toucher à l'en-tête Host",
+                  "points": 2,
+                  "retour": "C'est prévu : la taille de corps se règle par application, sur son hôte.",
+                  "suivant": "fin"
+                },
+                {
+                  "texte": "Augmenter la limite pour tout le cluster",
+                  "points": 0,
+                  "retour": "Cela ouvre une surface inutile pour toutes les applications ; le réglage existe par hôte.",
+                  "suivant": "fin"
+                }
+              ]
+            }
+          },
+          "paliers": [
+            {
+              "minPoints": 5,
+              "etoiles": 3,
+              "message": "Excellent : vous avez suivi le chemin prévu par les patterns et le socle."
+            },
+            {
+              "minPoints": 3,
+              "etoiles": 2,
+              "message": "Bien : quelques détours, mais l'essentiel est là. Relisez les retours des choix moins bons."
+            },
+            {
+              "minPoints": 0,
+              "etoiles": 1,
+              "message": "À reprendre : relisez les leçons du module, puis rejouez le cas."
+            }
+          ]
+        },
+        {
+          "id": "fiches-m3",
+          "type": "fiches",
+          "titre": "Fiches de révision",
+          "obligatoire": false,
+          "dureeEstimeeMinutes": 3,
+          "cartes": [
+            {
+              "recto": "Le trajet d'une requête",
+              "verso": "Edge (TLS, pare-feu) → « / » au front `ui-‹app›` ; « /api » → Kong → `api-‹app›` → moteurs déclarés + Vault."
+            },
+            {
+              "recto": "L'invariant de l'edge",
+              "verso": "Ne jamais réécrire l'en-tête `Host` : sinon tous les sites répondent 404."
+            },
+            {
+              "recto": "Le geste du socle par application",
+              "verso": "Émettre une fois les identifiants de provisionnement, poser l'hôte d'API. C'est tout."
+            },
+            {
+              "recto": "deploy-state",
+              "verso": "Branche dont chaque commit est une mise en production ; revenir en arrière = promouvoir l'ancien SHA."
+            },
+            {
+              "recto": "Livré ou sain ?",
+              "verso": "Une promotion prouve la livraison ; la supervision prouve la santé."
+            },
+            {
+              "recto": "Agents",
+              "verso": "Le script d'abord, l'IA en exception : plafonnée, en lecture seule, sur une entrée bornée."
+            }
+          ]
+        },
+        {
+          "id": "quiz-m3",
+          "type": "quiz",
+          "titre": "Quiz du module 3",
+          "seuil": 0.75,
+          "dureeEstimeeMinutes": 6,
+          "questions": [
+            {
+              "id": "q1",
+              "type": "choix_unique",
+              "enonce": "Par où passe une requête vers « /api » d'une application en pattern shared ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Edge, puis Kong, puis le namespace API de l'application"
+                },
+                {
+                  "id": "b",
+                  "texte": "Edge, puis le front, puis l'API"
+                },
+                {
+                  "id": "c",
+                  "texte": "Directement l'API, sans passer par l'edge"
+                },
+                {
+                  "id": "d",
+                  "texte": "Kong, puis l'edge, puis l'API"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Seul « /api » traverse Kong ; l'interface est servie directement par l'edge."
+            },
+            {
+              "id": "q2",
+              "type": "choix_unique",
+              "enonce": "Pourquoi l'outillage (SSO, Argo CD, supervision) a-t-il été sorti de l'installation de xpms ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Son cycle de vie était accroché à celui de xpms : une mise à jour manquée de xpms a fait tomber le SSO"
+                },
+                {
+                  "id": "b",
+                  "texte": "Parce que xpms est en pattern dedicated"
+                },
+                {
+                  "id": "c",
+                  "texte": "Pour réduire la consommation mémoire"
+                },
+                {
+                  "id": "d",
+                  "texte": "Parce qu'Argo CD ne peut pas gérer xpms"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Chaque outil a désormais son namespace, son Application Argo CD et ses données."
+            },
+            {
+              "id": "q3",
+              "type": "choix_multiple",
+              "enonce": "Que fait l'administrateur du socle pour une nouvelle application ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Émettre une fois les identifiants de provisionnement"
+                },
+                {
+                  "id": "b",
+                  "texte": "Poser l'hôte d'API"
+                },
+                {
+                  "id": "c",
+                  "texte": "Créer la base et le seau de l'application"
+                },
+                {
+                  "id": "d",
+                  "texte": "Écrire les routes Kong de l'application"
+                }
+              ],
+              "bonnes": [
+                "a",
+                "b"
+              ],
+              "explication": "L'application se provisionne elle-même et pose ses routes ; le socle ne fait que deux gestes."
+            },
+            {
+              "id": "q4",
+              "type": "choix_unique",
+              "enonce": "Comment revient-on à la version précédente d'une application ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "En promouvant l'ancien SHA dans la branche deploy-state"
+                },
+                {
+                  "id": "b",
+                  "texte": "En supprimant l'Application Argo CD"
+                },
+                {
+                  "id": "c",
+                  "texte": "En restaurant une sauvegarde du cluster"
+                },
+                {
+                  "id": "d",
+                  "texte": "En modifiant directement les pods"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "deploy-state est l'historique des mises en production : revenir en arrière, c'est y écrire l'ancien SHA."
+            },
+            {
+              "id": "q5",
+              "type": "vrai_faux",
+              "enonce": "Une promotion réussie dans deploy-state garantit que l'application fonctionne.",
+              "options": [
+                {
+                  "id": "v",
+                  "texte": "Vrai"
+                },
+                {
+                  "id": "f",
+                  "texte": "Faux"
+                }
+              ],
+              "bonnes": [
+                "f"
+              ],
+              "explication": "Elle prouve la livraison ; la santé se constate dans la supervision."
+            },
+            {
+              "id": "q6",
+              "type": "choix_unique",
+              "enonce": "Qui sauvegarde les bases PostgreSQL des applications en pattern shared ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "CloudNativePG, pour toutes les applications ; chaque application vérifie qu'une restauration fonctionne"
+                },
+                {
+                  "id": "b",
+                  "texte": "Chaque application, avec ses propres scripts"
+                },
+                {
+                  "id": "c",
+                  "texte": "Personne, PostgreSQL est répliqué"
+                },
+                {
+                  "id": "d",
+                  "texte": "Argo CD, à chaque synchronisation"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Sauvegarde complète hebdomadaire et archivage continu, vers le MinIO mutualisé."
+            },
+            {
+              "id": "q7",
+              "type": "choix_unique",
+              "enonce": "Quel est le rôle de l'IA dans les agents du socle ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Lire et juger sur une entrée bornée, en lecture seule, avec un commentaire pour seule sortie"
+                },
+                {
+                  "id": "b",
+                  "texte": "Appliquer automatiquement les montées de version"
+                },
+                {
+                  "id": "c",
+                  "texte": "Corriger le cluster quand il dérive"
+                },
+                {
+                  "id": "d",
+                  "texte": "Remplacer les scripts trop lents"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Le script d'abord ; l'IA en exception, plafonnée. La fusion d'une pull request reste le seul passage vers le cluster."
+            },
+            {
+              "id": "q8",
+              "type": "vrai_faux",
+              "enonce": "Une modification qui ne touche que la documentation d'une application déclenche une mise en production.",
+              "options": [
+                {
+                  "id": "v",
+                  "texte": "Vrai"
+                },
+                {
+                  "id": "f",
+                  "texte": "Faux"
+                }
+              ],
+              "bonnes": [
+                "f"
+              ],
+              "explication": "Aucune image n'est construite, donc rien n'est promu : Argo CD n'a rien à faire."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m4-pilotes-et-reproduction",
+      "titre": "Pilotes, reproduction et amélioration continue",
+      "resume": "Les deux applications pilotes et ce qu'elles ont appris aux patterns, le rythme des arrivées qui a suivi, la mise en production de ProLearning heure par heure, ce qu'une nouvelle application apporte et ce qu'elle n'a plus à faire, puis la boucle qui fait évoluer patterns et socle sans casser les applications.",
+      "objectifs": [
+        "Expliquer le rôle des deux applications pilotes et leurs leçons",
+        "Raconter la mise en production de ProLearning et en tirer les bons chiffres, avec leurs limites",
+        "Lister ce qu'une nouvelle application apporte et ce qu'elle n'a pas à faire",
+        "Décrire la boucle implémentation, écart, décision, réalignement, migration",
+        "Citer des retours d'expérience et les chantiers encore ouverts"
+      ],
+      "dureeEstimeeMinutes": 48,
+      "activites": [
+        {
+          "id": "deux-pilotes",
+          "type": "lecon",
+          "titre": "Deux patterns, deux pilotes",
+          "dureeEstimeeMinutes": 6,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Chaque pattern a été éprouvé par une vraie application avant d'être proposé aux suivantes.\n\n| | xpms | TreasureHunters |\n|---|---|---|\n| Pattern éprouvé | `dedicated` | `shared` |\n| Application | Gestion locative, application complète | Chasses au trésor |\n| Ce qu'elle a montré | Une application peut embarquer tous ses moteurs (PostgreSQL CloudNativePG, Redis, MinIO) dans sa release | La première application branchée sur le socle mutualisé ; son dossier `deploy/` sert de modèle aux suivantes |\n| Sa leçon | L'outillage ne doit pas vivre dans une application | Les écarts entre le chart et le socle doivent remonter aux patterns |"
+            },
+            {
+              "type": "encadre",
+              "variante": "a_retenir",
+              "markdown": "Une pilote ne sert pas seulement à être déployée : elle sert à **trouver ce que les patterns ne disent pas encore**, avant que ces trous ne coûtent à toutes les applications suivantes."
+            },
+            {
+              "type": "approfondir",
+              "titre": "xpms reste en dedicated",
+              "markdown": "xpms n'a pas migré vers le socle mutualisé : c'est un choix. Ses données restent dans sa release, dans son namespace. Le reste du contrat (edge, Kong, étiquettes, Vault) s'applique à elle normalement.",
+              "references": [
+                "hp-alignement"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "arrivees",
+          "type": "lecon",
+          "titre": "La reproduction : une application presque chaque semaine",
+          "dureeEstimeeMinutes": 5,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "Une fois les pilotes passées, les applications suivantes sont arrivées à un rythme régulier, sur le même chemin.\n\n| Date | Arrivée |\n|---|---|\n| 17 septembre | Premier commit de `platform-patterns` |\n| 22 septembre | Le socle mutualisé dans `homelab-platform` |\n| 24 septembre | TreasureHunters, pilote `shared` |\n| 30 septembre | mtgwars |\n| 6 octobre | wh4chars (base, seau et API) |\n| 12 octobre | ProLearning (trois bases) |\n| novembre | ludi-tabulares |\n\nAvec xpms (en `dedicated`) et findout, ce sont **sept applications** hébergées sur le même socle."
+            },
+            {
+              "type": "encadre",
+              "variante": "exemple",
+              "markdown": "Pour chacune, le socle n'a fait qu'une poignée de gestes : une base (et un seau si besoin) et un hôte d'API. Tout le reste s'est passé dans le dépôt de l'application."
+            }
+          ]
+        },
+        {
+          "id": "prolearning-heure-par-heure",
+          "type": "lecon",
+          "titre": "ProLearning, heure par heure",
+          "dureeEstimeeMinutes": 8,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "L'histoire de ProLearning a été reconstituée à partir de trois sources qui se recoupent : l'historique de son dépôt et de ses 25 pull requests, sa branche `deploy-state` et l'historique du socle.\n\n| Moment | Côté application | Côté socle |\n|---|---|---|\n| **J1**, samedi 11 octobre, soir | Décisions de démarrage ; squelette complet : front, API, CI, connexion Keycloak, rôles | — |\n| **J2**, 7 h 37 (UTC) | Pull request « Déploiement sur le socle (pattern shared) », workflows repris de TreasureHunters | La même minute : demandes des deux premières bases |\n| **J2**, 13 h 39 (UTC) | **Première mise en production** | — |\n| **J2**, après-midi | Quatre étapes fonctionnelles, quatre mises en production en une heure | — |\n| **J2**, soir | Besoin d'une troisième base | Troisième base accordée dans la soirée |\n| **J3**, matin | Toutes les étapes du pilote en production | — |"
+            },
+            {
+              "type": "texte",
+              "markdown": "### Les chiffres\n\n| Indicateur | Valeur |\n|---|---|\n| Premier commit → première mise en production | environ 18 h |\n| Premier commit → pilote complet en production | environ 36 h |\n| Mises en production enregistrées dans `deploy-state` | 29 |\n| Délai entre la fusion d'une pull request et sa promotion | 1 à 2 minutes |\n| Gestes du socle au démarrage | 3 bases et 1 hôte d'API |"
+            },
+            {
+              "type": "encadre",
+              "variante": "attention",
+              "markdown": "- Ces durées sont du **temps calendaire**, pas de l'effort d'équipe, et le développement a été **assisté par un assistant de programmation** (Claude Code). C'est aussi une conséquence de la démarche : des standards et des patterns bien décrits permettent à un assistant de produire vite un déploiement conforme.\n- Une promotion prouve la livraison, pas la santé.\n- Le message général reste : **une petite application, en production en une semaine.**",
+              "titre": "Lire ces chiffres honnêtement"
+            }
+          ]
+        },
+        {
+          "id": "nouvelle-application",
+          "type": "lecon",
+          "titre": "Pour une nouvelle application",
+          "dureeEstimeeMinutes": 6,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "C'est ce qui explique la semaine : tout ce qu'une équipe n'a plus à faire, parce que c'est dans le pattern et dans le socle.\n\n| Ce qu'elle apporte | Ce qu'elle n'a pas à faire |\n|---|---|\n| Ses images (front, API), sur les standards | TLS, certificats, pare-feu applicatif |\n| Un fichier de valeurs du chart `app` | Gateway et routage |\n| Une Application Argo CD qui pointe une version épinglée | Sauvegardes PostgreSQL (mais vérifier une restauration) |\n| Ses secrets, créés hors de Git | Supervision de base, SSO, mesure d'audience |\n| Ses routes, ses alertes, ses tableaux de bord | Isolation réseau et durcissement des conteneurs |"
+            },
+            {
+              "type": "encadre",
+              "variante": "exemple",
+              "markdown": "- **Jour 1** : choix du pattern, valeurs du chart, Application Argo CD ; demande des identifiants de provisionnement et de l'hôte d'API.\n- **Jours 2 et 3** : CI, images, première promotion ; l'URL répond.\n- **Jours 4 et 5** : alertes, tableau de bord, vérification d'une restauration, mise au point.",
+              "titre": "Une semaine type"
+            }
+          ]
+        },
+        {
+          "id": "boucle-amelioration",
+          "type": "lecon",
+          "titre": "Une démarche qui se corrige elle-même",
+          "dureeEstimeeMinutes": 8,
+          "blocs": [
+            {
+              "type": "texte",
+              "markdown": "La reproduction n'est pas seulement la preuve : c'est le **moteur de l'amélioration**. L'histoire du socle le montre.\n\n1. **Implémentation** : le socle grandit avec des charts maison, un provisionnement piloté par une liste de locataires et des secrets statiques.\n2. **Écart** : les arrivées successives montrent qu'il a divergé du modèle des patterns.\n3. **Décision** : l'[[ADR]] 0001 (20 octobre) réaligne le pattern `shared` : deux namespaces par application, Kong pour `/api` seulement, Vault.\n4. **Réalignement** : le socle adopte le chart `platform`, CloudNativePG et Vault, en cinq phases.\n5. **Migration** : chaque application bascule en **une pull request**, sans toucher à son code. ProLearning l'a fait le 23 octobre, en « quatrième cobaye »."
+            },
+            {
+              "type": "texte",
+              "markdown": "### Ce que le terrain a appris\n\n| Retour d'expérience | Leçon |\n|---|---|\n| Une seule IP publique | Deux edges ne peuvent pas tenir les ports 80 et 443 en même temps : la bascule se fait en une fois, en retirant l'ancien avant |\n| Résolution de noms interne | Oublier de repointer la résolution interne vers le nouvel edge rend les hôtes introuvables depuis le cluster : les certificats restent bloqués |\n| En-tête Host | Le réécrire fait répondre 404 à tous les sites |\n| Argo CD et opérateurs | Ignorer le champ `status` dans le calcul des différences ; purger les annotations trop longues héritées d'anciens déploiements |\n\n### Ce qui reste à faire\n\n- Réoutiller l'**épreuve de restauration** côté socle mutualisé.\n- Poser un premier **diagnostic automatique sur alerte**, quand le bruit des alertes sera connu.\n- Réécrire les guides de déploiement et de consommation autour des nouveaux charts."
+            },
+            {
+              "type": "approfondir",
+              "titre": "Pourquoi documenter les pièges ?",
+              "markdown": "Chacun de ces pièges est décrit dans les runbooks du socle, avec la commande qui le corrige. La prochaine bascule ne les retrouvera pas : c'est la même logique que pour les patterns, appliquée à l'exploitation.",
+              "references": [
+                "hp-alignement",
+                "hp-platform",
+                "pp-adr-0001"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ordre-boucle",
+          "type": "ordre",
+          "titre": "La boucle d'amélioration",
+          "dureeEstimeeMinutes": 3,
+          "consigne": "Remettez dans l'ordre les étapes par lesquelles le socle s'est réaligné.",
+          "elements": [
+            {
+              "id": "e1",
+              "texte": "Le socle grandit avec des charts maison et une liste de locataires"
+            },
+            {
+              "id": "e2",
+              "texte": "Les arrivées successives révèlent l'écart avec le modèle"
+            },
+            {
+              "id": "e3",
+              "texte": "Une décision d'architecture (ADR 0001) fixe le modèle réaligné"
+            },
+            {
+              "id": "e4",
+              "texte": "Le socle adopte le chart platform, CloudNativePG et Vault, par phases"
+            },
+            {
+              "id": "e5",
+              "texte": "Chaque application migre en une pull request"
+            }
+          ],
+          "explication": "L'écart est trouvé par la reproduction, tranché par une décision écrite, corrigé dans le socle, puis absorbé par chaque application sans toucher à son code."
+        },
+        {
+          "id": "reservo-une-semaine",
+          "type": "scenario",
+          "titre": "La semaine de Réservo",
+          "dureeEstimeeMinutes": 6,
+          "contexte": "**Réservo** est une petite application interne de réservation de salles : un front Angular, une API Node.js, une base PostgreSQL et quelques pièces jointes. **Camille**, développeuse, la porte ; **Hugo** administre le socle d'hébergement ; **Nadia**, cheffe de projet, veut la voir en production avant la fin du mois. Vous conseillez l'équipe.\n\nNadia a fixé l'objectif : Réservo en production dans une semaine.",
+          "debut": "n1",
+          "noeuds": {
+            "n1": {
+              "texte": "Lundi matin. Par quoi Camille commence-t-elle ?",
+              "choix": [
+                {
+                  "texte": "Reprendre le dossier deploy/ d'une application shared existante et l'adapter à Réservo",
+                  "points": 2,
+                  "retour": "C'est exactement ce qu'a fait ProLearning avec TreasureHunters : le travail est déjà fait.",
+                  "suivant": "n2"
+                },
+                {
+                  "texte": "Écrire ses propres manifestes Kubernetes, pour maîtriser chaque détail",
+                  "points": 0,
+                  "retour": "Elle perdrait la sécurité et la supervision intégrées au chart, et des jours de travail.",
+                  "suivant": "n2"
+                }
+              ]
+            },
+            "n2": {
+              "texte": "Mardi : la première mise en production est passée et l'URL répond. Nadia veut l'annoncer. Qu'en dites-vous ?",
+              "choix": [
+                {
+                  "texte": "Vérifier d'abord dans la supervision que les pods sont sains et que l'API répond correctement",
+                  "points": 2,
+                  "retour": "Une promotion prouve la livraison, pas la santé : on vérifie avant d'annoncer.",
+                  "suivant": "n3"
+                },
+                {
+                  "texte": "L'URL répond, c'est bon",
+                  "points": 1,
+                  "retour": "Probablement, mais une page qui s'affiche ne dit rien des erreurs côté API : un coup d'œil à la supervision s'impose.",
+                  "suivant": "n3"
+                }
+              ]
+            },
+            "n3": {
+              "texte": "Jeudi : il reste du temps. Que faire en priorité ?",
+              "choix": [
+                {
+                  "texte": "Écrire les alertes de Réservo et vérifier qu'une restauration de sa base fonctionne",
+                  "points": 2,
+                  "retour": "Les sauvegardes sont assurées par le socle, mais vérifier la restauration revient à l'application.",
+                  "suivant": "fin"
+                },
+                {
+                  "texte": "Mettre en place un script de sauvegarde de la base",
+                  "points": 0,
+                  "retour": "Inutile : CloudNativePG sauvegarde toutes les bases. Ce qui manque, c'est la preuve qu'on sait restaurer.",
+                  "suivant": "fin"
+                },
+                {
+                  "texte": "Demander à Hugo d'ajouter une règle de pare-feu pour Réservo",
+                  "points": 0,
+                  "retour": "Le pare-feu est déjà en place sur l'edge pour toutes les applications ; rien à demander.",
+                  "suivant": "fin"
+                }
+              ]
+            }
+          },
+          "paliers": [
+            {
+              "minPoints": 5,
+              "etoiles": 3,
+              "message": "Excellent : vous avez suivi le chemin prévu par les patterns et le socle."
+            },
+            {
+              "minPoints": 3,
+              "etoiles": 2,
+              "message": "Bien : quelques détours, mais l'essentiel est là. Relisez les retours des choix moins bons."
+            },
+            {
+              "minPoints": 0,
+              "etoiles": 1,
+              "message": "À reprendre : relisez les leçons du module, puis rejouez le cas."
+            }
+          ]
+        },
+        {
+          "id": "fiches-m4",
+          "type": "fiches",
+          "titre": "Fiches de révision",
+          "obligatoire": false,
+          "dureeEstimeeMinutes": 3,
+          "cartes": [
+            {
+              "recto": "Les deux pilotes",
+              "verso": "**xpms** pour `dedicated` (l'outillage ne doit pas vivre dans une application) ; **TreasureHunters** pour `shared` (son `deploy/` sert de modèle)."
+            },
+            {
+              "recto": "ProLearning en chiffres",
+              "verso": "≈ 18 h jusqu'à la première mise en production ; ≈ 36 h jusqu'au pilote complet ; 29 mises en production ; 1 à 2 min après chaque fusion."
+            },
+            {
+              "recto": "Lire ces chiffres",
+              "verso": "Temps calendaire, développement assisté par un assistant de programmation ; une promotion prouve la livraison, pas la santé."
+            },
+            {
+              "recto": "La boucle",
+              "verso": "Implémentation → écart → décision (ADR) → réalignement du socle → migration de chaque application en une PR."
+            },
+            {
+              "recto": "Chantiers ouverts",
+              "verso": "Épreuve de restauration côté socle, diagnostic automatique sur alerte, guides de déploiement à réécrire."
+            }
+          ]
+        },
+        {
+          "id": "quiz-m4",
+          "type": "quiz",
+          "titre": "Quiz du module 4",
+          "seuil": 0.75,
+          "dureeEstimeeMinutes": 6,
+          "questions": [
+            {
+              "id": "q1",
+              "type": "choix_unique",
+              "enonce": "Quel pattern xpms a-t-elle éprouvé ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "dedicated"
+                },
+                {
+                  "id": "b",
+                  "texte": "shared"
+                },
+                {
+                  "id": "c",
+                  "texte": "Les deux"
+                },
+                {
+                  "id": "d",
+                  "texte": "Aucun, elle est antérieure aux patterns"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "xpms embarque ses propres moteurs de données ; TreasureHunters a été la pilote du pattern shared."
+            },
+            {
+              "id": "q2",
+              "type": "choix_unique",
+              "enonce": "Quel a été l'apport principal de TreasureHunters ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Son dossier deploy/ sert de modèle aux applications suivantes, et ses écarts ont nourri le réalignement"
+                },
+                {
+                  "id": "b",
+                  "texte": "Elle a fourni le SSO du cluster"
+                },
+                {
+                  "id": "c",
+                  "texte": "Elle a remplacé le pattern dedicated"
+                },
+                {
+                  "id": "d",
+                  "texte": "Elle a imposé Redis à toutes les applications"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "ProLearning, par exemple, a repris ses workflows tels quels."
+            },
+            {
+              "id": "q3",
+              "type": "choix_unique",
+              "enonce": "Combien de temps a-t-il fallu entre le premier commit de ProLearning et sa première mise en production ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Environ 18 heures"
+                },
+                {
+                  "id": "b",
+                  "texte": "Environ une semaine"
+                },
+                {
+                  "id": "c",
+                  "texte": "Environ un mois"
+                },
+                {
+                  "id": "d",
+                  "texte": "Environ 36 heures"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "Environ 18 h pour la première mise en production, environ 36 h pour le pilote complet."
+            },
+            {
+              "id": "q4",
+              "type": "choix_multiple",
+              "enonce": "Quelles précautions faut-il donner avec les chiffres de ProLearning ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Ce sont des durées calendaires, pas de l'effort d'équipe"
+                },
+                {
+                  "id": "b",
+                  "texte": "Le développement a été assisté par un assistant de programmation"
+                },
+                {
+                  "id": "c",
+                  "texte": "Une promotion prouve la livraison, pas la santé"
+                },
+                {
+                  "id": "d",
+                  "texte": "Ils ne sont pas vérifiables"
+                }
+              ],
+              "bonnes": [
+                "a",
+                "b",
+                "c"
+              ],
+              "explication": "Les chiffres sont vérifiables dans l'historique Git et deploy-state ; ils doivent seulement être lus avec ces trois précautions."
+            },
+            {
+              "id": "q5",
+              "type": "choix_unique",
+              "enonce": "Qu'est-ce qu'une nouvelle application n'a PAS à mettre en place elle-même ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Le pare-feu applicatif et le TLS"
+                },
+                {
+                  "id": "b",
+                  "texte": "Son fichier de valeurs du chart app"
+                },
+                {
+                  "id": "c",
+                  "texte": "Ses alertes"
+                },
+                {
+                  "id": "d",
+                  "texte": "Ses secrets"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "TLS et pare-feu sont sur l'edge du socle, pour toutes les applications."
+            },
+            {
+              "id": "q6",
+              "type": "choix_unique",
+              "enonce": "Comment les applications ont-elles absorbé le réalignement du socle ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Chacune en une pull request, sans toucher à son code"
+                },
+                {
+                  "id": "b",
+                  "texte": "En réécrivant leur API"
+                },
+                {
+                  "id": "c",
+                  "texte": "En changeant de pattern"
+                },
+                {
+                  "id": "d",
+                  "texte": "Le socle les a migrées sans qu'elles le sachent"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "ProLearning a migré le 23 octobre en une pull request sur son dossier deploy/."
+            },
+            {
+              "id": "q7",
+              "type": "vrai_faux",
+              "enonce": "La reproduction sert seulement à prouver que la démarche fonctionne.",
+              "options": [
+                {
+                  "id": "v",
+                  "texte": "Vrai"
+                },
+                {
+                  "id": "f",
+                  "texte": "Faux"
+                }
+              ],
+              "bonnes": [
+                "f"
+              ],
+              "explication": "Elle est aussi le moteur de l'amélioration : c'est elle qui révèle les écarts que la démarche corrige ensuite."
+            },
+            {
+              "id": "q8",
+              "type": "choix_unique",
+              "enonce": "Pourquoi la bascule de l'edge a-t-elle dû se faire en une fois ?",
+              "options": [
+                {
+                  "id": "a",
+                  "texte": "Le cluster n'a qu'une IP publique : deux edges ne peuvent pas tenir les ports 80 et 443 en même temps"
+                },
+                {
+                  "id": "b",
+                  "texte": "Parce qu'Argo CD ne sait pas déployer deux edges"
+                },
+                {
+                  "id": "c",
+                  "texte": "Pour éviter de payer deux licences"
+                },
+                {
+                  "id": "d",
+                  "texte": "Parce que Kong l'impose"
+                }
+              ],
+              "bonnes": [
+                "a"
+              ],
+              "explication": "C'est une conséquence assumée de l'exigence de simplicité : une seule entrée publique."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
