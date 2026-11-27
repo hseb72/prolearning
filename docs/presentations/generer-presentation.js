@@ -89,7 +89,13 @@ async function applyTheme(file, theme) {
     .replace(/(<a:theme [^>]*name=")[^"]*"/, `$1${esc(theme.name)}"`)
     .replace(/(<a:fontScheme name=")[^"]*"/, `$1${esc(theme.name)}"`);
   zip.file(part, xml);
-  fs.writeFileSync(file, await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }));
+  // Archive recopiée fichier par fichier, sans entrées de dossier : certains services en
+  // ligne refusent de telles archives (supprimer un dossier, dans JSZip, vide aussi son contenu).
+  const out = new JSZip();
+  for (const [path, entry] of Object.entries(zip.files)) {
+    if (!entry.dir) out.file(path, await entry.async('nodebuffer'), { createFolders: false });
+  }
+  fs.writeFileSync(file, await out.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }));
 }
 
 // ---------- Icônes ----------
